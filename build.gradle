@@ -1,0 +1,39 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.0.0'
+
+        classpath 'com.novoda:bintray-release:0.3.4'
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    ext {
+        publish_version = '0.1'
+
+        //dependencies version
+        kotlin_version = '1.0.1'
+        result_version = '1.0.1'
+        rxjava_version = '1.1.1'
+        disklrucache_version = '2.0.2'
+
+        //test dependencies version
+        junit_version = '4.12'
+        robolectric_version = '3.0'
+    }
+
+    repositories {
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

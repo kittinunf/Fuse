@@ -1,0 +1,76 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+//apply plugin: 'com.novoda.bintray-release'
+
+repositories {
+    jcenter()
+}
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 23
+        versionCode 1
+        versionName parent.ext.publish_version
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+        test.java.srcDirs += 'src/test/kotlin'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$parent.ext.kotlin_version"
+    compile "com.github.kittinunf.result:result:$parent.ext.result_version"
+    compile "com.jakewharton:disklrucache:$parent.ext.disklrucache_version"
+
+//    testCompile "junit:junit:$parent.ext.junit_version"
+//    testCompile "org.robolectric:robolectric:$parent.ext.robolectric_version"
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$parent.ext.kotlin_version"
+    }
+}
+
+//publish {
+//    artifactId = 'fuse'
+//    autoPublish = true
+//    desc = ''
+//    groupId = 'com.github.kittinunf.fuse'
+//    licences = ['MIT']
+//    publishVersion = parent.ext.publish_version
+//    uploadName = 'Fuse'
+//    website = 'https://github.com/kittinunf/Fuse'
+//}
