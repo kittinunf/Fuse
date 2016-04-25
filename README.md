@@ -16,6 +16,8 @@ Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result 
 
 Really, that is it.
 
-Fuse will search through at 1st layer at LruCache, if not found, then go search at 2nd layer to find at DiskLruCache. 
-If Fuse cannot find suitable cache in Disk, it will fetch for data (For above example, it will make network call). 
-Once the fetch finishes, data is delivered through callback, then LruCache & DiskLruCache will be filled with data for subsequent use.
+## How it works?
+
+1. Fuse searches at 1st layer at LruCache (Memory), if found, delivers. If not found go to 2.
+2. Fuse searches at 2nd layer at DiskLruCache (Disk), if found delivers, If not found go to 3.
+3. Fuse performs fetch (by conformance with [Fetcher](https://github.com/kittinunf/Fuse/blob/master/fuse/src/main/kotlin/com/github/kittinunf/fuse/core/fetch/Fetcher.kt) interface), then store into LruCache and DiskCache, respectively. Subsequent uses will be much faster by going through 1 & 2. 
