@@ -9,7 +9,7 @@ Fuse.init(cacheDir.path)
 
 Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result ->
     result.success { json ->
-        //do something with json
+        //do something with json object
     }
 }
 ```
