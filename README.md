@@ -20,7 +20,7 @@ Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result 
 
 ## Installation
 
-Use [jitpacks](https://jitpack.io/)
+Use [jitpack.io](https://jitpack.io/)
 
 ```Groovy
 repositories {
