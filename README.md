@@ -14,6 +14,8 @@ Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result 
 }
 ```
 
+Yeah, that is it.
+
 ## Dependency
 
 * [DiskLruCache](https://github.com/JakeWharton/DiskLruCache)
@@ -33,8 +35,6 @@ dependencies {
     compile 'com.github.kittinunf:fuse:master-SNAPSHOT'
 }
 ```
-
-Really, that is it.
 
 ## How it works?
 
