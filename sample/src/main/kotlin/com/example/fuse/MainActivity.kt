@@ -21,6 +21,9 @@ class MainActivity : AppCompatActivity() {
 
         Fuse.init(cacheDir.path)
 
+        Fuse.stringCache.get("hello") { result ->
+        }
+
         btFetch.setOnClickListener {
 //            Fuse.stringCache.get(filesDir.resolve("json.txt")) { result ->
 //                result.success {
