@@ -23,7 +23,7 @@ class SimpleFetcher<T : Any>(override val key: String, val getValue: () -> T?) :
 
 }
 
-fun <T : Any> Cache<T>.get(key: String, getValue: () -> T?, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
+fun <T : Any> Cache<T>.get(key: String, getValue: () -> T? = { null }, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
     val fetcher = SimpleFetcher(key, getValue)
     get(fetcher, configName, handler)
 }

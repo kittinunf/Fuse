@@ -31,8 +31,8 @@ class MainActivity : AppCompatActivity() {
 
             Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result ->
                 result.fold({
-                    Log.i(TAG, it.toString(2))
-                    tvResult.text = it.toString(2)
+                    Log.i(TAG, it.toString(4))
+                    tvResult.text = it.toString(4)
                 }, {
                     Log.e(TAG, it.message)
                 })
