@@ -71,7 +71,13 @@ class NetworkFetcher<T : Any>(val url: URL, val convertible: Fuse.DataConvertibl
 
 }
 
+@JvmName("get")
 fun <T : Any> Cache<T>.get(url: URL, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
+    get(NetworkFetcher(url, this), configName, handler)
+}
+
+@JvmName("getWithType")
+fun <T : Any> Cache<T>.get(url: URL, configName: String = Config.DEFAULT_NAME, handler: ((Result<Pair<T, Cache.Type>, Exception>) -> Unit)? = null) {
     get(NetworkFetcher(url, this), configName, handler)
 }
 

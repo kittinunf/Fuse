@@ -8,11 +8,18 @@ import com.github.kittinunf.fuse.util.let
 import com.github.kittinunf.fuse.util.mainThread
 import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.result.Result
+import com.github.kittinunf.result.map
 import java.util.concurrent.Executors
 
 open class Cache<T : Any>(cacheDir: String,
                           convertible: Fuse.DataConvertible<T>,
                           representable: Fuse.DataRepresentable<T>) : Fuse.DataConvertible<T> by convertible, Fuse.DataRepresentable<T> by representable {
+
+    enum class Type {
+        NOT_FOUND,
+        MEM,
+        DISK,
+    }
 
     private val configs = hashMapOf<String, Triple<Config<T>, MemCache, DiskCache>>()
 
@@ -47,6 +54,7 @@ open class Cache<T : Any>(cacheDir: String,
         } ?: throw RuntimeException("Unable to find preset config, you must add config before putting data")
     }
 
+    @JvmName("get")
     fun get(fetcher: Fetcher<T>, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
         val key = fetcher.key
         val hashed = key.md5()
@@ -54,11 +62,10 @@ open class Cache<T : Any>(cacheDir: String,
         configs[configName]?.let { config, memCache, diskCache ->
             //find in memCache
             memCache[hashed]?.let { value ->
-                val casted = value as? T
-                casted?.let {
-                    handler?.invoke(Result.of(it))
-                } ?: handler?.invoke(Result.error(RuntimeException("Value is not type T")))
-                //find a way to bump specific key in disk cache up
+                val result = Result.of { value as T }
+                handler?.invoke(result)
+                //move specific key in disk cache up as it is found in mem
+                diskCache.moveToHead(hashed)
                 return
             }
 
@@ -78,6 +85,48 @@ open class Cache<T : Any>(cacheDir: String,
                 }
             }
         } ?: handler?.invoke(Result.error(RuntimeException("Config $configName is not found")))
+    }
+
+    @JvmName("getWithType")
+    fun get(fetcher: Fetcher<T>, configName: String = Config.DEFAULT_NAME, handler: ((Result<Pair<T, Type>, Exception>) -> Unit)? = null) {
+        val key = fetcher.key
+        val hashed = key.md5()
+
+        configs[configName]?.let { config, memCache, diskCache ->
+            //find in memCache
+            memCache[hashed]?.let { value ->
+                val result = Result.of { value as T to Type.MEM }
+                handler?.invoke(result)
+                //move specific key in disk cache up as it is found in mem
+                diskCache.moveToHead(hashed)
+                return
+            }
+
+            dispatch(backgroundExecutor) {
+                //find in diskCache
+                val bytes = diskCache[hashed]
+                val value = bytes?.let { convertFromData(bytes) }
+                if (value == null) {
+                    //not found we need to fetch then put it back
+                    fetchAndPut(fetcher, config) { result ->
+                        handler?.invoke(result.map { it to Type.NOT_FOUND })
+                    }
+                } else {
+                    //found in disk, save into mem
+                    memCache[hashed] = value
+                    mainThread {
+                        handler?.invoke(Result.of(value to Type.DISK))
+                    }
+                }
+            }
+        } ?: handler?.invoke(Result.error(RuntimeException("Config $configName is not found")))
+    }
+
+    fun remove(key: String, configName: String = Config.DEFAULT_NAME) {
+        configs[configName]?.let { config, memCache, diskCache ->
+            memCache.remove(key)
+            diskCache.remove(key)
+        }
     }
 
     private fun convert(value: T, config: Config<T>): ByteArray {

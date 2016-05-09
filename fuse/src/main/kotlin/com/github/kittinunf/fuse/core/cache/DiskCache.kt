@@ -5,7 +5,7 @@ import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 
-class DiskCache private constructor(val cache: DiskLruCache) {
+class DiskCache private constructor(private val cache: DiskLruCache) {
 
     companion object {
         fun open(cacheDir: String, uniqueName: String, capacity: Long): DiskCache {
@@ -23,15 +23,21 @@ class DiskCache private constructor(val cache: DiskLruCache) {
         editor.commit()
     }
 
-    operator fun get(key: Any?): ByteArray? {
-        return key?.let {
-            val snapshot = cache.get(key.toString())
-            snapshot?.let {
-                BufferedInputStream(it.getInputStream(0)).use {
-                    it.readBytes()
-                }
+    operator fun get(key: Any): ByteArray? {
+        val snapshot = cache.get(key.toString())
+        return snapshot?.let {
+            BufferedInputStream(it.getInputStream(0)).use {
+                it.readBytes()
             }
         }
+    }
+
+    fun moveToHead(key: Any) {
+        cache.get(key.toString())
+    }
+
+    fun remove(key: Any) {
+        cache.remove(key.toString())
     }
 
 }

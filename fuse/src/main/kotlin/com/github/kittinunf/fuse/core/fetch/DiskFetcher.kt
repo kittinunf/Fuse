@@ -53,6 +53,12 @@ class DiskFetcher<T : Any>(val file: File, val convertible: Fuse.DataConvertible
 
 }
 
+@JvmName("get")
 fun <T : Any> Cache<T>.get(file: File, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
+    get(DiskFetcher(file, this), configName, handler)
+}
+
+@JvmName("getWithType")
+fun <T : Any> Cache<T>.get(file: File, configName: String = Config.DEFAULT_NAME, handler: ((Result<Pair<T, Cache.Type>, Exception>) -> Unit)? = null) {
     get(DiskFetcher(file, this), configName, handler)
 }
