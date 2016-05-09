@@ -10,10 +10,17 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btFetch"
+            android:id="@+id/btNetworkFetch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Fetch"
+            android:text="Network Fetch"
+            />
+
+        <Button
+            android:id="@+id/btDiskFetch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Disk Fetch"
             />
 
         <Button

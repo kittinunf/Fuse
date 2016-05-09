@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.core.fetch.get
+import com.github.kittinunf.result.success
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.FileOutputStream
 import java.net.URL
@@ -24,14 +25,7 @@ class MainActivity : AppCompatActivity() {
         Fuse.stringCache.get("hello") { result ->
         }
 
-        btFetch.setOnClickListener {
-            //            Fuse.stringCache.get(filesDir.resolve("json.txt")) { result ->
-            //                result.success {
-            //                    Log.i(TAG, it)
-            //                    tvResult.text = it
-            //                }
-            //            }
-
+        btNetworkFetch.setOnClickListener {
             Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result, type ->
                 result.fold({
                     Log.i(TAG, it.toString(4))
@@ -39,6 +33,15 @@ class MainActivity : AppCompatActivity() {
                 }, {
                     Log.e(TAG, it.message)
                 })
+            }
+        }
+
+        btDiskFetch.setOnClickListener {
+            Fuse.stringCache.get(filesDir.resolve("json.txt")) { result ->
+                result.success {
+                    Log.i(TAG, it)
+                    tvResult.text = it
+                }
             }
         }
 
