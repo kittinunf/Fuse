@@ -8,7 +8,6 @@ import com.github.kittinunf.fuse.util.let
 import com.github.kittinunf.fuse.util.mainThread
 import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.map
 import java.util.concurrent.Executors
 
 open class Cache<T : Any>(cacheDir: String,
@@ -54,51 +53,39 @@ open class Cache<T : Any>(cacheDir: String,
         } ?: throw RuntimeException("Unable to find preset config, you must add config before putting data")
     }
 
-    @JvmName("get")
     fun get(fetcher: Fetcher<T>, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
-        val key = fetcher.key
-        val hashed = key.md5()
-
-        configs[configName]?.let { config, memCache, diskCache ->
-            //find in memCache
-            memCache[hashed]?.let { value ->
-                val result = Result.of { value as T }
-                handler?.invoke(result)
-                //move specific key in disk cache up as it is found in mem
-                diskCache.moveToHead(hashed)
-                return
-            }
-
-            dispatch(backgroundExecutor) {
-                //find in diskCache
-                val bytes = diskCache[hashed]
-                val value = bytes?.let { convertFromData(bytes) }
-                if (value == null) {
-                    //not found we need to fetch then put it back
-                    fetchAndPut(fetcher, config, handler)
-                } else {
-                    //found in disk, save into mem
-                    memCache[hashed] = value
-                    mainThread {
-                        handler?.invoke(Result.of(value))
-                    }
-                }
-            }
-        } ?: handler?.invoke(Result.error(RuntimeException("Config $configName is not found")))
+        _get(fetcher, configName, handler, handler, handler, { handler?.invoke(Result.error(it)) })
     }
 
-    @JvmName("getWithType")
-    fun get(fetcher: Fetcher<T>, configName: String = Config.DEFAULT_NAME, handler: ((Result<Pair<T, Type>, Exception>) -> Unit)? = null) {
+    fun get(fetcher: Fetcher<T>, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>, Type) -> Unit)? = null) {
+        _get(fetcher,
+                configName,
+                { handler?.invoke(it, Type.MEM) },
+                { handler?.invoke(it, Type.DISK) },
+                { handler?.invoke(it, Type.NOT_FOUND) },
+                { handler?.invoke(Result.error(it), Type.NOT_FOUND) })
+    }
+
+    private fun _get(fetcher: Fetcher<T>, configName: String = Config.DEFAULT_NAME,
+                     memHandler: ((Result<T, Exception>) -> Unit)?,
+                     diskHandler: ((Result<T, Exception>) -> Unit)?,
+                     fetchHandler: ((Result<T, Exception>) -> Unit)?,
+                     errorHandler: (Exception) -> Unit) {
+
         val key = fetcher.key
         val hashed = key.md5()
 
         configs[configName]?.let { config, memCache, diskCache ->
             //find in memCache
             memCache[hashed]?.let { value ->
-                val result = Result.of { value as T to Type.MEM }
-                handler?.invoke(result)
-                //move specific key in disk cache up as it is found in mem
-                diskCache.moveToHead(hashed)
+                dispatch(backgroundExecutor) {
+                    //move specific key in disk cache up as it is found in mem
+                    diskCache.moveToHead(hashed)
+                    mainThread {
+                        val result = Result.of { value as T }
+                        memHandler?.invoke(result)
+                    }
+                }
                 return
             }
 
@@ -108,18 +95,16 @@ open class Cache<T : Any>(cacheDir: String,
                 val value = bytes?.let { convertFromData(bytes) }
                 if (value == null) {
                     //not found we need to fetch then put it back
-                    fetchAndPut(fetcher, config) { result ->
-                        handler?.invoke(result.map { it to Type.NOT_FOUND })
-                    }
+                    fetchAndPut(fetcher, config, fetchHandler)
                 } else {
                     //found in disk, save into mem
                     memCache[hashed] = value
                     mainThread {
-                        handler?.invoke(Result.of(value to Type.DISK))
+                        diskHandler?.invoke(Result.of(value))
                     }
                 }
             }
-        } ?: handler?.invoke(Result.error(RuntimeException("Config $configName is not found")))
+        } ?: errorHandler(RuntimeException("Config $configName is not found"))
     }
 
     fun remove(key: String, configName: String = Config.DEFAULT_NAME) {
@@ -156,5 +141,3 @@ open class Cache<T : Any>(cacheDir: String,
     }
 
 }
-
-

@@ -25,17 +25,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         btFetch.setOnClickListener {
-//            Fuse.stringCache.get(filesDir.resolve("json.txt")) { result ->
-//                result.success {
-//                    Log.i(TAG, it)
-//                    tvResult.text = it
-//                }
-//            }
+            //            Fuse.stringCache.get(filesDir.resolve("json.txt")) { result ->
+            //                result.success {
+            //                    Log.i(TAG, it)
+            //                    tvResult.text = it
+            //                }
+            //            }
 
-            Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result ->
+            Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result, type ->
                 result.fold({
                     Log.i(TAG, it.toString(4))
-                    tvResult.text = it.toString(4)
+                    tvResult.text = "From: ${type.name}, \n ${it.toString(4)}"
                 }, {
                     Log.e(TAG, it.message)
                 })

@@ -23,14 +23,12 @@ class SimpleFetcher<T : Any>(override val key: String, val getValue: () -> T?) :
 
 }
 
-@JvmName("get")
 fun <T : Any> Cache<T>.get(key: String, getValue: () -> T? = { null }, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
     val fetcher = SimpleFetcher(key, getValue)
     get(fetcher, configName, handler)
 }
 
-@JvmName("getWithType")
-fun <T : Any> Cache<T>.get(key: String, getValue: () -> T? = { null }, configName: String = Config.DEFAULT_NAME, handler: ((Result<Pair<T, Cache.Type>, Exception>) -> Unit)? = null) {
+fun <T : Any> Cache<T>.get(key: String, getValue: () -> T? = { null }, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>, Cache.Type) -> Unit)? = null) {
     val fetcher = SimpleFetcher(key, getValue)
     get(fetcher, configName, handler)
 }
