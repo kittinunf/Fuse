@@ -79,11 +79,11 @@ open class Cache<T : Any>(cacheDir: String,
             //find in memCache
             memCache[hashed]?.let { value ->
                 dispatch(backgroundExecutor) {
+                    val t = value as T
                     //move specific key in disk cache up as it is found in mem
-                    diskCache.moveToHead(hashed)
+                    diskCache.setIfMissing(hashed, convertToData(t))
                     mainThread {
-                        val result = Result.of { value as T }
-                        memHandler?.invoke(result)
+                        memHandler?.invoke(Result.of(t))
                     }
                 }
                 return

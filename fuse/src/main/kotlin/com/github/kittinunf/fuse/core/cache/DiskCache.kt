@@ -32,8 +32,11 @@ class DiskCache private constructor(private val cache: DiskLruCache) {
         }
     }
 
-    fun moveToHead(key: Any) {
-        cache.get(key.toString())
+    fun setIfMissing(key: Any, value: ByteArray) {
+        val fetched = get(key)
+        if (fetched == null) {
+            set(key, value)
+        }
     }
 
     fun remove(key: Any) {
