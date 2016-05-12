@@ -1,16 +1,19 @@
 package com.github.kittinunf.fuse.core
 
-import org.json.JSONObject
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class Fuse {
 
     companion object {
 
+        var backgroundExecutor: ExecutorService = Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
+
         lateinit var dir: String
 
-        val stringCache by lazy { StringCache(dir) }
-        val bytesCache by lazy { ByteArrayCache(dir) }
-        val jsonCache by lazy { JsonCache(dir) }
+        val stringCache by lazy { Cache(dir, StringDataConvertible(), StringDataRepresentable()) }
+        val bytesCache by lazy { Cache(dir, ByteArrayDataConvertible(), ByteArrayDataRepresentable()) }
+        val jsonCache by lazy { Cache(dir, JsonDataConvertible(), JsonDataRepresentable()) }
 
         fun init(cacheDir: String) {
             dir = cacheDir
@@ -32,10 +35,3 @@ class Fuse {
 
 }
 
-class ByteArrayCache(cacheDir: String) : Cache<ByteArray>(cacheDir, ByteArrayDataConvertible(), ByteArrayDataRepresentable())
-
-class StringCache(cacheDir: String) : Cache<String>(cacheDir, StringDataConvertible(), StringDataRepresentable())
-
-class JsonCache(cacheDir: String) : Cache<JSONObject>(cacheDir, JsonDataConvertible(), JsonDataRepresentable())
-
- 

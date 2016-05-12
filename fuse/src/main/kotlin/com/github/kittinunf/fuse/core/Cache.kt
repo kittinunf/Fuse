@@ -8,9 +8,8 @@ import com.github.kittinunf.fuse.util.let
 import com.github.kittinunf.fuse.util.mainThread
 import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.result.Result
-import java.util.concurrent.Executors
 
-open class Cache<T : Any>(cacheDir: String,
+class Cache<T : Any>(cacheDir: String,
                           convertible: Fuse.DataConvertible<T>,
                           representable: Fuse.DataRepresentable<T>) : Fuse.DataConvertible<T> by convertible, Fuse.DataRepresentable<T> by representable {
 
@@ -21,8 +20,6 @@ open class Cache<T : Any>(cacheDir: String,
     }
 
     private val configs = hashMapOf<String, Triple<Config<T>, MemCache, DiskCache>>()
-
-    private val backgroundExecutor by lazy { Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors()) }
 
     init {
         val defaultConfig = Config<T>(cacheDir)
@@ -41,7 +38,7 @@ open class Cache<T : Any>(cacheDir: String,
         configs[configName]?.let { config, memCache, diskCache ->
             applyConfig(value, config) { transformed ->
                 val hashed = key.md5()
-                dispatch(backgroundExecutor) {
+                dispatch(Fuse.backgroundExecutor) {
                     memCache[hashed] = transformed
                     diskCache[hashed] = convert(transformed, config)
                     mainThread {
@@ -78,7 +75,7 @@ open class Cache<T : Any>(cacheDir: String,
         configs[configName]?.let { config, memCache, diskCache ->
             //find in memCache
             memCache[hashed]?.let { value ->
-                dispatch(backgroundExecutor) {
+                dispatch(Fuse.backgroundExecutor) {
                     val t = value as T
                     //move specific key in disk cache up as it is found in mem
                     diskCache.setIfMissing(hashed, convertToData(t))
@@ -89,7 +86,7 @@ open class Cache<T : Any>(cacheDir: String,
                 return
             }
 
-            dispatch(backgroundExecutor) {
+            dispatch(Fuse.backgroundExecutor) {
                 //find in diskCache
                 val bytes = diskCache[hashed]
                 val value = bytes?.let { convertFromData(bytes) }
@@ -132,7 +129,7 @@ open class Cache<T : Any>(cacheDir: String,
     }
 
     private fun applyConfig(value: T, config: Config<T>, success: (T) -> Unit) {
-        dispatch(backgroundExecutor) {
+        dispatch(Fuse.backgroundExecutor) {
             val transformed = config.transformer(value)
             mainThread {
                 success(transformed)

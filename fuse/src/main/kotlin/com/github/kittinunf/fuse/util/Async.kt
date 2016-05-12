@@ -6,9 +6,9 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 
-class __Async<T>(val weakRef: WeakReference<T>)
+internal class FuseAsync<T>(val weakRef: WeakReference<T>)
 
-fun <T, X> __Async<T>.mainThread(f: (T) -> X) {
+internal fun <T, X> FuseAsync<T>.mainThread(f: (T) -> X) {
     val r = weakRef.get() ?: return
 
     if (Thread.currentThread() == Looper.getMainLooper().thread) {
@@ -18,8 +18,8 @@ fun <T, X> __Async<T>.mainThread(f: (T) -> X) {
     }
 }
 
-fun <T> T.dispatch(executorService: ExecutorService, block: __Async<T>.() -> Unit): Future<Unit> {
-    val a = __Async(WeakReference(this))
+internal fun <T> T.dispatch(executorService: ExecutorService, block: FuseAsync<T>.() -> Unit): Future<Unit> {
+    val a = FuseAsync(WeakReference(this))
     return executorService.submit<Unit> { a.block() }
 }
 
