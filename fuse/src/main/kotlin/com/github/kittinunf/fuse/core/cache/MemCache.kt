@@ -14,9 +14,7 @@ class MemCache {
 
     operator fun get(key: Any): Any? = cache.get(key)
 
-    fun remove(key: Any) {
-        cache.remove(key)
-    }
+    fun remove(key: Any): Boolean = cache.remove(key) != null
 
 }
  
