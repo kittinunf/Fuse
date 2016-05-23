@@ -61,7 +61,7 @@ dependencies {
 
 ## License
 
-Fuse itself, is released under [MIT](https://opensource.org/licenses/MIT) of course, but as Fuse depends on LruCache and DiskLruCache. Licenses agreement on both dependencies applies.
+Fuse is released under [MIT](https://opensource.org/licenses/MIT), but as Fuse depends on LruCache and DiskLruCache. Licenses agreement on both dependencies applies.
 
 ```
 Copyright 2011 The Android Open Source Project
