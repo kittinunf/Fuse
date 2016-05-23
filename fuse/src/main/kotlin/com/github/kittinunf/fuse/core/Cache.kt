@@ -5,14 +5,13 @@ import com.github.kittinunf.fuse.core.cache.MemCache
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.util.dispatch
 import com.github.kittinunf.fuse.util.let
-import com.github.kittinunf.fuse.util.mainThread
 import com.github.kittinunf.fuse.util.md5
+import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
-import java.util.concurrent.Executors
 
-open class Cache<T : Any>(cacheDir: String,
-                          convertible: Fuse.DataConvertible<T>,
-                          representable: Fuse.DataRepresentable<T>) : Fuse.DataConvertible<T> by convertible, Fuse.DataRepresentable<T> by representable {
+class Cache<T : Any>(cacheDir: String,
+                     convertible: Fuse.DataConvertible<T>,
+                     representable: Fuse.DataRepresentable<T>) : Fuse.DataConvertible<T> by convertible, Fuse.DataRepresentable<T> by representable {
 
     enum class Type {
         NOT_FOUND,
@@ -21,8 +20,6 @@ open class Cache<T : Any>(cacheDir: String,
     }
 
     private val configs = hashMapOf<String, Triple<Config<T>, MemCache, DiskCache>>()
-
-    private val backgroundExecutor by lazy { Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors()) }
 
     init {
         val defaultConfig = Config<T>(cacheDir)
@@ -39,16 +36,15 @@ open class Cache<T : Any>(cacheDir: String,
 
     fun put(key: String, value: T, configName: String = Config.DEFAULT_NAME, success: ((T) -> Unit)? = null) {
         configs[configName]?.let { config, memCache, diskCache ->
-            applyConfig(value, config) { transformed ->
-                val hashed = key.md5()
-                dispatch(backgroundExecutor) {
+            dispatch(Fuse.dispatchedExecutor) {
+                applyConfig(value, config) { transformed ->
+                    val hashed = key.md5()
                     memCache[hashed] = transformed
                     diskCache[hashed] = convert(transformed, config)
-                    mainThread {
+                    thread(Fuse.callbackExecutor) {
                         success?.invoke(transformed)
                     }
                 }
-
             }
         } ?: throw RuntimeException("Unable to find preset config, you must add config before putting data")
     }
@@ -78,18 +74,18 @@ open class Cache<T : Any>(cacheDir: String,
         configs[configName]?.let { config, memCache, diskCache ->
             //find in memCache
             memCache[hashed]?.let { value ->
-                dispatch(backgroundExecutor) {
+                dispatch(Fuse.dispatchedExecutor) {
                     val t = value as T
                     //move specific key in disk cache up as it is found in mem
                     diskCache.setIfMissing(hashed, convertToData(t))
-                    mainThread {
+                    thread(Fuse.callbackExecutor) {
                         memHandler?.invoke(Result.of(t))
                     }
                 }
                 return
             }
 
-            dispatch(backgroundExecutor) {
+            dispatch(Fuse.dispatchedExecutor) {
                 //find in diskCache
                 val bytes = diskCache[hashed]
                 val value = bytes?.let { convertFromData(bytes) }
@@ -99,7 +95,7 @@ open class Cache<T : Any>(cacheDir: String,
                 } else {
                     //found in disk, save into mem
                     memCache[hashed] = value
-                    mainThread {
+                    thread(Fuse.callbackExecutor) {
                         diskHandler?.invoke(Result.of(value))
                     }
                 }
@@ -107,10 +103,11 @@ open class Cache<T : Any>(cacheDir: String,
         } ?: errorHandler(RuntimeException("Config $configName is not found"))
     }
 
-    fun remove(key: String, configName: String = Config.DEFAULT_NAME) {
+    fun remove(key: String, removeOnlyInMemory: Boolean = false, configName: String = Config.DEFAULT_NAME) {
+        val hashed = key.md5()
         configs[configName]?.let { config, memCache, diskCache ->
-            memCache.remove(key)
-            diskCache.remove(key)
+            memCache.remove(hashed)
+            if (!removeOnlyInMemory) diskCache.remove(hashed)
         }
     }
 
@@ -132,12 +129,8 @@ open class Cache<T : Any>(cacheDir: String,
     }
 
     private fun applyConfig(value: T, config: Config<T>, success: (T) -> Unit) {
-        dispatch(backgroundExecutor) {
-            val transformed = config.transformer(value)
-            mainThread {
-                success(transformed)
-            }
-        }
+        val transformed = config.transformer(value)
+        success(transformed)
     }
 
 }

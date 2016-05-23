@@ -4,18 +4,15 @@ import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Config
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.util.dispatch
-import com.github.kittinunf.fuse.util.mainThread
+import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
 import java.io.File
-import java.util.concurrent.Executors
 
 class DiskFetcher<T : Any>(val file: File, val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
     override val key: String = file.path
 
     var cancelled: Boolean = false
-
-    val backgroundExecutor by lazy { Executors.newSingleThreadExecutor() }
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
         cancelled = false
@@ -24,7 +21,7 @@ class DiskFetcher<T : Any>(val file: File, val convertible: Fuse.DataConvertible
 
         var hasFailed = false
 
-        dispatch(backgroundExecutor) {
+        dispatch(Fuse.dispatchedExecutor) {
             if (cancelled) {
                 return@dispatch
             }
@@ -33,14 +30,14 @@ class DiskFetcher<T : Any>(val file: File, val convertible: Fuse.DataConvertible
                 bytes = file.readBytes()
             } catch(ex: Exception) {
                 hasFailed = true
-                mainThread {
+                thread(Fuse.callbackExecutor) {
                     handler(Result.error(ex))
                 }
             }
 
-            mainThread {
+            thread(Fuse.callbackExecutor) {
                 if (cancelled or hasFailed) {
-                    return@mainThread
+                    return@thread
                 }
                 handler(Result.of(convertFromData(bytes)))
             }

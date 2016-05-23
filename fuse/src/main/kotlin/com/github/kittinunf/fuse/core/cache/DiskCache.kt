@@ -39,8 +39,6 @@ class DiskCache private constructor(private val cache: DiskLruCache) {
         }
     }
 
-    fun remove(key: Any) {
-        cache.remove(key.toString())
-    }
+    fun remove(key: Any): Boolean = cache.remove(key.toString())
 
 }

@@ -1,6 +1,9 @@
 # Fuse
 
-Fuse is a simple generic LRU cache for Android, backed by both memory cache ([LruCache](http://developer.android.com/reference/android/util/LruCache.html)) and disk-based cache ([DiskLruCache](https://github.com/JakeWharton/DiskLruCache)) by Jake Wharton 
+[ ![Kotlin](https://img.shields.io/badge/Kotlin-1.0.2-blue.svg)](http://kotlinlang.org) [ ![jcenter](https://api.bintray.com/packages/kittinunf/maven/Fuse/images/download.svg) ](https://bintray.com/kittinunf/maven/Fuse/_latestVersion) [![Build Status](https://travis-ci.org/kittinunf/Fuse.svg?branch=master)](https://travis-ci.org/kittinunf/Fuse)
+
+
+The simple generic LRU cache for Android, backed by both memory cache ([LruCache](http://developer.android.com/reference/android/util/LruCache.html)) and disk-based cache ([DiskLruCache](https://github.com/JakeWharton/DiskLruCache)) by Jake Wharton 
 
 ## TLDR 
 
@@ -52,13 +55,13 @@ dependencies {
 
 1. Fuse searches at 1st layer at LruCache (Memory), if found, delivers. If not found go to 2.
 2. Fuse searches at 2nd layer at DiskLruCache (Disk), if found delivers, If not found go to 3.
-3. Fuse performs fetch (by conformance with [Fetcher](https://github.com/kittinunf/Fuse/blob/master/fuse/src/main/kotlin/com/github/kittinunf/fuse/core/fetch/Fetcher.kt) interface), then store into LruCache and DiskCache, respectively. Subsequent uses will be much faster by going through 1 & 2. 
+3. Fuse performs fetch (by conformance with [Fetcher](https://github.com/kittinunf/Fuse/blob/master/fuse/src/main/kotlin/com/github/kittinunf/fuse/core/fetch/Fetcher.kt) interface), then store into LruCache and DiskCache, respectively. Therefore, subsequent uses will be much faster by going through 1 & 2. 
 
 ## Advanced Usage
 
 ## License
 
-Fuse itself, is released under [MIT](https://opensource.org/licenses/MIT) of course, but as Fuse depends on LruCache and DiskLruCache. Licenses on dependencies still applies.
+Fuse itself, is released under [MIT](https://opensource.org/licenses/MIT) of course, but as Fuse depends on LruCache and DiskLruCache. Licenses agreement on both dependencies applies.
 
 ```
 Copyright 2011 The Android Open Source Project

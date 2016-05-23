@@ -12,7 +12,7 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        minSdkVersion 9
+        minSdkVersion 12
         targetSdkVersion 23
         versionCode 1
         versionName parent.ext.publish_version
@@ -50,8 +50,8 @@ dependencies {
     compile "com.github.kittinunf.result:result:$parent.ext.result_version"
     compile "com.jakewharton:disklrucache:$parent.ext.disklrucache_version"
 
-//    testCompile "junit:junit:$parent.ext.junit_version"
-//    testCompile "org.robolectric:robolectric:$parent.ext.robolectric_version"
+    testCompile "junit:junit:$parent.ext.junit_version"
+    testCompile "org.robolectric:robolectric:$parent.ext.robolectric_version"
 }
 
 buildscript {
