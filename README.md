@@ -37,17 +37,17 @@ Yeah, that's about it.
 
 ## Installation
 
-Use [jitpack.io](https://jitpack.io/)
+### Gradle
 
 ```Groovy
 repositories {
-    maven { url "https://jipack.io" }
+    jcenter()
 }
 ```
 
 ```Groovy
 dependencies {
-    compile 'com.github.kittinunf:fuse:master-SNAPSHOT'
+    compile 'com.github.kittinunf.fuse:fuse:0.1'
 }
 ```
 

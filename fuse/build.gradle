@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-//apply plugin: 'com.novoda.bintray-release'
+apply plugin: 'com.novoda.bintray-release'
 
 repositories {
     jcenter()
@@ -64,13 +64,13 @@ buildscript {
     }
 }
 
-//publish {
-//    artifactId = 'fuse'
-//    autoPublish = true
-//    desc = ''
-//    groupId = 'com.github.kittinunf.fuse'
-//    licences = ['MIT']
-//    publishVersion = parent.ext.publish_version
-//    uploadName = 'Fuse'
-//    website = 'https://github.com/kittinunf/Fuse'
-//}
+publish {
+    artifactId = 'fuse'
+    autoPublish = true
+    desc = 'The simple generic LRU memory/disk cache for Android written in Kotlin'
+    groupId = 'com.github.kittinunf.fuse'
+    licences = ['MIT']
+    publishVersion = parent.ext.publish_version
+    uploadName = 'Fuse'
+    website = 'https://github.com/kittinunf/Fuse'
+}
