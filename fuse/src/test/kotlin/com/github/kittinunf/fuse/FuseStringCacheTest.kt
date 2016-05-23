@@ -88,7 +88,7 @@ class FuseStringCacheTest : BaseTestCase() {
 
     @Test
     fun fetchFromNetwork() {
-        val lock = CountDownLatch(1)
+        var lock = CountDownLatch(1)
         val url = URL("http://www.google.com")
 
         var value: String? = null
@@ -109,6 +109,23 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(value, containsString("<title>Google</title>"))
         assertThat(error, nullValue())
         assertThat(cacheType, isEqualTo(Cache.Type.NOT_FOUND))
+
+        // fetch again
+        lock = CountDownLatch(1)
+        Fuse.stringCache.get(url) { result, type ->
+            val (v, e) = result
+            value = v
+            error = e
+            cacheType = type
+
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(value, containsString("<title>Google</title>"))
+        assertThat(error, nullValue())
+        assertThat(cacheType, isEqualTo(Cache.Type.MEM))
     }
 
 }
