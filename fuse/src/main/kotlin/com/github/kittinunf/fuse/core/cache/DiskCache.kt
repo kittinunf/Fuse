@@ -10,7 +10,7 @@ class DiskCache private constructor(private val cache: DiskLruCache) {
     companion object {
         fun open(cacheDir: String, uniqueName: String, capacity: Long): DiskCache {
             val f = File(cacheDir)
-            val disk = DiskLruCache.open(f.resolve(uniqueName), 100, 2, capacity)
+            val disk = DiskLruCache.open(f.resolve(uniqueName), 1, 1, capacity)
             return DiskCache(disk)
         }
     }

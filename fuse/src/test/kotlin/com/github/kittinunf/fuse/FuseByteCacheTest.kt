@@ -15,11 +15,7 @@ import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 class FuseByteCacheTest : BaseTestCase() {
 
-    val tempDirString = createTempDir().absolutePath
-
-    companion object {
-        var hasSetUp = false
-    }
+    var hasSetUp = false
 
     @Before
     fun initialize() {
@@ -51,6 +47,30 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
+        assertThat(cacheType, isEqualTo(Cache.Type.NOT_FOUND))
+    }
+
+    @Test
+    fun SecondFetchFail() {
+        val lock = CountDownLatch(1)
+
+        fun fetchFail(): ByteArray? = null
+
+        var value: ByteArray? = null
+        var error: Exception? = null
+        var cacheType: Cache.Type? = null
+
+        Fuse.bytesCache.get("fail", ::fetchFail) { result, type ->
+            val (v, e) = result
+            value = v
+            error = e
+            cacheType = type
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, nullValue())
+        assertThat(error, notNullValue())
         assertThat(cacheType, isEqualTo(Cache.Type.NOT_FOUND))
     }
 
@@ -115,6 +135,48 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
         assertThat(cacheType, isEqualTo(Cache.Type.DISK))
+    }
+
+    @Test
+    fun fetchFileSuccess() {
+        val lock = CountDownLatch(1)
+        val song = asssetDir.resolve("sample_song.mp3")
+
+        var value: ByteArray? = null
+        var error: Exception? = null
+
+        Fuse.bytesCache.get(song) { result ->
+            val (v, e) = result
+            value = v
+            error = e
+            lock.countDown()
+        }
+
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(error, nullValue())
+    }
+
+    @Test
+    fun fetchFileFail() {
+        val lock = CountDownLatch(1)
+        val song = asssetDir.resolve("not_found_song.mp3")
+
+        var value: ByteArray? = null
+        var error: Exception? = null
+
+        Fuse.bytesCache.get(song) { result ->
+            val (v, e) = result
+            value = v
+            error = e
+            lock.countDown()
+        }
+
+        lock.wait()
+
+        assertThat(value, nullValue())
+        assertThat(error, notNullValue())
     }
 
 }

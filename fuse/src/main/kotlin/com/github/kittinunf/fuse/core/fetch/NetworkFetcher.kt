@@ -4,12 +4,11 @@ import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Config
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.util.dispatch
-import com.github.kittinunf.fuse.util.mainThread
+import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLConnection
-import java.util.concurrent.Executors
 import javax.net.ssl.HttpsURLConnection
 
 class NetworkFetcher<T : Any>(val url: URL, val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
@@ -18,8 +17,6 @@ class NetworkFetcher<T : Any>(val url: URL, val convertible: Fuse.DataConvertibl
 
     var cancelled: Boolean = false
 
-    val backgroundExecutor by lazy { Executors.newSingleThreadExecutor() }
-
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
         cancelled = false
 
@@ -27,7 +24,7 @@ class NetworkFetcher<T : Any>(val url: URL, val convertible: Fuse.DataConvertibl
 
         var hasFailed = false
 
-        dispatch(backgroundExecutor) {
+        dispatch(Fuse.dispatchedExecutor) {
             try {
                 val conn = establishConnection(url)
                 conn.readTimeout = 15000;
@@ -37,14 +34,15 @@ class NetworkFetcher<T : Any>(val url: URL, val convertible: Fuse.DataConvertibl
                 val input = conn.inputStream;
                 bytes = input.readBytes()
             } catch(ex: Exception) {
-                mainThread {
+                hasFailed = true
+                thread(Fuse.callbackExecutor) {
                     handler(Result.error(ex))
                 }
             }
 
-            mainThread {
+            thread(Fuse.callbackExecutor) {
                 if (cancelled or hasFailed) {
-                    return@mainThread
+                    return@thread
                 }
 
                 handler(Result.of(convertFromData(bytes)))
