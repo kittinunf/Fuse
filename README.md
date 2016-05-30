@@ -62,7 +62,7 @@ By default, `Fuse` has built-in Byte, String and JSONObject cache by using `Fuse
 You can remove specific cache by using Key
 
 ```Kotlin
-Fuse.bytesCache.remove("key") //same for
+Fuse.bytesCache.remove("key") //same for stringCache and jsonCache
 ```
 
 ## Advanced Usage
