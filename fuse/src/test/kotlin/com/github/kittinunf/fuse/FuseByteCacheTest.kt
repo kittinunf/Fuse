@@ -140,7 +140,7 @@ class FuseByteCacheTest : BaseTestCase() {
     @Test
     fun fetchFileSuccess() {
         val lock = CountDownLatch(1)
-        val song = asssetDir.resolve("sample_song.mp3")
+        val song = assetDir.resolve("sample_song.mp3")
 
         var value: ByteArray? = null
         var error: Exception? = null
@@ -161,7 +161,7 @@ class FuseByteCacheTest : BaseTestCase() {
     @Test
     fun fetchFileFail() {
         val lock = CountDownLatch(1)
-        val song = asssetDir.resolve("not_found_song.mp3")
+        val song = assetDir.resolve("not_found_song.mp3")
 
         var value: ByteArray? = null
         var error: Exception? = null

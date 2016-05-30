@@ -53,7 +53,7 @@ class FuseStringCacheTest : BaseTestCase() {
     fun fetchFromMemory() {
         var lock = CountDownLatch(1)
 
-        val loremFile = asssetDir.resolve("lorem_ipsum.txt")
+        val loremFile = assetDir.resolve("lorem_ipsum.txt")
 
         var value: String? = null
         var error: Exception? = null

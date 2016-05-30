@@ -51,13 +51,27 @@ dependencies {
 }
 ```
 
+## Detail Usage
+
+### Built-in Cache
+
+By default, `Fuse` has built-in Byte, String and JSONObject cache by using `Fuse.byteCache`, `Fuse.stringCache` and `Fuse.jsonCache` respectively
+
+### Remove
+
+You can remove specific cache by using Key
+
+```Kotlin
+Fuse.bytesCache.remove("key") //same for
+```
+
+## Advanced Usage
+
 ## How it works?
 
 1. Fuse searches at 1st layer at LruCache (Memory), if found, delivers. If not found go to 2.
 2. Fuse searches at 2nd layer at DiskLruCache (Disk), if found delivers, If not found go to 3.
 3. Fuse performs fetch (by conformance with [Fetcher](https://github.com/kittinunf/Fuse/blob/master/fuse/src/main/kotlin/com/github/kittinunf/fuse/core/fetch/Fetcher.kt) interface), then store into LruCache and DiskCache, respectively. Therefore, subsequent uses will be much faster by going through 1 & 2. 
-
-## Advanced Usage
 
 ## License
 

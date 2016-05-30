@@ -13,7 +13,7 @@ abstract class BaseTestCase {
 
     val tempDirString = createTempDir().absolutePath
 
-    val asssetDir = File(System.getProperty("user.dir")).resolve("src/test/assets")
+    val assetDir = File(System.getProperty("user.dir")).resolve("src/test/assets")
 
 }
 
