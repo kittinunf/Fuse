@@ -3,13 +3,13 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
 
     defaultConfig {
         applicationId "com.example.fuse"
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
     }
@@ -37,18 +37,18 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:appcompat-v7:$android_support_version"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$parent.ext.kotlin_version"
-    compile "com.google.code.gson:gson:$gson_version"
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.android.support:appcompat-v7:$android_support_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$parent.ext.kotlin_version"
+    implementation "com.google.code.gson:gson:$gson_version"
 
-    compile project(':fuse')
+    implementation project(':fuse')
 }
 
 buildscript {
     ext {
-        android_support_version = '23.4.0'
-        gson_version = '2.3.1'
+        android_support_version = '26.0.1'
+        gson_version = '2.8.1'
     }
 
     repositories {
