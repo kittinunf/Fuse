@@ -8,12 +8,12 @@ repositories {
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
 
     defaultConfig {
-        minSdkVersion 12
-        targetSdkVersion 23
+        minSdkVersion 16
+        targetSdkVersion 26
         versionCode 1
         versionName parent.ext.publish_version
     }
@@ -46,12 +46,12 @@ android {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$parent.ext.kotlin_version"
-    compile "com.github.kittinunf.result:result:$parent.ext.result_version"
-    compile "com.jakewharton:disklrucache:$parent.ext.disklrucache_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$parent.ext.kotlin_version"
+    api "com.github.kittinunf.result:result:$parent.ext.result_version"
+    implementation "com.jakewharton:disklrucache:$parent.ext.disklrucache_version"
 
-    testCompile "junit:junit:$parent.ext.junit_version"
-    testCompile "org.robolectric:robolectric:$parent.ext.robolectric_version"
+    testImplementation "junit:junit:$parent.ext.junit_version"
+    testImplementation "org.robolectric:robolectric:$parent.ext.robolectric_version"
 }
 
 buildscript {
