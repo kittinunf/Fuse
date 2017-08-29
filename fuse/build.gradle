@@ -63,10 +63,13 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$parent.ext.kotlin_version"
+        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.2'
     }
 }
 
 jacocoAndroidUnitTestReport {
+    excludes += ['**/AutoValue_*.*',
+                 '**/*JavascriptBridge.class']
     csv.enabled false
     html.enabled true
     xml.enabled true
