@@ -3,6 +3,8 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'com.novoda.bintray-release'
 
+apply plugin: 'jacoco-android'
+
 repositories {
     jcenter()
 }
@@ -62,6 +64,12 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$parent.ext.kotlin_version"
     }
+}
+
+jacocoAndroidUnitTestReport {
+    csv.enabled false
+    html.enabled true
+    xml.enabled true
 }
 
 publish {
