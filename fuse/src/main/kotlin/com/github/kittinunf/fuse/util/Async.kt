@@ -26,7 +26,3 @@ internal fun <T> T.dispatch(executorService: ExecutorService, block: FuseAsync<T
     val a = FuseAsync(WeakReference(this))
     return executorService.submit<Unit> { a.block() }
 }
-
-
-
- 

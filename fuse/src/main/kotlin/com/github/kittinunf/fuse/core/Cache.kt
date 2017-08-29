@@ -4,7 +4,6 @@ import com.github.kittinunf.fuse.core.cache.DiskCache
 import com.github.kittinunf.fuse.core.cache.MemCache
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.util.dispatch
-import com.github.kittinunf.fuse.util.let
 import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
@@ -35,7 +34,7 @@ class Cache<T : Any>(cacheDir: String,
     }
 
     fun put(key: String, value: T, configName: String = Config.DEFAULT_NAME, success: ((T) -> Unit)? = null) {
-        configs[configName]?.let { config, memCache, diskCache ->
+        configs[configName]?.let { (config, memCache, diskCache) ->
             dispatch(Fuse.dispatchedExecutor) {
                 applyConfig(value, config) { transformed ->
                     val hashed = key.md5()
@@ -71,7 +70,7 @@ class Cache<T : Any>(cacheDir: String,
         val key = fetcher.key
         val hashed = key.md5()
 
-        configs[configName]?.let { config, memCache, diskCache ->
+        configs[configName]?.let { (config, memCache, diskCache) ->
             //find in memCache
             memCache[hashed]?.let { value ->
                 dispatch(Fuse.dispatchedExecutor) {
@@ -105,7 +104,7 @@ class Cache<T : Any>(cacheDir: String,
 
     fun remove(key: String, removeOnlyInMemory: Boolean = false, configName: String = Config.DEFAULT_NAME) {
         val hashed = key.md5()
-        configs[configName]?.let { config, memCache, diskCache ->
+        configs[configName]?.let { (config, memCache, diskCache) ->
             memCache.remove(hashed)
             if (!removeOnlyInMemory) diskCache.remove(hashed)
         }
