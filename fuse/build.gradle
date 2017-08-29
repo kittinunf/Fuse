@@ -63,7 +63,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$parent.ext.kotlin_version"
-        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.2'
+        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.1'
     }
 }
 
