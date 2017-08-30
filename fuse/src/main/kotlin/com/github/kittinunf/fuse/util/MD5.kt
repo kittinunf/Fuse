@@ -9,6 +9,3 @@ fun String.md5(): String {
         String.format("%02x", it)
     }
 }
-
-
- 
