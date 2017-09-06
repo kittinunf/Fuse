@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         writeFromAssetToFileIfNeeded("json.txt")
     }
 
-    fun writeFromAssetToFileIfNeeded(fileName: String) {
+    private fun writeFromAssetToFileIfNeeded(fileName: String) {
         if (filesDir.resolve(fileName).exists().not()) {
             val stream = assets.open(fileName)
             val bytes = stream.readBytes()

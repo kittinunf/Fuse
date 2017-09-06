@@ -8,7 +8,7 @@ import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
 import java.io.File
 
-class DiskFetcher<T : Any>(val file: File, private val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
+class DiskFetcher<out T : Any>(val file: File, private val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
     override val key: String = file.path
 

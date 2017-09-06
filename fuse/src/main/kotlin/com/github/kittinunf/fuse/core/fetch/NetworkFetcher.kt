@@ -11,7 +11,7 @@ import java.net.URL
 import java.net.URLConnection
 import javax.net.ssl.HttpsURLConnection
 
-class NetworkFetcher<T : Any>(private val url: URL, private val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
+class NetworkFetcher<out T : Any>(private val url: URL, private val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
     override val key: String = url.toString()
 

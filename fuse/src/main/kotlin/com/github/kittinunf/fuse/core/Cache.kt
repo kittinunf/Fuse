@@ -104,7 +104,7 @@ class Cache<T : Any>(cacheDir: String,
 
     fun remove(key: String, removeOnlyInMemory: Boolean = false, configName: String = Config.DEFAULT_NAME) {
         val hashed = key.md5()
-        configs[configName]?.let { (config, memCache, diskCache) ->
+        configs[configName]?.let { (_, memCache, diskCache) ->
             memCache.remove(hashed)
             if (!removeOnlyInMemory) diskCache.remove(hashed)
         }
