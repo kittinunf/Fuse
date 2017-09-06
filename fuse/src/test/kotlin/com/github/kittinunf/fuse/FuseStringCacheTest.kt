@@ -14,7 +14,7 @@ import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 class FuseStringCacheTest : BaseTestCase() {
 
-    var hasSetUp = false
+    private var hasSetUp = false
 
     @Before
     fun initialize() {

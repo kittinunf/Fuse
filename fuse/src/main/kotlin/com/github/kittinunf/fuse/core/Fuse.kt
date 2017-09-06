@@ -10,7 +10,7 @@ class Fuse {
 
     companion object {
 
-        lateinit var dir: String
+        private lateinit var dir: String
 
         var dispatchedExecutor: ExecutorService = Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
 
@@ -33,13 +33,13 @@ class Fuse {
 
     }
 
-    interface DataConvertible<T : Any> {
+    interface DataConvertible<out T : Any> {
 
         fun convertFromData(bytes: ByteArray): T
 
     }
 
-    interface DataRepresentable<T : Any> {
+    interface DataRepresentable<in T : Any> {
 
         fun convertToData(value: T): ByteArray
 
