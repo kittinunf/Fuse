@@ -8,11 +8,11 @@ import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
 import java.io.File
 
-class DiskFetcher<T : Any>(val file: File, val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
+class DiskFetcher<out T : Any>(val file: File, private val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
     override val key: String = file.path
 
-    var cancelled: Boolean = false
+    private var cancelled: Boolean = false
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
         cancelled = false

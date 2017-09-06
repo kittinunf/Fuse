@@ -4,7 +4,7 @@ import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Config
 import com.github.kittinunf.result.Result
 
-interface Fetcher<T : Any> {
+interface Fetcher<out T : Any> {
 
     val key: String
 
@@ -15,7 +15,7 @@ interface Fetcher<T : Any> {
 
 }
 
-class SimpleFetcher<T : Any>(override val key: String, val getValue: () -> T?) : Fetcher<T> {
+class SimpleFetcher<out T : Any>(override val key: String, private val getValue: () -> T?) : Fetcher<T> {
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
         handler(Result.of(getValue(), { KotlinNullPointerException() }))

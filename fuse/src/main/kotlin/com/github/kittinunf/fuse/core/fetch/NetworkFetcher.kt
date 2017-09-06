@@ -11,11 +11,11 @@ import java.net.URL
 import java.net.URLConnection
 import javax.net.ssl.HttpsURLConnection
 
-class NetworkFetcher<T : Any>(val url: URL, val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
+class NetworkFetcher<out T : Any>(private val url: URL, private val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
     override val key: String = url.toString()
 
-    var cancelled: Boolean = false
+    private var cancelled: Boolean = false
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
         cancelled = false
@@ -27,11 +27,11 @@ class NetworkFetcher<T : Any>(val url: URL, val convertible: Fuse.DataConvertibl
         dispatch(Fuse.dispatchedExecutor) {
             try {
                 val conn = establishConnection(url)
-                conn.readTimeout = 15000;
-                conn.connectTimeout = 15000;
-                conn.connect();
+                conn.readTimeout = 15000
+                conn.connectTimeout = 15000
+                conn.connect()
 
-                val input = conn.inputStream;
+                val input = conn.inputStream
                 bytes = input.readBytes()
             } catch(ex: Exception) {
                 hasFailed = true

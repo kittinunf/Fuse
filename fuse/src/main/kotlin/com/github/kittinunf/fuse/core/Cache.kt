@@ -25,7 +25,7 @@ class Cache<T : Any>(cacheDir: String,
         addConfig(defaultConfig)
     }
 
-    fun addConfig(config: Config<T>) {
+    private fun addConfig(config: Config<T>) {
         val name = config.name
         val memCache = MemCache()
         val diskCache = DiskCache.open(config.cacheDir, name, config.diskCapacity)
@@ -33,7 +33,7 @@ class Cache<T : Any>(cacheDir: String,
         configs += (name to value)
     }
 
-    fun put(key: String, value: T, configName: String = Config.DEFAULT_NAME, success: ((T) -> Unit)? = null) {
+    private fun put(key: String, value: T, configName: String = Config.DEFAULT_NAME, success: ((T) -> Unit)? = null) {
         configs[configName]?.let { (config, memCache, diskCache) ->
             dispatch(Fuse.dispatchedExecutor) {
                 applyConfig(value, config) { transformed ->
@@ -104,7 +104,7 @@ class Cache<T : Any>(cacheDir: String,
 
     fun remove(key: String, removeOnlyInMemory: Boolean = false, configName: String = Config.DEFAULT_NAME) {
         val hashed = key.md5()
-        configs[configName]?.let { (config, memCache, diskCache) ->
+        configs[configName]?.let { (_, memCache, diskCache) ->
             memCache.remove(hashed)
             if (!removeOnlyInMemory) diskCache.remove(hashed)
         }

@@ -7,7 +7,7 @@ if [[ "$TRAVIS_BRANCH" == release-v* ]]; then
 
   for i in "${modules[@]}"
   do
-    ./gradlew :$i:clean :$i:build :$i:bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayKey=$BINTRAY_KEY -PdryRun=false
+    ./gradlew :$i:clean :$i:build :$i:bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayKey=$BINTRAY_KEY -PdryRun=false -x mavenAndroidJavadocs
   done
 
 fi
