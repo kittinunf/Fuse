@@ -12,6 +12,7 @@ Here is how you might wanna use Fuse to cache your network call.
 ```Kotlin
 Fuse.init(cacheDir.path)
 
+//jsonCache depends on Gson
 Fuse.jsonCache.get(URL("http://jsonplaceholder.typicode.com/users/1")) { result ->
     result.success { json ->
         //do something with json object (result is Result<JsonObject, Exception>)
@@ -31,11 +32,12 @@ Fuse.stringCache.get(filesDir.resolve("json.txt")) { result, type ->
 
 Yeah, that's about it.
 
-## Dependency
+## Installation
+
+### Dependency
 
 * [DiskLruCache](https://github.com/JakeWharton/DiskLruCache)
-
-## Installation
+* [Gson](https://github.com/google/gson)
 
 ### Gradle
 
@@ -47,7 +49,7 @@ repositories {
 
 ```Groovy
 dependencies {
-    compile 'com.github.kittinunf.fuse:fuse:0.1'
+    compile 'com.github.kittinunf.fuse:fuse:<latest-version>'
 }
 ```
 
