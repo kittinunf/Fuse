@@ -16,5 +16,7 @@ class MemCache {
 
     fun remove(key: Any): Boolean = cache.remove(key) != null
 
+    override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount / 1024
+
 }
  
