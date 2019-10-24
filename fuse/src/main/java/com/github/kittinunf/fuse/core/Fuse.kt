@@ -30,20 +30,13 @@ class Fuse {
         fun init(cacheDir: String) {
             dir = cacheDir
         }
-
     }
 
     interface DataConvertible<out T : Any> {
-
         fun convertFromData(bytes: ByteArray): T
-
     }
 
     interface DataRepresentable<in T : Any> {
-
         fun convertToData(value: T): ByteArray
-
     }
-
 }
-

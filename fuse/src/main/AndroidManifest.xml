@@ -1,5 +1,2 @@
-<manifest package="com.github.kittinunf.fuse">
-
-    <!-- Libraries have no manifest -->
-
-</manifest>
+<!-- Libraries have no manifest -->
+<manifest package="com.github.kittinunf.fuse" />

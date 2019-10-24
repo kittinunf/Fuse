@@ -2,16 +2,18 @@ package com.github.kittinunf.fuse
 
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.core.fetch.get
-import org.hamcrest.CoreMatchers.*
-import org.json.JSONObject
-import org.junit.Assert.assertThat
-import org.junit.Before
-import org.junit.Test
 import java.io.FileNotFoundException
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import org.hamcrest.CoreMatchers.`is` as isEqualTo
+import org.hamcrest.CoreMatchers.isA
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.nullValue
+import org.json.JSONObject
+import org.junit.Assert.assertThat
+import org.junit.Before
+import org.junit.Test
 
 class FuseJsonCacheTest : BaseTestCase() {
 
@@ -52,12 +54,12 @@ class FuseJsonCacheTest : BaseTestCase() {
     @Test
     fun fetchFromNetworkSuccess() {
         val lock = CountDownLatch(1)
-        val httpBin = URL("http://www.httpbin.org/get")
+        val httpBin = URL("https://www.httpbin.org/get")
 
         var value: JSONObject? = null
         var error: Exception? = null
 
-        Fuse.jsonCache.get(httpBin) { result, type ->
+        Fuse.jsonCache.get(httpBin) { result, _ ->
             val (v, e) = result
             value = v
             error = e
@@ -66,7 +68,7 @@ class FuseJsonCacheTest : BaseTestCase() {
 
         lock.wait()
         assertThat(value, notNullValue())
-        assertThat(value!!.getString("url"), isEqualTo("http://www.httpbin.org/get"))
+        assertThat(value!!.getString("url"), isEqualTo("https://www.httpbin.org/get"))
         assertThat(error, nullValue())
     }
 
@@ -78,7 +80,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         var value: JSONObject? = null
         var error: Exception? = null
 
-        Fuse.jsonCache.get(failedHttpBin) { result, type ->
+        Fuse.jsonCache.get(failedHttpBin) { result, _ ->
             val (v, e) = result
             value = v
             error = e
@@ -90,5 +92,4 @@ class FuseJsonCacheTest : BaseTestCase() {
         assertThat(error, notNullValue())
         assertThat(error as? FileNotFoundException, isA(FileNotFoundException::class.java))
     }
-
 }

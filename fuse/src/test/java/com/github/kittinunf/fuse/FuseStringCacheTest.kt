@@ -3,14 +3,17 @@ package com.github.kittinunf.fuse
 import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.core.fetch.get
-import org.hamcrest.CoreMatchers.*
-import org.junit.Assert.assertThat
-import org.junit.Before
-import org.junit.Test
 import java.net.URL
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import org.hamcrest.CoreMatchers.`is` as isEqualTo
+import org.hamcrest.CoreMatchers.containsString
+import org.hamcrest.CoreMatchers.notNullValue
+import org.hamcrest.CoreMatchers.nullValue
+import org.hamcrest.CoreMatchers.startsWith
+import org.junit.Assert.assertThat
+import org.junit.Before
+import org.junit.Test
 
 class FuseStringCacheTest : BaseTestCase() {
 
@@ -127,5 +130,4 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(error, nullValue())
         assertThat(cacheType, isEqualTo(Cache.Type.MEM))
     }
-
 }
