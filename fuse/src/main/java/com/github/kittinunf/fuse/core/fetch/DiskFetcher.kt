@@ -8,7 +8,8 @@ import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
 import java.io.File
 
-class DiskFetcher<out T : Any>(val file: File, private val convertible: Fuse.DataConvertible<T>) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
+class DiskFetcher<out T : Any>(val file: File, private val convertible: Fuse.DataConvertible<T>) :
+    Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
     override val key: String = file.path
 
@@ -28,7 +29,7 @@ class DiskFetcher<out T : Any>(val file: File, private val convertible: Fuse.Dat
 
             try {
                 bytes = file.readBytes()
-            } catch(ex: Exception) {
+            } catch (ex: Exception) {
                 hasFailed = true
                 thread(Fuse.callbackExecutor) {
                     handler(Result.error(ex))
@@ -47,13 +48,20 @@ class DiskFetcher<out T : Any>(val file: File, private val convertible: Fuse.Dat
     override fun cancel() {
         cancelled = true
     }
-
 }
 
-fun <T : Any> Cache<T>.get(file: File, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>) -> Unit)? = null) {
+fun <T : Any> Cache<T>.get(
+    file: File,
+    configName: String = Config.DEFAULT_NAME,
+    handler: ((Result<T, Exception>) -> Unit)? = null
+) {
     get(DiskFetcher(file, this), configName, handler)
 }
 
-fun <T : Any> Cache<T>.get(file: File, configName: String = Config.DEFAULT_NAME, handler: ((Result<T, Exception>, Cache.Type) -> Unit)? = null) {
+fun <T : Any> Cache<T>.get(
+    file: File,
+    configName: String = Config.DEFAULT_NAME,
+    handler: ((Result<T, Exception>, Cache.Type) -> Unit)? = null
+) {
     get(DiskFetcher(file, this), configName, handler)
 }

@@ -1,61 +1,61 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-
-android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
-
-    defaultConfig {
-        applicationId "com.example.fuse"
-        minSdkVersion 16
-        targetSdkVersion 26
-        versionCode 1
-        versionName "1.0"
-    }
-
-    sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    packagingOptions {
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
-}
-
-dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile "com.android.support:appcompat-v7:$android_support_version"
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$parent.ext.kotlin_version"
-    compile "com.google.code.gson:gson:$gson_version"
-
-    compile project(':fuse')
-}
-
-buildscript {
-    ext {
-        android_support_version = '26.0.1'
-        gson_version = '2.8.1'
-    }
-
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$parent.ext.kotlin_version"
-    }
-}
+//apply plugin: 'com.android.application'
+//apply plugin: 'kotlin-android'
+//apply plugin: 'kotlin-android-extensions'
+//
+//android {
+//    compileSdkVersion 26
+//    buildToolsVersion "26.0.1"
+//
+//    defaultConfig {
+//        applicationId "com.example.fuse"
+//        minSdkVersion 16
+//        targetSdkVersion 26
+//        versionCode 1
+//        versionName "1.0"
+//    }
+//
+//    sourceSets {
+//        main.java.srcDirs += 'src/main/kotlin'
+//    }
+//
+//    buildTypes {
+//        release {
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//        }
+//    }
+//
+//    packagingOptions {
+//        exclude 'META-INF/LICENSE.txt'
+//        exclude 'META-INF/NOTICE.txt'
+//    }
+//
+//    compileOptions {
+//        sourceCompatibility JavaVersion.VERSION_1_7
+//        targetCompatibility JavaVersion.VERSION_1_7
+//    }
+//}
+//
+//dependencies {
+//    compile fileTree(dir: 'libs', include: ['*.jar'])
+//    compile "com.android.support:appcompat-v7:$android_support_version"
+//    compile "org.jetbrains.kotlin:kotlin-stdlib:$parent.ext.kotlin_version"
+//    compile "com.google.code.gson:gson:$gson_version"
+//
+//    compile project(':fuse')
+//}
+//
+//buildscript {
+//    ext {
+//        android_support_version = '26.0.1'
+//        gson_version = '2.8.1'
+//    }
+//
+//    repositories {
+//        mavenCentral()
+//    }
+//
+//    dependencies {
+//        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$parent.ext.kotlin_version"
+//    }
+//}
