@@ -1,7 +1,6 @@
 package com.github.kittinunf.fuse
 
 import com.github.kittinunf.fuse.core.Cache
-import com.github.kittinunf.fuse.core.Config
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.util.dispatch
@@ -10,12 +9,19 @@ import com.github.kittinunf.result.Result
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLConnection
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import javax.net.ssl.HttpsURLConnection
 
-class NetworkFetcher<out T : Any>(
+class NetworkFetcher<T : Any>(
     private val url: URL,
     private val convertible: Fuse.DataConvertible<T>
 ) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
+
+    val dispatchedExecutor =
+        Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
+
+    val callbackExecutor = Executor { it.run() }
 
     override val key: String = url.toString()
 
@@ -28,7 +34,7 @@ class NetworkFetcher<out T : Any>(
 
         var hasFailed = false
 
-        dispatch(Fuse.dispatchedExecutor) {
+        dispatch(dispatchedExecutor) {
             try {
                 val conn = establishConnection(url)
                 conn.readTimeout = 15000
@@ -39,12 +45,12 @@ class NetworkFetcher<out T : Any>(
                 bytes = input.readBytes()
             } catch (ex: Exception) {
                 hasFailed = true
-                thread(Fuse.callbackExecutor) {
+                thread(callbackExecutor) {
                     handler(Result.error(ex))
                 }
             }
 
-            thread(Fuse.callbackExecutor) {
+            thread(callbackExecutor) {
                 if (cancelled or hasFailed) {
                     return@thread
                 }
@@ -71,18 +77,13 @@ class NetworkFetcher<out T : Any>(
     }
 }
 
-fun <T : Any> Cache<T>.get(
-    url: URL,
-    configName: String = Config.DEFAULT_NAME,
-    handler: ((Result<T, Exception>) -> Unit)? = null
-) {
-    get(NetworkFetcher(url, this), configName, handler)
+fun <T : Any> Cache<T>.get(url: URL, handler: ((Result<T, Exception>) -> Unit)? = null) {
+    get(NetworkFetcher(url, this), handler)
 }
 
 fun <T : Any> Cache<T>.get(
     url: URL,
-    configName: String = Config.DEFAULT_NAME,
     handler: ((Result<T, Exception>, Cache.Type) -> Unit)? = null
 ) {
-    get(NetworkFetcher(url, this), configName, handler)
+    get(NetworkFetcher(url, this), handler)
 }

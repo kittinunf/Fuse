@@ -1,7 +1,9 @@
 package com.github.kittinunf.fuse
 
 import com.github.kittinunf.fuse.core.Cache
-import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.CacheBuilder
+import com.github.kittinunf.fuse.core.StringDataConvertible
+import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.get
 import java.net.URL
 import java.util.concurrent.CountDownLatch
@@ -17,15 +19,19 @@ import org.junit.Test
 
 class FuseStringCacheTest : BaseTestCase() {
 
+    companion object {
+        private val tempDir = createTempDir().absolutePath
+        val cache =
+            CacheBuilder.config<String>(tempDir) { callbackExecutor = Executor { it.run() } }
+                .build(StringDataConvertible())
+    }
+
     private var hasSetUp = false
 
     @Before
     fun initialize() {
         if (!hasSetUp) {
             hasSetUp = true
-
-            Fuse.init(tempDirString)
-            Fuse.callbackExecutor = Executor { it.run() }
         }
     }
 
@@ -37,7 +43,7 @@ class FuseStringCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        Fuse.stringCache.get("hello", { "world" }) { result, type ->
+        cache.get("hello", { "world" }) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -62,7 +68,7 @@ class FuseStringCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        Fuse.stringCache.get(loremFile) { result ->
+        cache.get(loremFile) { result ->
             val (v, e) = result
             value = v
             error = e
@@ -74,7 +80,7 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(error, nullValue())
 
         lock = CountDownLatch(1)
-        Fuse.stringCache.get(loremFile) { result, type ->
+        cache.get(loremFile) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -98,7 +104,7 @@ class FuseStringCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        Fuse.stringCache.get(url) { result, type ->
+        cache.get(url) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -115,7 +121,7 @@ class FuseStringCacheTest : BaseTestCase() {
 
         // fetch again
         lock = CountDownLatch(1)
-        Fuse.stringCache.get(url) { result, type ->
+        cache.get(url) { result, type ->
             val (v, e) = result
             value = v
             error = e
