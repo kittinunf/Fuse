@@ -2,7 +2,7 @@ package com.github.kittinunf.fuse.core.cache
 
 import android.util.LruCache
 
-class MemCache {
+internal class MemCache {
 
     private val maxMemory = Runtime.getRuntime().maxMemory() / 1024
 
@@ -13,11 +13,11 @@ class MemCache {
         }
     }
 
-    operator fun set(key: Any, value: Any) {
+    operator fun set(key: String, value: Any) {
         cache.put(key, value)
     }
 
-    operator fun get(key: Any): Any? = cache.get(key)
+    operator fun get(key: String): Any? = cache.get(key)
 
     fun remove(key: Any): Boolean = cache.remove(key) != null
 }
