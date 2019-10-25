@@ -36,7 +36,7 @@ fun <T : Any> Cache<T>.get(
     handler: ((Result<T, Exception>) -> Unit)? = null
 ) {
     val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    get(fetcher, configName, handler)
+    get(fetcher, handler)
 }
 
 fun <T : Any> Cache<T>.get(
@@ -46,5 +46,5 @@ fun <T : Any> Cache<T>.get(
     handler: ((Result<T, Exception>, Cache.Type) -> Unit)? = null
 ) {
     val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    get(fetcher, configName, handler)
+    get(fetcher, handler)
 }

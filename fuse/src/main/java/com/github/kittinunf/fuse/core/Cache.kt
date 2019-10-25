@@ -8,8 +8,23 @@ import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
 
-class Cache<T : Any>(cacheDir: String, convertible: Fuse.DataConvertible<T>) :
-    Fuse.DataConvertible<T> by convertible {
+object CacheBuilder {
+
+    fun <T : Any> config(dir: String, construct: Config<T>.() -> Unit = {}): Config<T> {
+        return Config<T>(dir).apply(construct)
+    }
+
+    fun <T : Any> config(dir: String, name: String, construct: Config<T>.() -> Unit): Config<T> {
+        return Config<T>(dir, name).apply(construct)
+    }
+}
+
+fun <T : Any> Config<T>.build(convertible: Fuse.DataConvertible<T>) = Cache(this, convertible)
+
+class Cache<T : Any> internal constructor(
+    private val config: Config<T>,
+    convertible: Fuse.DataConvertible<T>
+) : Fuse.DataConvertible<T> by convertible {
 
     enum class Type {
         NOT_FOUND,
@@ -17,29 +32,22 @@ class Cache<T : Any>(cacheDir: String, convertible: Fuse.DataConvertible<T>) :
         DISK,
     }
 
-    private val configs = hashMapOf<String, Triple<Config<T>, MemCache, DiskCache>>()
-
-    init {
-        val defaultConfig = Config<T>(cacheDir)
-        initWith(defaultConfig)
-    }
-
-    private fun initWith(config: Config<T>) {
-        val name = config.name
-        val memCache = MemCache()
-        val diskCache = DiskCache.open(config.cacheDir, name, config.diskCapacity)
-        val value = Triple(config, memCache, diskCache)
-        configs += (name to value)
+    private val memCache by lazy { MemCache() }
+    private val diskCache by lazy {
+        DiskCache.open(
+            config.cacheDir,
+            config.name,
+            config.diskCapacity
+        )
     }
 
     fun put(
         key: String,
         value: T,
-        configName: String = Config.DEFAULT_NAME,
         handler: ((Result<T, Exception>) -> Unit)? = null
     ) {
         handler?.invoke(Result.of {
-            _put(key, value, configName)
+            _put(key, value)
             value
         })
     }
@@ -47,39 +55,32 @@ class Cache<T : Any>(cacheDir: String, convertible: Fuse.DataConvertible<T>) :
     private fun _put(
         key: String,
         value: T,
-        configName: String = Config.DEFAULT_NAME,
         success: ((T) -> Unit)? = null
     ) {
-        configs[configName]?.let { (config, memCache, diskCache) ->
-            dispatch(Fuse.dispatchedExecutor) {
-                apply(value, config) { transformed ->
-                    val hashed = key.md5()
-                    memCache[hashed] = transformed
-                    diskCache[hashed] = convert(transformed, config)
-                    thread(Fuse.callbackExecutor) {
-                        success?.invoke(transformed)
-                    }
+        dispatch(config.dispatchedExecutor) {
+            apply(value, config) { transformed ->
+                val hashed = key.md5()
+                memCache[hashed] = transformed
+                diskCache[hashed] = convert(transformed, config)
+                thread(config.callbackExecutor) {
+                    success?.invoke(transformed)
                 }
             }
         }
-            ?: throw RuntimeException("Unable to find preset config, you must add config before putting data")
     }
 
     fun get(
         fetcher: Fetcher<T>,
-        configName: String = Config.DEFAULT_NAME,
         handler: ((Result<T, Exception>) -> Unit)? = null
     ) {
-        _get(fetcher, configName, handler, handler, handler, { handler?.invoke(Result.error(it)) })
+        _get(fetcher, handler, handler, handler, { handler?.invoke(Result.error(it)) })
     }
 
     fun get(
         fetcher: Fetcher<T>,
-        configName: String = Config.DEFAULT_NAME,
         handler: ((Result<T, Exception>, Type) -> Unit)? = null
     ) {
         _get(fetcher,
-            configName,
             { handler?.invoke(it, Type.MEM) },
             { handler?.invoke(it, Type.DISK) },
             { handler?.invoke(it, Type.NOT_FOUND) },
@@ -88,7 +89,6 @@ class Cache<T : Any>(cacheDir: String, convertible: Fuse.DataConvertible<T>) :
 
     private fun _get(
         fetcher: Fetcher<T>,
-        configName: String = Config.DEFAULT_NAME,
         memHandler: ((Result<T, Exception>) -> Unit)?,
         diskHandler: ((Result<T, Exception>) -> Unit)?,
         fetchHandler: ((Result<T, Exception>) -> Unit)?,
@@ -98,47 +98,42 @@ class Cache<T : Any>(cacheDir: String, convertible: Fuse.DataConvertible<T>) :
         val key = fetcher.key
         val hashed = key.md5()
 
-        configs[configName]?.let { (config, memCache, diskCache) ->
-            // find in memCache
-            memCache[hashed]?.let { value ->
-                dispatch(Fuse.dispatchedExecutor) {
-                    // move specific key in disk cache up as it is found in mem
-                    diskCache.setIfMissing(hashed, convertToData(value as T))
-                    thread(Fuse.callbackExecutor) {
-                        memHandler?.invoke(Result.of(value))
-                    }
+        // find in memCache
+        memCache[hashed]?.let { value ->
+            dispatch(config.dispatchedExecutor) {
+                // move specific key in disk cache up as it is found in mem
+                diskCache.setIfMissing(hashed, convertToData(value as T))
+                thread(config.callbackExecutor) {
+                    memHandler?.invoke(Result.of(value))
                 }
-                return
             }
+            return
+        }
 
-            dispatch(Fuse.dispatchedExecutor) {
-                // find in diskCache
-                val bytes = diskCache[hashed]
-                val value = bytes?.let { convertFromData(bytes) }
-                if (value == null) {
-                    // not found we need to fetch then put it back
-                    fetchAndPut(fetcher, config, fetchHandler)
-                } else {
-                    // found in disk, save into mem
-                    memCache[hashed] = value
-                    thread(Fuse.callbackExecutor) {
-                        diskHandler?.invoke(Result.of(value))
-                    }
+        dispatch(config.dispatchedExecutor) {
+            // find in diskCache
+            val bytes = diskCache[hashed]
+            val value = bytes?.let { convertFromData(bytes) }
+            if (value == null) {
+                // not found we need to fetch then put it back
+                fetchAndPut(fetcher, fetchHandler)
+            } else {
+                // found in disk, save into mem
+                memCache[hashed] = value
+                thread(config.callbackExecutor) {
+                    diskHandler?.invoke(Result.of(value))
                 }
             }
-        } ?: errorHandler(RuntimeException("Config $configName is not found"))
+        }
     }
 
     fun remove(
         key: String,
-        removeOnlyInMemory: Boolean = false,
-        configName: String = Config.DEFAULT_NAME
+        removeOnlyInMemory: Boolean = false
     ) {
         val hashed = key.md5()
-        configs[configName]?.let { (_, memCache, diskCache) ->
-            memCache.remove(hashed)
-            if (!removeOnlyInMemory) diskCache.remove(hashed)
-        }
+        memCache.remove(hashed)
+        if (!removeOnlyInMemory) diskCache.remove(hashed)
     }
 
     private fun convert(value: T, config: Config<T>): ByteArray {
@@ -148,12 +143,11 @@ class Cache<T : Any>(cacheDir: String, convertible: Fuse.DataConvertible<T>) :
 
     private fun fetchAndPut(
         fetcher: Fetcher<T>,
-        config: Config<T>,
         handler: ((Result<T, Exception>) -> Unit)? = null
     ) {
         fetcher.fetch { result ->
             result.fold({ value ->
-                _put(fetcher.key, value, config.name) {
+                _put(fetcher.key, value) {
                     handler?.invoke(Result.of(it))
                 }
             }, { exception ->

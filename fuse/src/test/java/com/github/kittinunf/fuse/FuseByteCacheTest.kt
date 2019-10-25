@@ -1,9 +1,9 @@
 package com.github.kittinunf.fuse
 
 import com.github.kittinunf.fuse.core.ByteArrayDataConvertible
-import com.github.kittinunf.fuse.core.ByteArrayDataRepresentable
 import com.github.kittinunf.fuse.core.Cache
-import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.CacheBuilder
+import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.get
 import java.nio.charset.Charset
 import java.util.concurrent.CountDownLatch
@@ -22,8 +22,10 @@ import org.junit.runners.MethodSorters
 class FuseByteCacheTest : BaseTestCase() {
 
     companion object {
-        val tempDir = createTempDir().absolutePath
-        val cache = Cache(tempDir, ByteArrayDataConvertible(), ByteArrayDataRepresentable())
+        private val tempDir = createTempDir().absolutePath
+        val cache =
+            CacheBuilder.config<ByteArray>(tempDir) { callbackExecutor = Executor { it.run() } }
+                .build(ByteArrayDataConvertible())
     }
 
     private var hasSetUp = false
@@ -32,7 +34,6 @@ class FuseByteCacheTest : BaseTestCase() {
     fun initialize() {
         if (!hasSetUp) {
             hasSetUp = true
-            Fuse.callbackExecutor = Executor { it.run() }
         }
     }
 
@@ -69,7 +70,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        cache.get("fail", ::fetchFail) { result, type ->
+        cache.get("fail") { result, type ->
             val (v, e) = result
             value = v
             error = e

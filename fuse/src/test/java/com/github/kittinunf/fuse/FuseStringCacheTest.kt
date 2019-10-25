@@ -1,9 +1,9 @@
 package com.github.kittinunf.fuse
 
 import com.github.kittinunf.fuse.core.Cache
-import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.StringDataConvertible
-import com.github.kittinunf.fuse.core.StringDataRepresentable
+import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.get
 import java.net.URL
 import java.util.concurrent.CountDownLatch
@@ -20,8 +20,10 @@ import org.junit.Test
 class FuseStringCacheTest : BaseTestCase() {
 
     companion object {
-        val tempDir = createTempDir().absolutePath
-        val cache = Cache(tempDir, StringDataConvertible(), StringDataRepresentable())
+        private val tempDir = createTempDir().absolutePath
+        val cache =
+            CacheBuilder.config<String>(tempDir) { callbackExecutor = Executor { it.run() } }
+                .build(StringDataConvertible())
     }
 
     private var hasSetUp = false
@@ -30,7 +32,6 @@ class FuseStringCacheTest : BaseTestCase() {
     fun initialize() {
         if (!hasSetUp) {
             hasSetUp = true
-            Fuse.callbackExecutor = Executor { it.run() }
         }
     }
 

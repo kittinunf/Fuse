@@ -1,9 +1,8 @@
 package com.github.kittinunf.fuse
 
-import com.github.kittinunf.fuse.core.Cache
-import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.JsonDataConvertible
-import com.github.kittinunf.fuse.core.JsonDataRepresentable
+import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.get
 import java.io.FileNotFoundException
 import java.net.URL
@@ -21,8 +20,10 @@ import org.junit.Test
 class FuseJsonCacheTest : BaseTestCase() {
 
     companion object {
-        val tempDir = createTempDir().absolutePath
-        val cache by lazy { Cache(tempDir, JsonDataConvertible(), JsonDataRepresentable()) }
+        private val tempDir = createTempDir().absolutePath
+        val cache =
+            CacheBuilder.config<JSONObject>(tempDir) { callbackExecutor = Executor { it.run() } }
+                .build(JsonDataConvertible())
     }
 
     private var hasSetUp = false
@@ -31,8 +32,6 @@ class FuseJsonCacheTest : BaseTestCase() {
     fun initialize() {
         if (!hasSetUp) {
             hasSetUp = true
-
-            Fuse.callbackExecutor = Executor { it.run() }
         }
     }
 
