@@ -22,11 +22,8 @@ class Fuse {
         }
     }
 
-    interface DataConvertible<out T : Any> {
+    interface DataConvertible<T : Any> {
         fun convertFromData(bytes: ByteArray): T
-    }
-
-    interface DataRepresentable<in T : Any> {
         fun convertToData(value: T): ByteArray
     }
 }

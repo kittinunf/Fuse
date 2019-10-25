@@ -8,11 +8,8 @@ import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
 
-class Cache<T : Any>(
-    cacheDir: String,
-    convertible: Fuse.DataConvertible<T>,
-    representable: Fuse.DataRepresentable<T>
-) : Fuse.DataConvertible<T> by convertible, Fuse.DataRepresentable<T> by representable {
+class Cache<T : Any>(cacheDir: String, convertible: Fuse.DataConvertible<T>) :
+    Fuse.DataConvertible<T> by convertible {
 
     enum class Type {
         NOT_FOUND,
