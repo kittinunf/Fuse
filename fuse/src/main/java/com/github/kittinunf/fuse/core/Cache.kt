@@ -105,11 +105,10 @@ class Cache<T : Any>(
             // find in memCache
             memCache[hashed]?.let { value ->
                 dispatch(Fuse.dispatchedExecutor) {
-                    val t = value as T
                     // move specific key in disk cache up as it is found in mem
-                    diskCache.setIfMissing(hashed, convertToData(t))
+                    diskCache.setIfMissing(hashed, convertToData(value as T))
                     thread(Fuse.callbackExecutor) {
-                        memHandler?.invoke(Result.of(t))
+                        memHandler?.invoke(Result.of(value))
                     }
                 }
                 return

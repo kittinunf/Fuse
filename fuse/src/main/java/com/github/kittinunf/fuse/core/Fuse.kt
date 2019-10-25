@@ -3,7 +3,6 @@ package com.github.kittinunf.fuse.core
 import android.os.Handler
 import android.os.Looper
 import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class Fuse {
@@ -12,7 +11,7 @@ class Fuse {
 
         private lateinit var dir: String
 
-        var dispatchedExecutor: ExecutorService = Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
+        var dispatchedExecutor = Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
 
         var callbackExecutor = Executor {
             if (Thread.currentThread() == Looper.getMainLooper().thread) {
