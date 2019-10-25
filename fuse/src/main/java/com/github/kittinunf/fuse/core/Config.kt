@@ -23,7 +23,7 @@ class Config<T : Any>(
 ) {
 
     companion object {
-        val DEFAULT_NAME = "Fuse-Default-Config"
+        const val DEFAULT_NAME = "FUSE_DEFAULT"
     }
 
     var transformer: ((T) -> T) = { it }

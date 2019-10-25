@@ -2,22 +2,26 @@ package com.github.kittinunf.fuse.core.cache
 
 import android.util.LruCache
 
-internal class MemCache {
+internal class MemCache : Persistence<Any> {
 
     private val maxMemory = Runtime.getRuntime().maxMemory() / 1024
 
     private val cache = object : LruCache<Any, Any>((maxMemory / 8).toInt()) {
-
-        override fun sizeOf(key: Any?, value: Any?): Int {
-            return super.sizeOf(key, value)
-        }
     }
 
-    operator fun set(key: String, value: Any) {
+    override fun put(key: String, value: Any) {
         cache.put(key, value)
     }
 
-    operator fun get(key: String): Any? = cache.get(key)
+    override fun remove(key: String): Boolean = cache.remove(key) != null
 
-    fun remove(key: Any): Boolean = cache.remove(key) != null
+    override fun removeAll() {
+        cache.evictAll()
+    }
+
+    override fun allKeys(): List<String> = cache.snapshot().keys.map { it.toString() }
+
+    override fun size(): Long = cache.size().toLong()
+
+    override fun get(key: String): Any? = cache.get(key)
 }

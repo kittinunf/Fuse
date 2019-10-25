@@ -43,13 +43,13 @@ class FuseByteCacheTest : BaseTestCase() {
 
         var value: ByteArray? = null
         var error: Exception? = null
-        var cacheType: Cache.Type? = null
+        var cacheSource: Cache.Source? = null
 
         cache.get("hello", { "world".toByteArray() }) { result, type ->
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
             lock.countDown()
         }
         lock.wait()
@@ -57,7 +57,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
     }
 
     @Test
@@ -68,20 +68,20 @@ class FuseByteCacheTest : BaseTestCase() {
 
         var value: ByteArray? = null
         var error: Exception? = null
-        var cacheType: Cache.Type? = null
+        var cacheSource: Cache.Source? = null
 
         cache.get("fail") { result, type ->
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
             lock.countDown()
         }
         lock.wait()
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
     }
 
     @Test
@@ -90,13 +90,13 @@ class FuseByteCacheTest : BaseTestCase() {
 
         var value: ByteArray? = null
         var error: Exception? = null
-        var cacheType: Cache.Type? = null
+        var cacheSource: Cache.Source? = null
 
         cache.get("hello", { "world".toByteArray() }) { result, type ->
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
             lock.countDown()
         }
         lock.wait()
@@ -104,7 +104,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.MEM))
+        assertThat(cacheSource, isEqualTo(Cache.Source.MEM))
     }
 
     @Test
@@ -113,13 +113,13 @@ class FuseByteCacheTest : BaseTestCase() {
 
         var value: ByteArray? = null
         var error: Exception? = null
-        var cacheType: Cache.Type? = null
+        var cacheSource: Cache.Source? = null
 
         cache.get("hello", { "world".toByteArray() }) { result, type ->
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
             lock.countDown()
         }
         lock.wait()
@@ -136,7 +136,7 @@ class FuseByteCacheTest : BaseTestCase() {
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
             lock.countDown()
         }
         lock.wait()
@@ -144,7 +144,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.DISK))
+        assertThat(cacheSource, isEqualTo(Cache.Source.DISK))
     }
 
     @Test

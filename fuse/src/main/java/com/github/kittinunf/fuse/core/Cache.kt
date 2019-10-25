@@ -26,7 +26,7 @@ class Cache<T : Any> internal constructor(
     convertible: Fuse.DataConvertible<T>
 ) : Fuse.DataConvertible<T> by convertible {
 
-    enum class Type {
+    enum class Source {
         NOT_FOUND,
         MEM,
         DISK,
@@ -60,8 +60,8 @@ class Cache<T : Any> internal constructor(
         dispatch(config.dispatchedExecutor) {
             apply(value, config) { transformed ->
                 val hashed = key.md5()
-                memCache[hashed] = transformed
-                diskCache[hashed] = convert(transformed, config)
+                memCache.put(hashed, transformed)
+                diskCache.put(hashed, convert(transformed, config))
                 thread(config.callbackExecutor) {
                     success?.invoke(transformed)
                 }
@@ -78,13 +78,13 @@ class Cache<T : Any> internal constructor(
 
     fun get(
         fetcher: Fetcher<T>,
-        handler: ((Result<T, Exception>, Type) -> Unit)? = null
+        handler: ((Result<T, Exception>, Source) -> Unit)? = null
     ) {
         _get(fetcher,
-            { handler?.invoke(it, Type.MEM) },
-            { handler?.invoke(it, Type.DISK) },
-            { handler?.invoke(it, Type.NOT_FOUND) },
-            { handler?.invoke(Result.error(it), Type.NOT_FOUND) })
+            { handler?.invoke(it, Source.MEM) },
+            { handler?.invoke(it, Source.DISK) },
+            { handler?.invoke(it, Source.NOT_FOUND) },
+            { handler?.invoke(Result.error(it), Source.NOT_FOUND) })
     }
 
     private fun _get(
@@ -99,7 +99,7 @@ class Cache<T : Any> internal constructor(
         val hashed = key.md5()
 
         // find in memCache
-        memCache[hashed]?.let { value ->
+        memCache.get(hashed)?.let { value ->
             dispatch(config.dispatchedExecutor) {
                 // move specific key in disk cache up as it is found in mem
                 diskCache.setIfMissing(hashed, convertToData(value as T))
@@ -112,14 +112,14 @@ class Cache<T : Any> internal constructor(
 
         dispatch(config.dispatchedExecutor) {
             // find in diskCache
-            val bytes = diskCache[hashed]
+            val bytes = diskCache.get(hashed)
             val value = bytes?.let { convertFromData(bytes) }
             if (value == null) {
                 // not found we need to fetch then put it back
                 fetchAndPut(fetcher, fetchHandler)
             } else {
                 // found in disk, save into mem
-                memCache[hashed] = value
+                memCache.put(hashed, value)
                 thread(config.callbackExecutor) {
                     diskHandler?.invoke(Result.of(value))
                 }
