@@ -1,7 +1,6 @@
 package com.github.kittinunf.fuse.core.fetch
 
 import com.github.kittinunf.fuse.core.Cache
-import com.github.kittinunf.fuse.core.Config
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.result.Result
 import java.io.File
@@ -42,17 +41,12 @@ class DiskFetcher<T : Any>(val file: File, private val convertible: Fuse.DataCon
     }
 }
 
-fun <T : Any> Cache<T>.get(
-    file: File,
-    configName: String = Config.DEFAULT_NAME,
-    handler: ((Result<T, Exception>) -> Unit)? = null
-) {
+fun <T : Any> Cache<T>.get(file: File, handler: ((Result<T, Exception>) -> Unit)? = null) {
     get(DiskFetcher(file, this), handler)
 }
 
 fun <T : Any> Cache<T>.get(
     file: File,
-    configName: String = Config.DEFAULT_NAME,
     handler: ((Result<T, Exception>, Cache.Type) -> Unit)? = null
 ) {
     get(DiskFetcher(file, this), handler)
