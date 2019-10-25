@@ -1,6 +1,9 @@
 package com.github.kittinunf.fuse
 
+import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.JsonDataConvertible
+import com.github.kittinunf.fuse.core.JsonDataRepresentable
 import com.github.kittinunf.fuse.core.fetch.get
 import java.io.FileNotFoundException
 import java.net.URL
@@ -17,6 +20,11 @@ import org.junit.Test
 
 class FuseJsonCacheTest : BaseTestCase() {
 
+    companion object {
+        val tempDir = createTempDir().absolutePath
+        val cache by lazy { Cache(tempDir, JsonDataConvertible(), JsonDataRepresentable()) }
+    }
+
     private var hasSetUp = false
 
     @Before
@@ -24,7 +32,6 @@ class FuseJsonCacheTest : BaseTestCase() {
         if (!hasSetUp) {
             hasSetUp = true
 
-            Fuse.init(tempDirString)
             Fuse.callbackExecutor = Executor { it.run() }
         }
     }
@@ -37,7 +44,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         var value: JSONObject? = null
         var error: Exception? = null
 
-        Fuse.jsonCache.get(json) { result ->
+        cache.get(json) { result ->
             val (v, e) = result
             value = v
             error = e
@@ -59,7 +66,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         var value: JSONObject? = null
         var error: Exception? = null
 
-        Fuse.jsonCache.get(httpBin) { result, _ ->
+        cache.get(httpBin) { result, _ ->
             val (v, e) = result
             value = v
             error = e
@@ -80,7 +87,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         var value: JSONObject? = null
         var error: Exception? = null
 
-        Fuse.jsonCache.get(failedHttpBin) { result, _ ->
+        cache.get(failedHttpBin) { result, _ ->
             val (v, e) = result
             value = v
             error = e

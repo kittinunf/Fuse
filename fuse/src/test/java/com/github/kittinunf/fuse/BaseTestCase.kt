@@ -8,8 +8,6 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 abstract class BaseTestCase {
-    val tempDirString = createTempDir().absolutePath
-
     val assetDir = File(System.getProperty("user.dir")).resolve("src/test/assets")
 }
 

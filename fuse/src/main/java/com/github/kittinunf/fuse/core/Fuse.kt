@@ -9,9 +9,8 @@ class Fuse {
 
     companion object {
 
-        private lateinit var dir: String
-
-        var dispatchedExecutor = Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
+        var dispatchedExecutor =
+            Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
 
         var callbackExecutor = Executor {
             if (Thread.currentThread() == Looper.getMainLooper().thread) {
@@ -20,14 +19,6 @@ class Fuse {
                 val mainLooperHandler = Handler(Looper.getMainLooper())
                 mainLooperHandler.post(it)
             }
-        }
-
-        val stringCache by lazy { Cache(dir, StringDataConvertible(), StringDataRepresentable()) }
-        val bytesCache by lazy { Cache(dir, ByteArrayDataConvertible(), ByteArrayDataRepresentable()) }
-        val jsonCache by lazy { Cache(dir, JsonDataConvertible(), JsonDataRepresentable()) }
-
-        fun init(cacheDir: String) {
-            dir = cacheDir
         }
     }
 

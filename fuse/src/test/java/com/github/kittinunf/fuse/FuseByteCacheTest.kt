@@ -1,5 +1,7 @@
 package com.github.kittinunf.fuse
 
+import com.github.kittinunf.fuse.core.ByteArrayDataConvertible
+import com.github.kittinunf.fuse.core.ByteArrayDataRepresentable
 import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.core.fetch.get
@@ -19,14 +21,17 @@ import org.junit.runners.MethodSorters
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class FuseByteCacheTest : BaseTestCase() {
 
+    companion object {
+        val tempDir = createTempDir().absolutePath
+        val cache = Cache(tempDir, ByteArrayDataConvertible(), ByteArrayDataRepresentable())
+    }
+
     private var hasSetUp = false
 
     @Before
     fun initialize() {
         if (!hasSetUp) {
             hasSetUp = true
-
-            Fuse.init(tempDirString)
             Fuse.callbackExecutor = Executor { it.run() }
         }
     }
@@ -39,7 +44,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        Fuse.bytesCache.get("hello", { "world".toByteArray() }) { result, type ->
+        cache.get("hello", { "world".toByteArray() }) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -64,7 +69,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        Fuse.bytesCache.get("fail", ::fetchFail) { result, type ->
+        cache.get("fail", ::fetchFail) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -86,7 +91,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        Fuse.bytesCache.get("hello", { "world".toByteArray() }) { result, type ->
+        cache.get("hello", { "world".toByteArray() }) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -109,7 +114,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheType: Cache.Type? = null
 
-        Fuse.bytesCache.get("hello", { "world".toByteArray() }) { result, type ->
+        cache.get("hello", { "world".toByteArray() }) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -123,10 +128,10 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(error, nullValue())
 
         // remove from memory cache
-        Fuse.bytesCache.remove("hello", true)
+        cache.remove("hello", true)
 
         lock = CountDownLatch(1)
-        Fuse.bytesCache.get("hello", { "world".toByteArray() }) { result, type ->
+        cache.get("hello", { "world".toByteArray() }) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -148,7 +153,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var value: ByteArray? = null
         var error: Exception? = null
 
-        Fuse.bytesCache.put("Test Put", "Hello world".toByteArray()) {
+        cache.put("Test Put", "Hello world".toByteArray()) {
             value = it.component1()
             error = it.component2()
             lock.countDown()
@@ -166,7 +171,7 @@ class FuseByteCacheTest : BaseTestCase() {
         val anotherLock = CountDownLatch(1)
         var anotherValue: ByteArray? = null
         var anotherError: Exception? = null
-        Fuse.bytesCache.get("Test Put") { result ->
+        cache.get("Test Put") { result ->
             anotherValue = result.component1()
             anotherError = result.component2()
             anotherLock.countDown()
@@ -186,7 +191,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var value: ByteArray? = null
         var error: Exception? = null
 
-        Fuse.bytesCache.get(song) { result ->
+        cache.get(song) { result ->
             val (v, e) = result
             value = v
             error = e
@@ -207,7 +212,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var value: ByteArray? = null
         var error: Exception? = null
 
-        Fuse.bytesCache.get(song) { result ->
+        cache.get(song) { result ->
             val (v, e) = result
             value = v
             error = e
