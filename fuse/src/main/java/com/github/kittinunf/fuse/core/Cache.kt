@@ -26,13 +26,14 @@ class Cache<T : Any> internal constructor(
     convertible: Fuse.DataConvertible<T>
 ) : Fuse.DataConvertible<T> by convertible {
 
-    enum class Type {
+    enum class Source {
         NOT_FOUND,
         MEM,
         DISK,
     }
 
     private val memCache by lazy { MemCache() }
+
     private val diskCache by lazy {
         DiskCache.open(
             config.cacheDir,
@@ -41,27 +42,19 @@ class Cache<T : Any> internal constructor(
         )
     }
 
-    fun put(
-        key: String,
-        value: T,
-        handler: ((Result<T, Exception>) -> Unit)? = null
-    ) {
+    fun put(key: String, value: T, handler: ((Result<T, Exception>) -> Unit)? = null) {
         handler?.invoke(Result.of {
             _put(key, value)
             value
         })
     }
 
-    private fun _put(
-        key: String,
-        value: T,
-        success: ((T) -> Unit)? = null
-    ) {
+    private fun _put(key: String, value: T, success: ((T) -> Unit)? = null) {
         dispatch(config.dispatchedExecutor) {
             apply(value, config) { transformed ->
                 val hashed = key.md5()
-                memCache[hashed] = transformed
-                diskCache[hashed] = convert(transformed, config)
+                memCache.put(hashed, transformed)
+                diskCache.put(hashed, convert(transformed, config))
                 thread(config.callbackExecutor) {
                     success?.invoke(transformed)
                 }
@@ -69,37 +62,29 @@ class Cache<T : Any> internal constructor(
         }
     }
 
-    fun get(
-        fetcher: Fetcher<T>,
-        handler: ((Result<T, Exception>) -> Unit)? = null
-    ) {
-        _get(fetcher, handler, handler, handler, { handler?.invoke(Result.error(it)) })
+    fun get(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)? = null) {
+        _get(fetcher, handler, handler, handler)
     }
 
-    fun get(
-        fetcher: Fetcher<T>,
-        handler: ((Result<T, Exception>, Type) -> Unit)? = null
-    ) {
+    fun get(fetcher: Fetcher<T>, handler: ((Result<T, Exception>, Source) -> Unit)? = null) {
         _get(fetcher,
-            { handler?.invoke(it, Type.MEM) },
-            { handler?.invoke(it, Type.DISK) },
-            { handler?.invoke(it, Type.NOT_FOUND) },
-            { handler?.invoke(Result.error(it), Type.NOT_FOUND) })
+            { handler?.invoke(it, Source.MEM) },
+            { handler?.invoke(it, Source.DISK) },
+            { handler?.invoke(it, Source.NOT_FOUND) })
     }
 
     private fun _get(
         fetcher: Fetcher<T>,
         memHandler: ((Result<T, Exception>) -> Unit)?,
         diskHandler: ((Result<T, Exception>) -> Unit)?,
-        fetchHandler: ((Result<T, Exception>) -> Unit)?,
-        errorHandler: (Exception) -> Unit
+        fetchHandler: ((Result<T, Exception>) -> Unit)?
     ) {
 
         val key = fetcher.key
         val hashed = key.md5()
 
         // find in memCache
-        memCache[hashed]?.let { value ->
+        memCache.get(hashed)?.let { value ->
             dispatch(config.dispatchedExecutor) {
                 // move specific key in disk cache up as it is found in mem
                 diskCache.setIfMissing(hashed, convertToData(value as T))
@@ -112,14 +97,14 @@ class Cache<T : Any> internal constructor(
 
         dispatch(config.dispatchedExecutor) {
             // find in diskCache
-            val bytes = diskCache[hashed]
+            val bytes = diskCache.get(hashed)
             val value = bytes?.let { convertFromData(bytes) }
             if (value == null) {
                 // not found we need to fetch then put it back
                 fetchAndPut(fetcher, fetchHandler)
             } else {
                 // found in disk, save into mem
-                memCache[hashed] = value
+                memCache.put(hashed, value)
                 thread(config.callbackExecutor) {
                     diskHandler?.invoke(Result.of(value))
                 }
@@ -127,13 +112,20 @@ class Cache<T : Any> internal constructor(
         }
     }
 
-    fun remove(
-        key: String,
-        removeOnlyInMemory: Boolean = false
-    ) {
+    fun remove(key: String, removeOnlyInMemory: Boolean = false) {
         val hashed = key.md5()
         memCache.remove(hashed)
         if (!removeOnlyInMemory) diskCache.remove(hashed)
+    }
+
+    fun removeAll(removeOnlyInMemory: Boolean = false) {
+        memCache.removeAll()
+        if (!removeOnlyInMemory) diskCache.removeAll()
+    }
+
+    fun allKeys(): List<String> {
+        val keys = memCache.allKeys()
+        return keys.takeIf { it.isNotEmpty() } ?: diskCache.allKeys()
     }
 
     private fun convert(value: T, config: Config<T>): ByteArray {

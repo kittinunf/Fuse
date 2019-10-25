@@ -3,9 +3,12 @@ package com.github.kittinunf.fuse.core.cache
 import com.jakewharton.disklrucache.DiskLruCache
 import java.io.File
 
-internal class DiskCache private constructor(private val cache: DiskLruCache) {
+internal class DiskCache private constructor(private val cache: DiskLruCache) :
+    Persistence<ByteArray> {
 
     companion object {
+        const val JOURNAL_FILE = "journal"
+
         fun open(cacheDir: String, uniqueName: String, capacity: Long): DiskCache {
             val f = File(cacheDir)
             val disk = DiskLruCache.open(f.resolve(uniqueName), 1, 1, capacity)
@@ -13,14 +16,29 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) {
         }
     }
 
-    operator fun set(key: String, value: ByteArray) {
+    override fun put(key: String, value: ByteArray) {
         cache.edit(key).apply {
             newOutputStream(0).use { it.write(value) }
             commit()
         }
     }
 
-    operator fun get(key: String): ByteArray? {
+    override fun remove(key: String) = cache.remove(key)
+
+    override fun removeAll() {
+        cache.delete()
+    }
+
+    override fun allKeys(): List<String> {
+        return synchronized(this) {
+            cache.directory.listFiles().filter { it.isFile && it.name == JOURNAL_FILE }
+                .map { it.name }
+        }
+    }
+
+    override fun size(): Long = cache.size()
+
+    override fun get(key: String): ByteArray? {
         val snapshot = cache.get(key)
         return snapshot?.let {
             it.getInputStream(0).use { it.readBytes() }
@@ -30,9 +48,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) {
     fun setIfMissing(key: String, value: ByteArray) {
         val fetched = get(key)
         if (fetched == null) {
-            set(key, value)
+            put(key, value)
         }
     }
-
-    fun remove(key: Any): Boolean = cache.remove(key.toString())
 }

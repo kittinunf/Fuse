@@ -47,7 +47,7 @@ fun <T : Any> Cache<T>.get(file: File, handler: ((Result<T, Exception>) -> Unit)
 
 fun <T : Any> Cache<T>.get(
     file: File,
-    handler: ((Result<T, Exception>, Cache.Type) -> Unit)? = null
+    handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
 ) {
     get(DiskFetcher(file, this), handler)
 }

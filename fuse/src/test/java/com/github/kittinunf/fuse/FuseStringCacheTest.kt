@@ -41,13 +41,13 @@ class FuseStringCacheTest : BaseTestCase() {
 
         var value: String? = null
         var error: Exception? = null
-        var cacheType: Cache.Type? = null
+        var cacheSource: Cache.Source? = null
 
         cache.get("hello", { "world" }) { result, type ->
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
             lock.countDown()
         }
         lock.wait()
@@ -55,7 +55,7 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value, isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
     }
 
     @Test
@@ -66,7 +66,7 @@ class FuseStringCacheTest : BaseTestCase() {
 
         var value: String? = null
         var error: Exception? = null
-        var cacheType: Cache.Type? = null
+        var cacheSource: Cache.Source? = null
 
         cache.get(loremFile) { result ->
             val (v, e) = result
@@ -84,7 +84,7 @@ class FuseStringCacheTest : BaseTestCase() {
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
             lock.countDown()
         }
         lock.wait()
@@ -92,7 +92,7 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value, startsWith("Lorem ipsum dolor sit amet,"))
         assertThat(error, nullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.MEM))
+        assertThat(cacheSource, isEqualTo(Cache.Source.MEM))
     }
 
     @Test
@@ -102,13 +102,13 @@ class FuseStringCacheTest : BaseTestCase() {
 
         var value: String? = null
         var error: Exception? = null
-        var cacheType: Cache.Type? = null
+        var cacheSource: Cache.Source? = null
 
         cache.get(url) { result, type ->
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
 
             lock.countDown()
         }
@@ -117,7 +117,7 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value, containsString("<title>Google</title>"))
         assertThat(error, nullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
 
         // fetch again
         lock = CountDownLatch(1)
@@ -125,7 +125,7 @@ class FuseStringCacheTest : BaseTestCase() {
             val (v, e) = result
             value = v
             error = e
-            cacheType = type
+            cacheSource = type
 
             lock.countDown()
         }
@@ -134,6 +134,6 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value, containsString("<title>Google</title>"))
         assertThat(error, nullValue())
-        assertThat(cacheType, isEqualTo(Cache.Type.MEM))
+        assertThat(cacheSource, isEqualTo(Cache.Source.MEM))
     }
 }
