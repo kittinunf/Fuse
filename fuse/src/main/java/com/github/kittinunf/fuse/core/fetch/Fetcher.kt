@@ -21,10 +21,12 @@ class SimpleFetcher<out T : Any>(override val key: String, private val getValue:
     }
 }
 
+class NotFoundException(key: String) : RuntimeException("value from $key is not found")
+
 class NoFetcher<out T : Any>(override val key: String) : Fetcher<T> {
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
-        handler(Result.error(IllegalArgumentException("No fetcher, don't fetch anything")))
+        handler(Result.error(NotFoundException(key)))
     }
 }
 

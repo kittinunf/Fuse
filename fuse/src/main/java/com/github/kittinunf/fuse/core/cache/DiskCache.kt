@@ -3,9 +3,12 @@ package com.github.kittinunf.fuse.core.cache
 import com.jakewharton.disklrucache.DiskLruCache
 import java.io.File
 
-internal class DiskCache private constructor(private val cache: DiskLruCache) : Persistence<ByteArray> {
+internal class DiskCache private constructor(private val cache: DiskLruCache) :
+    Persistence<ByteArray> {
 
     companion object {
+        const val JOURNAL_FILE = "journal"
+
         fun open(cacheDir: String, uniqueName: String, capacity: Long): DiskCache {
             val f = File(cacheDir)
             val disk = DiskLruCache.open(f.resolve(uniqueName), 1, 1, capacity)
@@ -28,7 +31,8 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
 
     override fun allKeys(): List<String> {
         return synchronized(this) {
-            cache.directory.listFiles().filter { it.isFile }.map { it.name }
+            cache.directory.listFiles().filter { it.isFile && it.name == JOURNAL_FILE }
+                .map { it.name }
         }
     }
 

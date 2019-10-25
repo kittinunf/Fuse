@@ -4,14 +4,18 @@ import com.github.kittinunf.fuse.core.ByteArrayDataConvertible
 import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.build
+import com.github.kittinunf.fuse.core.fetch.NotFoundException
 import com.github.kittinunf.fuse.core.fetch.get
 import java.nio.charset.Charset
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.isA
+import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
+import org.hamcrest.Matchers.empty
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.FixMethodOrder
@@ -61,7 +65,7 @@ class FuseByteCacheTest : BaseTestCase() {
     }
 
     @Test
-    fun secondFetchFail() {
+    fun fetchSecondFail() {
         val lock = CountDownLatch(1)
 
         fun fetchFail(): ByteArray? = null
@@ -224,5 +228,65 @@ class FuseByteCacheTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
+    }
+
+    @Test
+    fun remove() {
+        var lock = CountDownLatch(1)
+
+        var value: ByteArray? = null
+        var error: Exception? = null
+        var source: Cache.Source? = null
+
+        cache.get("YOYO", { "yoyo".toByteArray() }) { result, type ->
+            val (v, e) = result
+            value = v
+            error = e
+            source = type
+            lock.countDown()
+        }
+
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("yoyo"))
+        assertThat(error, nullValue())
+        assertThat(source, equalTo(Cache.Source.NOT_FOUND))
+
+        cache.remove("YOYO")
+
+        value = null
+        error = null
+        source = null
+
+        lock = CountDownLatch(1)
+        cache.get("YOYO") { result, type ->
+            val (v, e) = result
+            value = v
+            error = e
+            source = type
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, nullValue())
+        assertThat(error, notNullValue())
+        assertThat(error as NotFoundException, isA(NotFoundException::class.java))
+    }
+
+    @Test
+    fun removeAll() {
+        val lock = CountDownLatch(10)
+
+        (1..10).forEach {
+            cache.get("remove $it", { "yoyo".toByteArray() }) { result, type ->
+                lock.countDown()
+            }
+        }
+        lock.wait()
+
+        assertThat(cache.allKeys(), not(empty()))
+        cache.removeAll()
+        assertThat(cache.allKeys(), empty())
     }
 }
