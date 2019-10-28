@@ -4,13 +4,18 @@ import android.util.LruCache
 
 internal class MemCache : Persistence<Any> {
 
-    private val maxMemory = Runtime.getRuntime().maxMemory() / 1024
-
-    private val cache = object : LruCache<Any, Any>((maxMemory / 8).toInt()) {
+    companion object {
+        const val KEY_SUFFIX = ".key"
     }
 
-    override fun put(key: String, value: Any) {
-        cache.put(key, value)
+    private val maxMemory = Runtime.getRuntime().maxMemory() / 1024
+
+    private val cache = object : LruCache<String, Any>((maxMemory / 8).toInt()) {
+    }
+
+    override fun put(safeKey: String, key: String, value: Any) {
+        cache.put(safeKey, value)
+        cache.put("$safeKey$KEY_SUFFIX", key)
     }
 
     override fun remove(key: String): Boolean = cache.remove(key) != null
@@ -19,7 +24,8 @@ internal class MemCache : Persistence<Any> {
         cache.evictAll()
     }
 
-    override fun allKeys(): List<String> = cache.snapshot().keys.map { it.toString() }
+    override fun allKeys(): Set<String> =
+        cache.snapshot().keys.filter { !it.contains(KEY_SUFFIX) }.map { get("$it$KEY_SUFFIX") as String }.toSet()
 
     override fun size(): Long = cache.size().toLong()
 
