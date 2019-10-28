@@ -52,23 +52,6 @@ class Cache<T : Any> internal constructor(
         }
     }
 
-    fun put(key: String, value: T, success: ((Result<T, Exception>) -> Unit)? = null) {
-        dispatch(config.dispatchedExecutor) {
-            applyTransformer(key, value) { transformed ->
-                val safeKey = key.md5()
-                memCache.put(safeKey, key, transformed)
-                val result = Result.of<T, Exception> {
-                    val converted = convertToData(transformed)
-                    diskCache.put(safeKey, key, converted)
-                    transformed
-                }
-                thread(config.callbackExecutor) {
-                    success?.invoke(result)
-                }
-            }
-        }
-    }
-
     fun get(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)? = null) {
         _get(fetcher, handler, handler, handler)
     }
@@ -126,6 +109,23 @@ class Cache<T : Any> internal constructor(
         }
     }
 
+    private fun _put(key: String, value: T, success: ((Result<T, Exception>) -> Unit)? = null) {
+        dispatch(config.dispatchedExecutor) {
+            applyTransformer(key, value) { transformed ->
+                val safeKey = key.md5()
+                memCache.put(safeKey, key, transformed)
+                val result = Result.of<T, Exception> {
+                    val converted = convertToData(transformed)
+                    diskCache.put(safeKey, key, converted)
+                    transformed
+                }
+                thread(config.callbackExecutor) {
+                    success?.invoke(result)
+                }
+            }
+        }
+    }
+
     fun remove(key: String, removeOnlyInMemory: Boolean = false) {
         val safeKey = key.md5()
         memCache.remove(safeKey)
@@ -148,7 +148,7 @@ class Cache<T : Any> internal constructor(
     ) {
         fetcher.fetch { result ->
             result.fold({ value ->
-                put(fetcher.key, value, handler)
+                _put(fetcher.key, value, handler)
             }, { exception ->
                 handler?.invoke(Result.error(exception))
             })

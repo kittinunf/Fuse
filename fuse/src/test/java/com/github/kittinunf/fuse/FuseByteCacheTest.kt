@@ -6,6 +6,7 @@ import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.NotFoundException
 import com.github.kittinunf.fuse.core.fetch.get
+import com.github.kittinunf.fuse.core.fetch.put
 import java.nio.charset.Charset
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
