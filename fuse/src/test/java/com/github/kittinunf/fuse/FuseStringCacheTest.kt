@@ -5,6 +5,10 @@ import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.StringDataConvertible
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.get
+import java.net.URL
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
@@ -12,10 +16,6 @@ import org.hamcrest.CoreMatchers.startsWith
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.net.URL
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 class FuseStringCacheTest : BaseTestCase() {
 

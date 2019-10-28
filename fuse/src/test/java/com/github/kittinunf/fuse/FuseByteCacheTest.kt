@@ -6,6 +6,10 @@ import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.NotFoundException
 import com.github.kittinunf.fuse.core.fetch.get
+import java.nio.charset.Charset
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.CoreMatchers.isA
@@ -18,10 +22,6 @@ import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
-import java.nio.charset.Charset
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class FuseByteCacheTest : BaseTestCase() {
@@ -76,7 +76,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheSource: Cache.Source? = null
 
-        cache.get("fail") { result, type ->
+        cache.get("fail", ::fetchFail) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -293,5 +293,4 @@ class FuseByteCacheTest : BaseTestCase() {
         cache.removeAll()
         assertThat(cache.allKeys(), empty())
     }
-
 }
