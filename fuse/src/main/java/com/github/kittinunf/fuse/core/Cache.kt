@@ -42,21 +42,28 @@ class Cache<T : Any> internal constructor(
         )
     }
 
-    fun put(key: String, value: T, handler: ((Result<T, Exception>) -> Unit)? = null) {
-        handler?.invoke(Result.of {
-            _put(key, value)
-            value
-        })
+    fun put(fetcher: Fetcher<T>, success: ((Result<T, Exception>) -> Unit)? = null) {
+        dispatch(config.dispatchedExecutor) {
+            fetchAndPut(fetcher) { result ->
+                thread(config.callbackExecutor) {
+                    success?.invoke(result)
+                }
+            }
+        }
     }
 
-    private fun _put(key: String, value: T, success: ((T) -> Unit)? = null) {
+    fun put(key: String, value: T, success: ((Result<T, Exception>) -> Unit)? = null) {
         dispatch(config.dispatchedExecutor) {
             applyTransformer(key, value) { transformed ->
                 val safeKey = key.md5()
                 memCache.put(safeKey, key, transformed)
-                diskCache.put(safeKey, key, convertToData(transformed))
+                val result = Result.of<T, Exception> {
+                    val converted = convertToData(transformed)
+                    diskCache.put(safeKey, key, converted)
+                    transformed
+                }
                 thread(config.callbackExecutor) {
-                    success?.invoke(transformed)
+                    success?.invoke(result)
                 }
             }
         }
@@ -141,9 +148,7 @@ class Cache<T : Any> internal constructor(
     ) {
         fetcher.fetch { result ->
             result.fold({ value ->
-                _put(fetcher.key, value) {
-                    handler?.invoke(Result.of(it))
-                }
+                put(fetcher.key, value, handler)
             }, { exception ->
                 handler?.invoke(Result.error(exception))
             })
