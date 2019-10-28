@@ -98,4 +98,24 @@ class FuseJsonCacheTest : BaseTestCase() {
         assertThat(error, notNullValue())
         assertThat(error as? FileNotFoundException, isA(FileNotFoundException::class.java))
     }
+
+    @Test
+    fun fetchWithValueJsonNotCompatible() {
+        val lock = CountDownLatch(1)
+
+        var value: JSONObject? = null
+        var error: Exception? = null
+
+        val json = assetDir.resolve("broken_json.json")
+        cache.get(json) { result ->
+            val (v, e) = result
+            value = v
+            error = e
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, nullValue())
+        assertThat(error, notNullValue())
+    }
 }

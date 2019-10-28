@@ -27,6 +27,4 @@ class Config<T : Any>(
     }
 
     var transformer: ((key: String, value: T) -> T) = { _, value -> value }
-
-    var convertToData: ((T) -> ByteArray)? = null
 }

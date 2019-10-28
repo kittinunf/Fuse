@@ -54,7 +54,7 @@ class Cache<T : Any> internal constructor(
             applyTransformer(key, value) { transformed ->
                 val safeKey = key.md5()
                 memCache.put(safeKey, key, transformed)
-                diskCache.put(safeKey, key, convert(transformed, config))
+                diskCache.put(safeKey, key, convertToData(transformed))
                 thread(config.callbackExecutor) {
                     success?.invoke(transformed)
                 }
@@ -83,13 +83,17 @@ class Cache<T : Any> internal constructor(
         val key = fetcher.key
         val safeKey = key.md5()
 
-        // find in memCache
+        // found in memCache
         memCache.get(safeKey)?.let { value ->
             dispatch(config.dispatchedExecutor) {
                 // move specific key in disk cache up as it is found in mem
-                diskCache.setIfMissing(safeKey, key, convertToData(value as T))
+                val result = Result.of<T, Exception> {
+                    val converted = convertToData(value as T)
+                    diskCache.setIfMissing(safeKey, key, converted)
+                    value
+                }
                 thread(config.callbackExecutor) {
-                    memHandler?.invoke(Result.of(value))
+                    memHandler?.invoke(result)
                 }
             }
             return
@@ -98,15 +102,18 @@ class Cache<T : Any> internal constructor(
         dispatch(config.dispatchedExecutor) {
             // find in diskCache
             val bytes = diskCache.get(safeKey)
-            val value = bytes?.let { convertFromData(bytes) }
-            if (value == null) {
+            if (bytes == null) {
                 // not found we need to fetch then put it back
                 fetchAndPut(fetcher, fetchHandler)
             } else {
-                // found in disk, save into mem
-                memCache.put(safeKey, key, value)
+                // found in disk, save back into mem
+                val result = Result.of<T, Exception> {
+                    val converted = convertFromData(bytes)
+                    memCache.put(safeKey, key, bytes)
+                    converted
+                }
                 thread(config.callbackExecutor) {
-                    diskHandler?.invoke(Result.of(value))
+                    diskHandler?.invoke(result)
                 }
             }
         }
@@ -126,11 +133,6 @@ class Cache<T : Any> internal constructor(
     fun allKeys(): Set<String> {
         val keys = memCache.allKeys()
         return keys.takeIf { it.isNotEmpty() } ?: diskCache.allKeys()
-    }
-
-    private fun convert(value: T, config: Config<T>): ByteArray {
-        val converter = config.convertToData ?: { convertToData(value) }
-        return converter(value)
     }
 
     private fun fetchAndPut(

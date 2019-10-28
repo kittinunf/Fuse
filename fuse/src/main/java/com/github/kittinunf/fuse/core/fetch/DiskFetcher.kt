@@ -32,7 +32,7 @@ class DiskFetcher<T : Any>(val file: File, private val convertible: Fuse.DataCon
             return
         }
 
-        handler(Result.of(convertFromData(bytes)))
+        handler(Result.of { convertFromData(bytes) })
     }
 
     override fun cancel() {
