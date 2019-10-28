@@ -94,7 +94,11 @@ class Cache<T : Any> internal constructor(
             val bytes = diskCache.get(safeKey)
             if (bytes == null) {
                 // not found we need to fetch then put it back
-                fetchAndPut(fetcher, fetchHandler)
+                fetchAndPut(fetcher) { result ->
+                    thread(config.callbackExecutor) {
+                        fetchHandler?.invoke(result)
+                    }
+                }
             } else {
                 // found in disk, save back into mem
                 val result = Result.of<T, Exception> {
