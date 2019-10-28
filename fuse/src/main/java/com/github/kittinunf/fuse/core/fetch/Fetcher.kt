@@ -47,3 +47,12 @@ fun <T : Any> Cache<T>.get(
     val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
     get(fetcher, handler)
 }
+
+fun <T : Any> Cache<T>.put(
+    key: String,
+    putValue: T? = null,
+    handler: ((Result<T, Exception>) -> Unit)? = null
+) {
+    val fetcher = if (putValue == null) NoFetcher<T>(key) else SimpleFetcher(key, { putValue })
+    put(fetcher, handler)
+}

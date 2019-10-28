@@ -42,21 +42,11 @@ class Cache<T : Any> internal constructor(
         )
     }
 
-    fun put(key: String, value: T, handler: ((Result<T, Exception>) -> Unit)? = null) {
-        handler?.invoke(Result.of {
-            _put(key, value)
-            value
-        })
-    }
-
-    private fun _put(key: String, value: T, success: ((T) -> Unit)? = null) {
+    fun put(fetcher: Fetcher<T>, success: ((Result<T, Exception>) -> Unit)? = null) {
         dispatch(config.dispatchedExecutor) {
-            applyTransformer(key, value) { transformed ->
-                val safeKey = key.md5()
-                memCache.put(safeKey, key, transformed)
-                diskCache.put(safeKey, key, convertToData(transformed))
+            fetchAndPut(fetcher) { result ->
                 thread(config.callbackExecutor) {
-                    success?.invoke(transformed)
+                    success?.invoke(result)
                 }
             }
         }
@@ -104,7 +94,11 @@ class Cache<T : Any> internal constructor(
             val bytes = diskCache.get(safeKey)
             if (bytes == null) {
                 // not found we need to fetch then put it back
-                fetchAndPut(fetcher, fetchHandler)
+                fetchAndPut(fetcher) { result ->
+                    thread(config.callbackExecutor) {
+                        fetchHandler?.invoke(result)
+                    }
+                }
             } else {
                 // found in disk, save back into mem
                 val result = Result.of<T, Exception> {
@@ -114,6 +108,23 @@ class Cache<T : Any> internal constructor(
                 }
                 thread(config.callbackExecutor) {
                     diskHandler?.invoke(result)
+                }
+            }
+        }
+    }
+
+    private fun _put(key: String, value: T, success: ((Result<T, Exception>) -> Unit)? = null) {
+        dispatch(config.dispatchedExecutor) {
+            applyTransformer(key, value) { transformed ->
+                val safeKey = key.md5()
+                memCache.put(safeKey, key, transformed)
+                val result = Result.of<T, Exception> {
+                    val converted = convertToData(transformed)
+                    diskCache.put(safeKey, key, converted)
+                    transformed
+                }
+                thread(config.callbackExecutor) {
+                    success?.invoke(result)
                 }
             }
         }
@@ -141,9 +152,7 @@ class Cache<T : Any> internal constructor(
     ) {
         fetcher.fetch { result ->
             result.fold({ value ->
-                _put(fetcher.key, value) {
-                    handler?.invoke(Result.of(it))
-                }
+                _put(fetcher.key, value, handler)
             }, { exception ->
                 handler?.invoke(Result.error(exception))
             })
