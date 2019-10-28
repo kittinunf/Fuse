@@ -23,7 +23,7 @@ interface Persistence<T> {
     fun removeAll()
 
     /**
-     * Retrieve the keys from all values persisted, internally
+     * Retrieve the keys from all values persisted, this is a <string>real</strong> as opposed to safeKey
      */
     fun allKeys(): Set<String>
 
