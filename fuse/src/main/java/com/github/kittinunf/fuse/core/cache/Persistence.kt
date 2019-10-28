@@ -4,10 +4,11 @@ interface Persistence<T> {
     /**
      * Save the data supplied based on a certain mechanism which provides persistence somehow
      *
-     * @param key The key associated with the value to be persisted
+     * @param safeKey The safeKey associated with the value to be persisted, this is sanitized key and it is conformed to regex <strong>[a-z0-9_-]{1,64}</strong>
+     * @param key The key associated with the value to be persisted, this is an un-sanitized key which is the same as the call-site key
      * @param value The value to be persisted
      */
-    fun put(key: String, value: T)
+    fun put(safeKey: String, key: String, value: T)
 
     /**
      * Remove the data associated with its particular key
@@ -22,9 +23,9 @@ interface Persistence<T> {
     fun removeAll()
 
     /**
-     * Retrieve the keys from all values persisted
+     * Retrieve the keys from all values persisted, this is a <string>real</strong> as opposed to safeKey
      */
-    fun allKeys(): List<String>
+    fun allKeys(): Set<String>
 
     /**
      * Retrieve accumulated values

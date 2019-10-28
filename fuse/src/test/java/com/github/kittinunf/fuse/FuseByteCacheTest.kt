@@ -28,8 +28,9 @@ class FuseByteCacheTest : BaseTestCase() {
     companion object {
         private val tempDir = createTempDir().absolutePath
         val cache =
-            CacheBuilder.config<ByteArray>(tempDir) { callbackExecutor = Executor { it.run() } }
-                .build(ByteArrayDataConvertible())
+            CacheBuilder.config<ByteArray>(tempDir, "Byte") {
+                callbackExecutor = Executor { it.run() }
+            }.build(ByteArrayDataConvertible())
     }
 
     private var hasSetUp = false

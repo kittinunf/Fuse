@@ -52,9 +52,9 @@ class Cache<T : Any> internal constructor(
     private fun _put(key: String, value: T, success: ((T) -> Unit)? = null) {
         dispatch(config.dispatchedExecutor) {
             apply(value, config) { transformed ->
-                val hashed = key.md5()
-                memCache.put(hashed, transformed)
-                diskCache.put(hashed, convert(transformed, config))
+                val safeKey = key.md5()
+                memCache.put(safeKey, key, transformed)
+                diskCache.put(safeKey, key, convert(transformed, config))
                 thread(config.callbackExecutor) {
                     success?.invoke(transformed)
                 }
@@ -81,13 +81,13 @@ class Cache<T : Any> internal constructor(
     ) {
 
         val key = fetcher.key
-        val hashed = key.md5()
+        val safeKey = key.md5()
 
         // find in memCache
-        memCache.get(hashed)?.let { value ->
+        memCache.get(safeKey)?.let { value ->
             dispatch(config.dispatchedExecutor) {
                 // move specific key in disk cache up as it is found in mem
-                diskCache.setIfMissing(hashed, convertToData(value as T))
+                diskCache.setIfMissing(safeKey, key, convertToData(value as T))
                 thread(config.callbackExecutor) {
                     memHandler?.invoke(Result.of(value))
                 }
@@ -97,14 +97,14 @@ class Cache<T : Any> internal constructor(
 
         dispatch(config.dispatchedExecutor) {
             // find in diskCache
-            val bytes = diskCache.get(hashed)
+            val bytes = diskCache.get(safeKey)
             val value = bytes?.let { convertFromData(bytes) }
             if (value == null) {
                 // not found we need to fetch then put it back
                 fetchAndPut(fetcher, fetchHandler)
             } else {
                 // found in disk, save into mem
-                memCache.put(hashed, value)
+                memCache.put(safeKey, key, value)
                 thread(config.callbackExecutor) {
                     diskHandler?.invoke(Result.of(value))
                 }
@@ -113,9 +113,9 @@ class Cache<T : Any> internal constructor(
     }
 
     fun remove(key: String, removeOnlyInMemory: Boolean = false) {
-        val hashed = key.md5()
-        memCache.remove(hashed)
-        if (!removeOnlyInMemory) diskCache.remove(hashed)
+        val safeKey = key.md5()
+        memCache.remove(safeKey)
+        if (!removeOnlyInMemory) diskCache.remove(safeKey)
     }
 
     fun removeAll(removeOnlyInMemory: Boolean = false) {
@@ -123,7 +123,7 @@ class Cache<T : Any> internal constructor(
         if (!removeOnlyInMemory) diskCache.removeAll()
     }
 
-    fun allKeys(): List<String> {
+    fun allKeys(): Set<String> {
         val keys = memCache.allKeys()
         return keys.takeIf { it.isNotEmpty() } ?: diskCache.allKeys()
     }

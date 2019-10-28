@@ -13,15 +13,13 @@ class DiskFetcher<T : Any>(val file: File, private val convertible: Fuse.DataCon
     private var cancelled: Boolean = false
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
-        cancelled = false
+        if (cancelled) {
+            return
+        }
 
         var bytes = ByteArray(0)
 
         var hasFailed = false
-
-        if (cancelled) {
-            return
-        }
 
         try {
             bytes = file.readBytes()
@@ -33,6 +31,7 @@ class DiskFetcher<T : Any>(val file: File, private val convertible: Fuse.DataCon
         if (cancelled or hasFailed) {
             return
         }
+
         handler(Result.of(convertFromData(bytes)))
     }
 
