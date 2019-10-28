@@ -18,10 +18,10 @@ class NetworkFetcher<T : Any>(
     private val convertible: Fuse.DataConvertible<T>
 ) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
-    val dispatchedExecutor =
+    private val dispatchedExecutor =
         Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors())
 
-    val callbackExecutor = Executor { it.run() }
+    private val callbackExecutor = Executor { it.run() }
 
     override val key: String = url.toString()
 

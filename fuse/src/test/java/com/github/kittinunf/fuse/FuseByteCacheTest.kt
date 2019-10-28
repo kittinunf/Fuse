@@ -11,6 +11,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.CoreMatchers.isA
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
@@ -75,7 +76,7 @@ class FuseByteCacheTest : BaseTestCase() {
         var error: Exception? = null
         var cacheSource: Cache.Source? = null
 
-        cache.get("fail") { result, type ->
+        cache.get("fail", ::fetchFail) { result, type ->
             val (v, e) = result
             value = v
             error = e
@@ -277,9 +278,10 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun removeAll() {
-        val lock = CountDownLatch(10)
+        val count = 10
+        val lock = CountDownLatch(count)
 
-        (1..10).forEach {
+        (1..count).forEach {
             cache.get("remove $it", { "yoyo".toByteArray() }) { result, type ->
                 lock.countDown()
             }
@@ -287,6 +289,7 @@ class FuseByteCacheTest : BaseTestCase() {
         lock.wait()
 
         assertThat(cache.allKeys(), not(empty()))
+        assertThat(cache.allKeys(), hasItems("remove 1", "remove 2", "remove 3", "remove 4", "remove 5"))
         cache.removeAll()
         assertThat(cache.allKeys(), empty())
     }

@@ -136,4 +136,75 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(error, nullValue())
         assertThat(cacheSource, isEqualTo(Cache.Source.MEM))
     }
+
+    @Test
+    fun applyValue() {
+        val lock = CountDownLatch(1)
+
+        val cache =
+            CacheBuilder.config<String>(tempDir, "Custom") {
+                callbackExecutor = Executor { it.run() }
+                transformer = { _, value -> value.toUpperCase() + "1" }
+            }.build(StringDataConvertible())
+
+        var value: String? = null
+        var error: Exception? = null
+
+        cache.get("hello", { "world" }) { result ->
+            val (v, e) = result
+            value = v
+            error = e
+
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(value, isEqualTo("WORLD1"))
+        assertThat(error, nullValue())
+    }
+
+    @Test
+    fun applyValueForSomeKey() {
+        var lock = CountDownLatch(1)
+
+        val cache =
+            CacheBuilder.config<String>(tempDir, "Another Custom") {
+                callbackExecutor = Executor { it.run() }
+                transformer = { key, value ->
+                    if (key == "custom") value.toUpperCase()
+                    else value
+                }
+            }.build(StringDataConvertible())
+
+        var value: String? = null
+        var error: Exception? = null
+
+        cache.get("hello", { "world" }) { result ->
+            val (v, e) = result
+            value = v
+            error = e
+
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(value, isEqualTo("world"))
+        assertThat(error, nullValue())
+
+        lock = CountDownLatch(1)
+        cache.get("custom", { "world" }) { result ->
+            val (v, e) = result
+            value = v
+            error = e
+
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(value, isEqualTo("WORLD"))
+        assertThat(error, nullValue())
+    }
 }
