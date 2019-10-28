@@ -26,7 +26,7 @@ class Config<T : Any>(
         const val DEFAULT_NAME = "FUSE_DEFAULT"
     }
 
-    var transformer: ((T) -> T) = { it }
+    var transformer: ((key: String, value: T) -> T) = { _, value -> value }
 
     var convertToData: ((T) -> ByteArray)? = null
 }

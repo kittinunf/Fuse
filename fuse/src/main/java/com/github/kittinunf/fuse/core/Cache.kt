@@ -51,7 +51,7 @@ class Cache<T : Any> internal constructor(
 
     private fun _put(key: String, value: T, success: ((T) -> Unit)? = null) {
         dispatch(config.dispatchedExecutor) {
-            apply(value, config) { transformed ->
+            applyTransformer(key, value) { transformed ->
                 val safeKey = key.md5()
                 memCache.put(safeKey, key, transformed)
                 diskCache.put(safeKey, key, convert(transformed, config))
@@ -148,8 +148,8 @@ class Cache<T : Any> internal constructor(
         }
     }
 
-    private fun apply(value: T, config: Config<T>, success: (T) -> Unit) {
-        val transformed = config.transformer(value)
+    private fun applyTransformer(key: String, value: T, success: (T) -> Unit) {
+        val transformed = config.transformer(key, value)
         success(transformed)
     }
 }

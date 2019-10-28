@@ -6,11 +6,8 @@ import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.NotFoundException
 import com.github.kittinunf.fuse.core.fetch.get
-import java.nio.charset.Charset
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
+import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.CoreMatchers.isA
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
@@ -21,6 +18,10 @@ import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
+import java.nio.charset.Charset
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class FuseByteCacheTest : BaseTestCase() {
@@ -277,9 +278,10 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun removeAll() {
-        val lock = CountDownLatch(10)
+        val count = 10
+        val lock = CountDownLatch(count)
 
-        (1..10).forEach {
+        (1..count).forEach {
             cache.get("remove $it", { "yoyo".toByteArray() }) { result, type ->
                 lock.countDown()
             }
@@ -287,7 +289,9 @@ class FuseByteCacheTest : BaseTestCase() {
         lock.wait()
 
         assertThat(cache.allKeys(), not(empty()))
+        assertThat(cache.allKeys(), hasItems("remove 1", "remove 2", "remove 3", "remove 4", "remove 5"))
         cache.removeAll()
         assertThat(cache.allKeys(), empty())
     }
+
 }
