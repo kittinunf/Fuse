@@ -26,5 +26,7 @@ class Fuse {
         fun removeAll(removeOnlyInMemory: Boolean = false)
 
         fun allKeys(): Set<String>
+
+        fun getTimestamp(key: String): Long
     }
 }

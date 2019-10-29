@@ -13,17 +13,19 @@ interface Fetcher<out T : Any> {
     }
 }
 
-class SimpleFetcher<out T : Any>(override val key: String, private val getValue: () -> T?) :
-    Fetcher<T> {
+class NotFoundException(key: String) : RuntimeException("value from $key is not found")
+
+internal class SimpleFetcher<out T : Any>(
+    override val key: String,
+    private val getValue: () -> T?
+) : Fetcher<T> {
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
-        handler(Result.of(getValue(), { KotlinNullPointerException() }))
+        handler(Result.of(getValue(), { NotFoundException(key) }))
     }
 }
 
-class NotFoundException(key: String) : RuntimeException("value from $key is not found")
-
-class NoFetcher<out T : Any>(override val key: String) : Fetcher<T> {
+internal class NoFetcher<out T : Any>(override val key: String) : Fetcher<T> {
 
     override fun fetch(handler: (Result<T, Exception>) -> Unit) {
         handler(Result.error(NotFoundException(key)))

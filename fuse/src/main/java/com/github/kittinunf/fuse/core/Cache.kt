@@ -162,6 +162,11 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         return keys.takeIf { it.isNotEmpty() } ?: diskCache.allKeys()
     }
 
+    override fun getTimestamp(key: String): Long {
+        val safeKey = key.md5()
+        return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey) ?: -1
+    }
+
     private fun fetchAndPut(
         fetcher: Fetcher<T>,
         handler: ((Result<T, Exception>) -> Unit)? = null

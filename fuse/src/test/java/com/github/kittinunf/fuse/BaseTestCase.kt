@@ -11,6 +11,6 @@ abstract class BaseTestCase {
     val assetDir = File(System.getProperty("user.dir")).resolve("src/test/assets")
 }
 
-fun CountDownLatch.wait() {
-    await(15, TimeUnit.SECONDS)
+fun CountDownLatch.wait(seconds: Int = 15) {
+    await(seconds.toLong(), TimeUnit.SECONDS)
 }

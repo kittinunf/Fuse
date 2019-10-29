@@ -18,6 +18,7 @@ import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.Matchers.empty
+import org.hamcrest.Matchers.greaterThan
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.FixMethodOrder
@@ -252,6 +253,20 @@ class FuseByteCacheTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
+    }
+
+    @Test
+    fun checkTimestamp() {
+        val lock = CountDownLatch(1)
+
+        cache.get("timestamp", { System.currentTimeMillis().toString().toByteArray() }) { _ -> }
+
+        lock.wait(3)
+
+        val timestamp = cache.getTimestamp("timestamp")
+
+        assertThat(timestamp, not(isEqualTo(-1L)))
+        assertThat(System.currentTimeMillis() - timestamp, greaterThan(2000L))
     }
 
     @Test
