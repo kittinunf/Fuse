@@ -18,6 +18,7 @@ import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.Matchers.empty
+import org.hamcrest.Matchers.greaterThan
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.FixMethodOrder
@@ -30,9 +31,9 @@ class FuseByteCacheTest : BaseTestCase() {
     companion object {
         private val tempDir = createTempDir().absolutePath
         val cache =
-            CacheBuilder.config<ByteArray>(tempDir, "Byte") {
+            CacheBuilder.config(tempDir, "Byte", ByteArrayDataConvertible()) {
                 callbackExecutor = Executor { it.run() }
-            }.build(ByteArrayDataConvertible())
+            }.build()
     }
 
     private var hasSetUp = false
@@ -213,6 +214,27 @@ class FuseByteCacheTest : BaseTestCase() {
     }
 
     @Test
+    fun fetchFileImageSuccess() {
+        val lock = CountDownLatch(1)
+        val image = assetDir.resolve("sample.jpg")
+
+        var value: ByteArray? = null
+        var error: Exception? = null
+
+        cache.get(image) { result ->
+            val (v, e) = result
+            value = v
+            error = e
+            lock.countDown()
+        }
+
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(error, nullValue())
+    }
+
+    @Test
     fun fetchFileFail() {
         val lock = CountDownLatch(1)
         val song = assetDir.resolve("not_found_song.mp3")
@@ -231,6 +253,20 @@ class FuseByteCacheTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
+    }
+
+    @Test
+    fun checkTimestamp() {
+        val lock = CountDownLatch(1)
+
+        cache.get("timestamp", { System.currentTimeMillis().toString().toByteArray() }) { _ -> }
+
+        lock.wait(3)
+
+        val timestamp = cache.getTimestamp("timestamp")
+
+        assertThat(timestamp, not(isEqualTo(-1L)))
+        assertThat(System.currentTimeMillis() - timestamp, greaterThan(2000L))
     }
 
     @Test
@@ -290,7 +326,10 @@ class FuseByteCacheTest : BaseTestCase() {
         lock.wait()
 
         assertThat(cache.allKeys(), not(empty()))
-        assertThat(cache.allKeys(), hasItems("remove 1", "remove 2", "remove 3", "remove 4", "remove 5"))
+        assertThat(
+            cache.allKeys(),
+            hasItems("remove 1", "remove 2", "remove 3", "remove 4", "remove 5")
+        )
         cache.removeAll()
         assertThat(cache.allKeys(), empty())
     }

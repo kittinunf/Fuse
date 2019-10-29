@@ -5,8 +5,10 @@ import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.result.Result
 import java.io.File
 
-class DiskFetcher<T : Any>(val file: File, private val convertible: Fuse.DataConvertible<T>) :
-    Fetcher<T>, Fuse.DataConvertible<T> by convertible {
+class DiskFetcher<T : Any>(
+    private val file: File,
+    private val convertible: Fuse.DataConvertible<T>
+) : Fetcher<T>, Fuse.DataConvertible<T> by convertible {
 
     override val key: String = file.path
 
@@ -49,4 +51,8 @@ fun <T : Any> Cache<T>.get(
     handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
 ) {
     get(DiskFetcher(file, this), handler)
+}
+
+fun <T : Any> Cache<T>.put(file: File, handler: ((Result<T, Exception>) -> Unit)? = null) {
+    put(DiskFetcher(file, this), handler)
 }

@@ -8,7 +8,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) :
     Persistence<ByteArray> {
 
     enum class OutputStreamIndex {
-        Data, Key
+        Data, Key, Time
     }
 
     companion object {
@@ -26,10 +26,11 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) :
         }
     }
 
-    override fun put(safeKey: String, key: String, value: ByteArray) {
+    override fun put(safeKey: String, key: String, value: ByteArray, timeToPersist: Long) {
         cache.edit(safeKey).apply {
-            newOutputStream(0).use { it.write(value) }
-            newOutputStream(1).use { it.write(key.toByteArray()) }
+            newOutputStream(OutputStreamIndex.Data.ordinal).use { it.write(value) }
+            newOutputStream(OutputStreamIndex.Key.ordinal).use { it.write(key.toByteArray()) }
+            newOutputStream(OutputStreamIndex.Time.ordinal).use { it.write(timeToPersist.toString().toByteArray()) }
             commit()
         }
     }
@@ -42,9 +43,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) :
 
     override fun allKeys(): Set<String> {
         return allSafeKeys()
-            .map {
-                get(it, OutputStreamIndex.Key.ordinal)!!.toString(Charset.defaultCharset())
-            }
+            .map { get(it, OutputStreamIndex.Key.ordinal)!!.toString(Charset.defaultCharset()) }
             .toSet()
     }
 
@@ -57,17 +56,13 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) :
 
     override fun get(key: String): ByteArray? = get(key, OutputStreamIndex.Data.ordinal)
 
+    override fun getTimestamp(key: String): Long? =
+        get(key, OutputStreamIndex.Time.ordinal)?.toString(Charset.defaultCharset())?.toLong()
+
     private fun get(key: String, indexStream: Int): ByteArray? {
         val snapshot = cache.get(key)
         return snapshot?.let {
             it.getInputStream(indexStream).use { it.readBytes() }
-        }
-    }
-
-    fun setIfMissing(safeKey: String, key: String, value: ByteArray) {
-        val fetched = get(safeKey)
-        if (fetched == null) {
-            put(safeKey, key, value)
         }
     }
 }
