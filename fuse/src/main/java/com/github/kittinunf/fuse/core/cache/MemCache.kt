@@ -22,7 +22,12 @@ internal class MemCache : Persistence<Any> {
         }
     }
 
-    override fun remove(key: String): Boolean = cache.remove(key) != null
+    override fun remove(key: String): Boolean {
+        val removedValue = cache.remove(key)
+        cache.remove(convertKey(key, KEY_SUFFIX))
+        cache.remove(convertKey(key, TIME_SUFFIX))
+        return removedValue != null
+    }
 
     override fun removeAll() {
         cache.evictAll()
