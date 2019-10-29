@@ -21,9 +21,9 @@ class FuseStringCacheTest : BaseTestCase() {
 
     companion object {
         private val tempDir = createTempDir().absolutePath
-        val cache =
-            CacheBuilder.config<String>(tempDir) { callbackExecutor = Executor { it.run() } }
-                .build(StringDataConvertible())
+        val cache = CacheBuilder.config(tempDir, StringDataConvertible()) {
+            callbackExecutor = Executor { it.run() }
+        }.build()
     }
 
     private var hasSetUp = false
@@ -141,11 +141,10 @@ class FuseStringCacheTest : BaseTestCase() {
     fun applyValue() {
         val lock = CountDownLatch(1)
 
-        val cache =
-            CacheBuilder.config<String>(tempDir, "Custom") {
-                callbackExecutor = Executor { it.run() }
-                transformer = { _, value -> value.toUpperCase() + "1" }
-            }.build(StringDataConvertible())
+        val cache = CacheBuilder.config(tempDir, "Custom", StringDataConvertible()) {
+            callbackExecutor = Executor { it.run() }
+            transformer = { _, value -> value.toUpperCase() + "1" }
+        }.build()
 
         var value: String? = null
         var error: Exception? = null
@@ -168,14 +167,13 @@ class FuseStringCacheTest : BaseTestCase() {
     fun applyValueForSomeKey() {
         var lock = CountDownLatch(1)
 
-        val cache =
-            CacheBuilder.config<String>(tempDir, "Another Custom") {
-                callbackExecutor = Executor { it.run() }
-                transformer = { key, value ->
-                    if (key == "custom") value.toUpperCase()
-                    else value
-                }
-            }.build(StringDataConvertible())
+        val cache = CacheBuilder.config(tempDir, "Another Custom", StringDataConvertible()) {
+            callbackExecutor = Executor { it.run() }
+            transformer = { key, value ->
+                if (key == "custom") value.toUpperCase()
+                else value
+            }
+        }.build()
 
         var value: String? = null
         var error: Exception? = null

@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService
 class Config<T : Any>(
     val cacheDir: String,
     val name: String = DEFAULT_NAME,
+    val convertible: Fuse.DataConvertible<T>,
     var diskCapacity: Long = 1024 * 1024 * 20,
     var dispatchedExecutor: ScheduledExecutorService =
         Executors.newScheduledThreadPool(2 * Runtime.getRuntime().availableProcessors()),
