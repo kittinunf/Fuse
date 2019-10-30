@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         runOnUiThread {
             when (result) {
                 is Result.Success -> {
-                    resultText.text = "Area: ${result.value.timezone}\nTime: ${result.value.dateTime}\nTz: ${result.value.abbrev}"
+                    resultText.text = "Location: ${result.value.timezone}\nTime: ${result.value.dateTime}\nTZ: ${result.value.abbrev}"
                 }
 
                 is Result.Failure -> {

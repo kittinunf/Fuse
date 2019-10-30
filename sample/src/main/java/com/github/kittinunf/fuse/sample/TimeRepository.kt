@@ -37,7 +37,7 @@ class CacheRepository(dir: String, private val fuel: FuelManager = manager) : Ti
             }
         }
 
-        cache.get(fetcher) { result, source ->
+        cache.get(fetcher) { result, _ ->
             handler(result.map { LocalTime.fromJson(it) })
         }
     }
