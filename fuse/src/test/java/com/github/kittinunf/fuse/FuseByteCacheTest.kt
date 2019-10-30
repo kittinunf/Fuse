@@ -7,10 +7,6 @@ import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.NotFoundException
 import com.github.kittinunf.fuse.core.fetch.get
 import com.github.kittinunf.fuse.core.fetch.put
-import java.nio.charset.Charset
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.CoreMatchers.isA
@@ -24,6 +20,11 @@ import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
+import java.nio.charset.Charset
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
+import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class FuseByteCacheTest : BaseTestCase() {
@@ -65,7 +66,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
     }
 
     @Test
@@ -89,7 +90,7 @@ class FuseByteCacheTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
     }
 
     @Test
@@ -265,6 +266,7 @@ class FuseByteCacheTest : BaseTestCase() {
 
         val timestamp = cache.getTimestamp("timestamp")
 
+        TimeUnit.MINUTES
         assertThat(timestamp, not(isEqualTo(-1L)))
         assertThat(System.currentTimeMillis() - timestamp, greaterThan(2000L))
     }
@@ -290,7 +292,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), equalTo("yoyo"))
         assertThat(error, nullValue())
-        assertThat(source, equalTo(Cache.Source.NOT_FOUND))
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
 
         cache.remove("YOYO")
 

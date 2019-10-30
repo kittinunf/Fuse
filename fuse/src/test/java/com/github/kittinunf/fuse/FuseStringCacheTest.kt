@@ -55,7 +55,7 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value, isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
     }
 
     @Test
@@ -117,7 +117,7 @@ class FuseStringCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value, containsString("<title>Google</title>"))
         assertThat(error, nullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
 
         // fetch again
         lock = CountDownLatch(1)

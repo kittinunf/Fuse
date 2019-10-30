@@ -10,16 +10,22 @@ class Fuse {
         fun convertToData(value: T): ByteArray
     }
 
-    interface Cacheable<T : Any> {
+    interface Cacheable {
 
-        fun put(fetcher: Fetcher<T>, success: ((Result<T, Exception>) -> Unit)? = null)
+        interface Put<T : Any> {
 
-        fun get(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)? = null)
+            fun put(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)? = null)
+        }
 
-        fun get(
-            fetcher: Fetcher<T>,
-            handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
-        )
+        interface Get<T : Any> {
+
+            fun get(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)? = null)
+
+            fun get(
+                fetcher: Fetcher<T>,
+                handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
+            )
+        }
 
         fun remove(key: String, removeOnlyInMemory: Boolean = false)
 
