@@ -10,7 +10,6 @@ import com.github.kittinunf.fuse.core.fetch.put
 import java.nio.charset.Charset
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
-import java.util.concurrent.TimeUnit
 import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
@@ -266,7 +265,6 @@ class FuseByteCacheTest : BaseTestCase() {
 
         val timestamp = cache.getTimestamp("timestamp")
 
-        TimeUnit.MINUTES
         assertThat(timestamp, not(isEqualTo(-1L)))
         assertThat(System.currentTimeMillis() - timestamp, greaterThan(2000L))
     }
@@ -314,6 +312,38 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
         assertThat(error as NotFoundException, isA(NotFoundException::class.java))
+    }
+
+    @Test
+    fun removeFromMem() {
+        val lock = CountDownLatch(1)
+
+        cache.put("timestamp", "test".toByteArray()) { _ ->
+            lock.countDown()
+        }
+        lock.wait()
+
+        val result = cache.remove("timestamp")
+        assertThat(result, equalTo(true))
+
+        val anotherResult = cache.remove("timestamp")
+        assertThat(anotherResult, equalTo(false))
+    }
+
+    @Test
+    fun removeFromDisk() {
+        val lock = CountDownLatch(1)
+
+        cache.put("timestamp", "test".toByteArray()) { _ ->
+            lock.countDown()
+        }
+        lock.wait()
+
+        val result = cache.remove("timestamp", Cache.Source.DISK)
+        assertThat(result, equalTo(true))
+
+        val anotherResult = cache.remove("timestamp", Cache.Source.MEM)
+        assertThat(anotherResult, equalTo(true))
     }
 
     @Test
