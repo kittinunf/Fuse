@@ -43,6 +43,7 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
             if (!isExpired || useEntryEvenIfExpired) {
                 cache.get(fetcher, handler)
             } else {
+                // fetch the value from the fetcher and put back
                 put(fetcher) { handler?.invoke(it, Cache.Source.ORIGIN) }
             }
         }

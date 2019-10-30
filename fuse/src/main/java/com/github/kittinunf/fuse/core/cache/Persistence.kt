@@ -2,7 +2,7 @@ package com.github.kittinunf.fuse.core.cache
 
 internal interface Persistence<T> {
     /**
-     * Save the entry supplied based on a certain mechanism which provides persistence somehow
+     * Save the entry supplied based on a certain mechanism which provides persistence
      *
      * @param safeKey The safeKey associated with the value to be persisted, this is sanitized key and it is conformed to regex <strong>[a-z0-9_-]{1,64}</strong>
      * @param key The key associated with the value to be persisted, this is an un-sanitized key which is the same as the call-site key
@@ -20,7 +20,7 @@ internal interface Persistence<T> {
     fun remove(key: String): Boolean
 
     /**
-     * Remove all the entry
+     * Remove all the entry in the persistence
      */
     fun removeAll()
 
