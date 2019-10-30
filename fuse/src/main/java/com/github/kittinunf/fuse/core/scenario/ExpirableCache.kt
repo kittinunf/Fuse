@@ -10,10 +10,10 @@ import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.milliseconds
 
-@ExperimentalTime
 class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by cache,
     Fuse.Cacheable.Put<T> by cache {
 
+    @ExperimentalTime
     fun get(
         fetcher: Fetcher<T>,
         timeLimit: Duration = Duration.INFINITE,
@@ -23,6 +23,7 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
         get(fetcher, timeLimit, useEntryEvenIfExpired) { result, _ -> handler?.invoke(result) }
     }
 
+    @ExperimentalTime
     fun get(
         fetcher: Fetcher<T>,
         timeLimit: Duration = Duration.INFINITE,
@@ -47,6 +48,7 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
         }
     }
 
+    @ExperimentalTime
     private fun hasExpired(persistedTimestamp: Long, timeLimit: Duration): Boolean {
         val now = System.currentTimeMillis()
         val durationSincePersisted = (now - persistedTimestamp).milliseconds
@@ -87,4 +89,3 @@ fun <T : Any> ExpirableCache<T>.put(
     val fetcher = if (putValue == null) NoFetcher<T>(key) else SimpleFetcher(key, { putValue })
     put(fetcher, handler)
 }
-

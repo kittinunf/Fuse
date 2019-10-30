@@ -27,9 +27,9 @@ class Fuse {
             )
         }
 
-        fun remove(key: String, removeOnlyInMemory: Boolean = false)
+        fun remove(key: String, fromSource: Cache.Source = Cache.Source.MEM)
 
-        fun removeAll(removeOnlyInMemory: Boolean = false)
+        fun removeAll()
 
         fun allKeys(): Set<String>
 

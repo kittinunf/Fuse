@@ -146,15 +146,21 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         }
     }
 
-    override fun remove(key: String, removeOnlyInMemory: Boolean) {
+    override fun remove(key: String, fromSource: Source) {
+        require(fromSource != Source.ORIGIN) { "Cannot remove from Source.ORIGIN" }
+
         val safeKey = key.md5()
-        memCache.remove(safeKey)
-        if (!removeOnlyInMemory) diskCache.remove(safeKey)
+        when (fromSource) {
+            Source.MEM -> memCache.remove(safeKey)
+            Source.DISK -> diskCache.remove(safeKey)
+            else -> {
+            }
+        }
     }
 
-    override fun removeAll(removeOnlyInMemory: Boolean) {
+    override fun removeAll() {
         memCache.removeAll()
-        if (!removeOnlyInMemory) diskCache.removeAll()
+        diskCache.removeAll()
     }
 
     override fun allKeys(): Set<String> {

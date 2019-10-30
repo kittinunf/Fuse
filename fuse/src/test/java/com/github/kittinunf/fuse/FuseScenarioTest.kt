@@ -44,7 +44,8 @@ class FuseScenarioTest : BaseTestCase() {
     @Test
     fun fetchWhenNoData() {
         // remove first if it exists
-        expirableCache.remove("hello")
+        expirableCache.remove("hello", Cache.Source.MEM)
+        expirableCache.remove("hello", Cache.Source.DISK)
 
         val lock = CountDownLatch(1)
 
@@ -130,7 +131,12 @@ class FuseScenarioTest : BaseTestCase() {
         Thread.sleep(6000)
 
         lock = CountDownLatch(1)
-        expirableCache.get("expired", { "new world" }, timeLimit = 5.seconds, useEntryEvenIfExpired = true) { (v, e), type ->
+        expirableCache.get(
+            "expired",
+            { "new world" },
+            timeLimit = 5.seconds,
+            useEntryEvenIfExpired = true
+        ) { (v, e), type ->
             value = v
             error = e
             source = type
@@ -212,7 +218,7 @@ class FuseScenarioTest : BaseTestCase() {
         error = null
 
         Thread.sleep(1000)
-        expirableCache.remove("not expired", true)
+        expirableCache.remove("not expired", Cache.Source.MEM)
 
         lock = CountDownLatch(1)
         expirableCache.get("not expired", { "new world" }, 5.seconds) { (v, e), type ->

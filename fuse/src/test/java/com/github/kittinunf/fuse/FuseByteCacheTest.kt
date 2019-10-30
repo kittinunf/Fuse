@@ -138,7 +138,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(error, nullValue())
 
         // remove from memory cache
-        cache.remove("hello", true)
+        cache.remove("hello", Cache.Source.MEM)
 
         lock = CountDownLatch(1)
         cache.get("hello", { "world".toByteArray() }) { result, type ->
@@ -294,7 +294,8 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(error, nullValue())
         assertThat(source, equalTo(Cache.Source.ORIGIN))
 
-        cache.remove("YOYO")
+        cache.remove("YOYO", Cache.Source.MEM)
+        cache.remove("YOYO", Cache.Source.DISK)
 
         value = null
         error = null
