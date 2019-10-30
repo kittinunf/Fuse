@@ -39,7 +39,11 @@ subprojects {
     val isSample = project.name.contains("sample")
 
     apply {
-        plugin("com.android.library")
+        if (isSample) {
+            plugin("com.android.application")
+        } else {
+            plugin("com.android.library")
+        }
         plugin("org.jetbrains.kotlin.android")
         plugin("org.jmailen.kotlinter")
         plugin("jacoco")

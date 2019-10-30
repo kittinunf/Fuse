@@ -23,7 +23,7 @@ object CacheBuilder {
         dir: String,
         name: String,
         convertible: Fuse.DataConvertible<T>,
-        construct: Config<T>.() -> Unit
+        construct: Config<T>.() -> Unit = {}
     ): Config<T> {
         return Config(dir, name, convertible).apply(construct)
     }
@@ -113,10 +113,12 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
             } else {
                 // found in disk, save back into mem
                 val result = Result.of<T, Exception> {
-                    val converted = convertFromData(bytes)
                     // we found this in disk cache, so we need to retrieve timeStamp that was stored in diskCache back to memCache
+                    val converted = convertFromData(bytes)
+
                     val timeWasPersisted = diskCache.getTimestamp(safeKey)
-                    memCache.put(safeKey, key, bytes, timeWasPersisted ?: -1)
+                    // put the converted version into the memCache
+                    memCache.put(safeKey, key, converted, timeWasPersisted ?: -1)
                     converted
                 }
                 thread(config.callbackExecutor) {
