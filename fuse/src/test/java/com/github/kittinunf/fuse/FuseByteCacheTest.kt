@@ -65,7 +65,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
     }
 
     @Test
@@ -89,7 +89,7 @@ class FuseByteCacheTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.NOT_FOUND))
+        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
     }
 
     @Test
@@ -137,7 +137,7 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(error, nullValue())
 
         // remove from memory cache
-        cache.remove("hello", true)
+        cache.remove("hello", Cache.Source.MEM)
 
         lock = CountDownLatch(1)
         cache.get("hello", { "world".toByteArray() }) { result, type ->
@@ -290,9 +290,10 @@ class FuseByteCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), equalTo("yoyo"))
         assertThat(error, nullValue())
-        assertThat(source, equalTo(Cache.Source.NOT_FOUND))
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
 
-        cache.remove("YOYO")
+        cache.remove("YOYO", Cache.Source.MEM)
+        cache.remove("YOYO", Cache.Source.DISK)
 
         value = null
         error = null
@@ -314,7 +315,39 @@ class FuseByteCacheTest : BaseTestCase() {
     }
 
     @Test
-    fun removeAll() {
+    fun removeFromMem() {
+        val lock = CountDownLatch(1)
+
+        cache.put("remove", "test".toByteArray()) { _ ->
+            lock.countDown()
+        }
+        lock.wait()
+
+        val result = cache.remove("remove")
+        assertThat(result, equalTo(true))
+
+        val anotherResult = cache.remove("remove")
+        assertThat(anotherResult, equalTo(false))
+    }
+
+    @Test
+    fun removeFromDisk() {
+        val lock = CountDownLatch(1)
+
+        cache.put("remove", "test".toByteArray()) { result ->
+            lock.countDown()
+        }
+        lock.wait()
+
+        val result = cache.remove("remove", Cache.Source.DISK)
+        assertThat(result, equalTo(true))
+
+        val anotherResult = cache.remove("remove", Cache.Source.MEM)
+        assertThat(anotherResult, equalTo(true))
+    }
+
+    @Test
+    fun removeThemAll() {
         val count = 10
         val lock = CountDownLatch(count)
 
@@ -326,10 +359,12 @@ class FuseByteCacheTest : BaseTestCase() {
         lock.wait()
 
         assertThat(cache.allKeys(), not(empty()))
-        assertThat(
-            cache.allKeys(),
-            hasItems("remove 1", "remove 2", "remove 3", "remove 4", "remove 5")
-        )
+        (1..count).forEach {
+            assertThat(
+                cache.allKeys(),
+                hasItems("remove $it")
+            )
+        }
         cache.removeAll()
         assertThat(cache.allKeys(), empty())
     }

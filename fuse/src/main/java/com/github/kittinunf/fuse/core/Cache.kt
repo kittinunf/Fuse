@@ -31,11 +31,11 @@ object CacheBuilder {
 
 fun <T : Any> Config<T>.build() = Cache(this)
 
-class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.Cacheable<T>,
-    Fuse.DataConvertible<T> by config.convertible {
+class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.Cacheable,
+    Fuse.Cacheable.Put<T>, Fuse.Cacheable.Get<T>, Fuse.DataConvertible<T> by config.convertible {
 
     enum class Source {
-        NOT_FOUND,
+        ORIGIN,
         MEM,
         DISK,
     }
@@ -49,11 +49,11 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         )
     }
 
-    override fun put(fetcher: Fetcher<T>, success: ((Result<T, Exception>) -> Unit)?) {
+    override fun put(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)?) {
         dispatch(config.dispatchedExecutor) {
             fetchAndPut(fetcher) { result ->
                 thread(config.callbackExecutor) {
-                    success?.invoke(result)
+                    handler?.invoke(result)
                 }
             }
         }
@@ -67,7 +67,7 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         get(fetcher,
             { handler?.invoke(it, Source.MEM) },
             { handler?.invoke(it, Source.DISK) },
-            { handler?.invoke(it, Source.NOT_FOUND) })
+            { handler?.invoke(it, Source.ORIGIN) })
     }
 
     private fun get(
@@ -146,15 +146,22 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         }
     }
 
-    override fun remove(key: String, removeOnlyInMemory: Boolean) {
+    override fun remove(key: String, fromSource: Source): Boolean {
+        require(fromSource != Source.ORIGIN) { "Cannot remove from Source.ORIGIN" }
+
         val safeKey = key.md5()
-        memCache.remove(safeKey)
-        if (!removeOnlyInMemory) diskCache.remove(safeKey)
+        return when (fromSource) {
+            Source.MEM -> memCache.remove(safeKey)
+            Source.DISK -> diskCache.remove(safeKey)
+            else -> {
+                false
+            }
+        }
     }
 
-    override fun removeAll(removeOnlyInMemory: Boolean) {
+    override fun removeAll() {
         memCache.removeAll()
-        if (!removeOnlyInMemory) diskCache.removeAll()
+        diskCache.removeAll()
     }
 
     override fun allKeys(): Set<String> {
