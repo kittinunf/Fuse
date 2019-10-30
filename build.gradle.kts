@@ -41,6 +41,7 @@ subprojects {
     apply {
         if (isSample) {
             plugin("com.android.application")
+            plugin("org.jetbrains.kotlin.android.extensions")
         } else {
             plugin("com.android.library")
         }
