@@ -318,15 +318,15 @@ class FuseByteCacheTest : BaseTestCase() {
     fun removeFromMem() {
         val lock = CountDownLatch(1)
 
-        cache.put("timestamp", "test".toByteArray()) { _ ->
+        cache.put("remove", "test".toByteArray()) { _ ->
             lock.countDown()
         }
         lock.wait()
 
-        val result = cache.remove("timestamp")
+        val result = cache.remove("remove")
         assertThat(result, equalTo(true))
 
-        val anotherResult = cache.remove("timestamp")
+        val anotherResult = cache.remove("remove")
         assertThat(anotherResult, equalTo(false))
     }
 
@@ -334,20 +334,20 @@ class FuseByteCacheTest : BaseTestCase() {
     fun removeFromDisk() {
         val lock = CountDownLatch(1)
 
-        cache.put("timestamp", "test".toByteArray()) { _ ->
+        cache.put("remove", "test".toByteArray()) { result ->
             lock.countDown()
         }
         lock.wait()
 
-        val result = cache.remove("timestamp", Cache.Source.DISK)
+        val result = cache.remove("remove", Cache.Source.DISK)
         assertThat(result, equalTo(true))
 
-        val anotherResult = cache.remove("timestamp", Cache.Source.MEM)
+        val anotherResult = cache.remove("remove", Cache.Source.MEM)
         assertThat(anotherResult, equalTo(true))
     }
 
     @Test
-    fun removeAll() {
+    fun removeThemAll() {
         val count = 10
         val lock = CountDownLatch(count)
 
@@ -359,10 +359,12 @@ class FuseByteCacheTest : BaseTestCase() {
         lock.wait()
 
         assertThat(cache.allKeys(), not(empty()))
-        assertThat(
-            cache.allKeys(),
-            hasItems("remove 1", "remove 2", "remove 3", "remove 4", "remove 5")
-        )
+        (1..count).forEach {
+            assertThat(
+                cache.allKeys(),
+                hasItems("remove $it")
+            )
+        }
         cache.removeAll()
         assertThat(cache.allKeys(), empty())
     }
