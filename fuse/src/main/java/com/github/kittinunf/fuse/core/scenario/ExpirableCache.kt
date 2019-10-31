@@ -35,7 +35,7 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
 
         // no timestamp fetch
         if (persistedTimestamp == -1L) {
-            put(fetcher) { handler?.invoke(it, Cache.Source.ORIGIN) }
+            putOrGetFromCacheIfFailure(fetcher, handler)
         } else {
             val isExpired = hasExpired(persistedTimestamp, timeLimit)
 
@@ -43,8 +43,23 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
             if (!isExpired || useEntryEvenIfExpired) {
                 cache.get(fetcher, handler)
             } else {
-                // fetch the value from the fetcher and put back
-                put(fetcher) { handler?.invoke(it, Cache.Source.ORIGIN) }
+                // fetch the value from the fetcher and put back if success, if failure we will fallback to the cache
+                putOrGetFromCacheIfFailure(fetcher, handler)
+            }
+        }
+    }
+
+    private fun putOrGetFromCacheIfFailure(
+        fetcher: Fetcher<T>,
+        handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
+    ) {
+        put(fetcher) {
+            when (it) {
+                is Result.Success -> handler?.invoke(it, Cache.Source.ORIGIN)
+                is Result.Failure -> {
+                    // fallback to cache
+                    cache.get(fetcher, handler)
+                }
             }
         }
     }

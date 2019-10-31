@@ -4,12 +4,10 @@ import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.StringDataConvertible
 import com.github.kittinunf.fuse.core.build
+import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.scenario.ExpirableCache
 import com.github.kittinunf.fuse.core.scenario.get
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
-import kotlin.time.ExperimentalTime
-import kotlin.time.seconds
+import com.github.kittinunf.result.Result
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
@@ -17,6 +15,11 @@ import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.seconds
 
 class FuseScenarioTest : BaseTestCase() {
 
@@ -234,5 +237,82 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
         assertThat(source, equalTo(Cache.Source.DISK))
+    }
+
+    @ExperimentalTime
+    @Test
+    fun fetchWithFetcherThatCouldFail() {
+        var lock = CountDownLatch(1)
+
+        var value: String? = null
+        var error: Exception? = null
+        var source: Cache.Source? = null
+
+        expirableCache.get("can_fail", { "world" }) { (v, e) ->
+            value = v
+            error = e
+
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(value, equalTo("world"))
+        assertThat(error, nullValue())
+
+        value = null
+        error = null
+
+        lock = CountDownLatch(1)
+
+        val failFetcher = object : Fetcher<String> {
+            override val key: String = "can_fail"
+
+            override fun fetch(handler: (Result<String, Exception>) -> Unit) =
+                handler(Result.error(Exception("fail catcher")))
+        }
+
+        expirableCache.get(failFetcher, Duration.ZERO) { (v, e), s ->
+            value = v
+            error = e
+
+            source = s
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, notNullValue())
+        assertThat(error, nullValue())
+        assertThat(source, not(equalTo(Cache.Source.ORIGIN)))
+    }
+
+    @ExperimentalTime
+    @Test
+    fun fetchWithFailureFetcherAndAlwaysExpiringEntry() {
+        val lock = CountDownLatch(1)
+
+        var value: String? = null
+        var error: Exception? = null
+        var source: Cache.Source? = null
+
+        val failFetcher = object : Fetcher<String> {
+            override val key: String = "will_fail"
+
+            override fun fetch(handler: (Result<String, Exception>) -> Unit) =
+                handler(Result.error(Exception("fail catcher")))
+        }
+
+        expirableCache.get(failFetcher, Duration.ZERO) { (v, e), s ->
+            value = v
+            error = e
+
+            source = s
+            lock.countDown()
+        }
+        lock.wait()
+
+        assertThat(value, nullValue())
+        assertThat(error, notNullValue())
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
     }
 }
