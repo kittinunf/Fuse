@@ -8,6 +8,11 @@ import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.scenario.ExpirableCache
 import com.github.kittinunf.fuse.core.scenario.get
 import com.github.kittinunf.result.Result
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.seconds
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
@@ -15,11 +20,6 @@ import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
-import kotlin.time.seconds
 
 class FuseScenarioTest : BaseTestCase() {
 
