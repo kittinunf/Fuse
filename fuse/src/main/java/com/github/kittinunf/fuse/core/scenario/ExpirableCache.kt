@@ -33,9 +33,9 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
         val key = fetcher.key
         val persistedTimestamp = getTimestamp(key)
 
-        // no timestamp fetch
+        // no timestamp fetch, we need to just fetch the new data
         if (persistedTimestamp == -1L) {
-            putOrGetFromCacheIfFailure(fetcher, handler)
+            put(fetcher) { handler?.invoke(it, Cache.Source.ORIGIN) }
         } else {
             val isExpired = hasExpired(persistedTimestamp, timeLimit)
 
