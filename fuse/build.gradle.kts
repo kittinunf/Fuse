@@ -1,9 +1,15 @@
 dependencies {
-    implementation(kotlin("stdlib", "1.3.50"))
-    implementation( "com.jakewharton:disklrucache:2.0.2")
+    val kotlinVersion: String by project
+    val diskLruCacheVersion: String by project
+    val resultVersion: String by project
+    val junitVersion: String by project
+    val robolectricVersion: String by project
 
-    api("com.github.kittinunf.result:result:2.2.0")
+    implementation(kotlin("stdlib", kotlinVersion))
+    implementation("com.jakewharton:disklrucache:$diskLruCacheVersion")
 
-    testImplementation("junit:junit:4.12")
-    testImplementation("org.robolectric:robolectric:4.3")
+    api("com.github.kittinunf.result:result:$resultVersion")
+
+    testImplementation("junit:junit:$junitVersion")
+    testImplementation("org.robolectric:robolectric:$robolectricVersion")
 }
