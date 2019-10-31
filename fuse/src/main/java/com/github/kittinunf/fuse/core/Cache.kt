@@ -180,13 +180,13 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         fetcher: Fetcher<T>,
         handler: ((Result<T, Exception>) -> Unit)? = null
     ) {
-        fetcher.fetch { result ->
-            result.fold({ value ->
-                put(fetcher.key, value, handler)
-            }, { exception ->
-                handler?.invoke(Result.error(exception))
-            })
-        }
+        val fetchResult = fetcher.fetch()
+
+        fetchResult.fold({ value ->
+            put(fetcher.key, value, handler)
+        }, { exception ->
+            handler?.invoke(Result.error(exception))
+        })
     }
 
     private fun applyTransformer(key: String, value: T, success: (T) -> Unit) {

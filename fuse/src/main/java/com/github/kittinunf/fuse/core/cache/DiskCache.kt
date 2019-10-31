@@ -15,9 +15,9 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) :
         const val JOURNAL_FILE = "journal"
 
         fun open(cacheDir: String, uniqueName: String, capacity: Long): DiskCache {
-            val f = File(cacheDir)
+            val dir = File(cacheDir)
             val disk = DiskLruCache.open(
-                f.resolve(uniqueName),
+                dir.resolve(uniqueName),
                 1,
                 OutputStreamIndex.values().size,
                 capacity

@@ -7,7 +7,7 @@ interface Fetcher<out T : Any> {
 
     val key: String
 
-    fun fetch(handler: (Result<T, Exception>) -> Unit)
+    fun fetch(): Result<T, Exception>
 
     fun cancel() {
     }
@@ -20,16 +20,12 @@ internal class SimpleFetcher<out T : Any>(
     private val getValue: () -> T?
 ) : Fetcher<T> {
 
-    override fun fetch(handler: (Result<T, Exception>) -> Unit) {
-        handler(Result.of(getValue(), { NotFoundException(key) }))
-    }
+    override fun fetch(): Result<T, Exception> = Result.of(getValue(), { NotFoundException(key) })
 }
 
 internal class NoFetcher<out T : Any>(override val key: String) : Fetcher<T> {
 
-    override fun fetch(handler: (Result<T, Exception>) -> Unit) {
-        handler(Result.error(NotFoundException(key)))
-    }
+    override fun fetch(): Result<T, Exception> = Result.error(NotFoundException(key))
 }
 
 fun <T : Any> Cache<T>.get(
