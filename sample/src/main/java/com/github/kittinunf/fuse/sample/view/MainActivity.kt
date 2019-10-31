@@ -1,6 +1,7 @@
 package com.github.kittinunf.fuse.sample.view
 
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.github.kittinunf.fuse.sample.CacheRepository
 import com.github.kittinunf.fuse.sample.LocalTime
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         val place = "Asia/Bangkok"
 
         networkButton.setOnClickListener {
+            setLoading(true)
             service.getFromNetwork(place) {
                 updateTitle("Network")
                 updateResult(it)
@@ -32,6 +34,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
 
         cacheButton.setOnClickListener {
+            setLoading(true)
             service.getFromCache(place) {
                 updateTitle("Cache")
                 updateResult(it)
@@ -39,16 +42,17 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
         }
 
         bothButton.setOnClickListener {
+            setLoading(true)
             var count = 0
             service.getFromBoth(place) {
                 count++
-
                 updateTitle(count.toString())
                 updateResult(it)
             }
         }
 
         cacheIfNotExpired.setOnClickListener {
+            setLoading(true)
             service.getFromCacheIfNotExpired(place) { result, source ->
                 updateTitle(source.name)
                 updateResult(result)
@@ -57,6 +61,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 
     private fun updateResult(result: Result<LocalTime, Exception>) {
+        setLoading(false)
         when (result) {
             is Result.Success -> {
                 resultText.text =
@@ -71,5 +76,15 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private fun updateTitle(text: String? = null) {
         titleText.text = text
+    }
+
+    private fun setLoading(isLoading: Boolean) {
+        if (isLoading) {
+            progress.visibility = View.VISIBLE
+            resultText.visibility = View.GONE
+        } else {
+            progress.visibility = View.GONE
+            resultText.visibility = View.VISIBLE
+        }
     }
 }
