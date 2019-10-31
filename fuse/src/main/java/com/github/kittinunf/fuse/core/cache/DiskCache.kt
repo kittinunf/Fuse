@@ -40,15 +40,12 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
         cache.delete()
     }
 
-    override fun allKeys(): Set<String> {
-        return allSafeKeys()
-            .map { get(it, OutputStreamIndex.Key.ordinal)!!.toString(Charset.defaultCharset()) }
-            .toSet()
-    }
+    override fun allKeys(): Set<String> = allSafeKeys()
+        .map { get(it, OutputStreamIndex.Key.ordinal)!!.toString(Charset.defaultCharset()) }
+        .toSet()
 
     private fun allSafeKeys() = synchronized(this) {
-        cache.directory.listFiles().filter { it.isFile && it.name != JOURNAL_FILE }
-            .map { it.name.substringBefore(".") }
+        cache.directory.listFiles().filter { it.isFile && it.name != JOURNAL_FILE }.map { it.name.substringBefore(".") }
     }
 
     override fun size(): Long = cache.size()

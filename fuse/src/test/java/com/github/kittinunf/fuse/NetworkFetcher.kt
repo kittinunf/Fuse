@@ -53,13 +53,7 @@ class NetworkFetcher<T : Any>(
     }
 }
 
-fun <T : Any> Cache<T>.get(url: URL, handler: ((Result<T, Exception>) -> Unit)? = null) {
-    get(NetworkFetcher(url, this), handler)
-}
+fun <T : Any> Cache<T>.get(url: URL): Result<T, Exception> = get(NetworkFetcher(url, this))
 
-fun <T : Any> Cache<T>.get(
-    url: URL,
-    handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
-) {
-    get(NetworkFetcher(url, this), handler)
-}
+fun <T : Any> Cache<T>.getWithSource(url: URL): Pair<Result<T, Exception>, Cache.Source> =
+    getWithSource(NetworkFetcher(url, this))

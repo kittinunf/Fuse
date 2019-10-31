@@ -57,23 +57,19 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     }
 
     private fun updateResult(result: Result<LocalTime, Exception>) {
-        runOnUiThread {
-            when (result) {
-                is Result.Success -> {
-                    resultText.text =
-                        "Location: ${result.value.timezone}\nTime: ${result.value.dateTime}\nTZ: ${result.value.abbrev}"
-                }
+        when (result) {
+            is Result.Success -> {
+                resultText.text =
+                    "Location: ${result.value.timezone}\nTime: ${result.value.dateTime}\nTZ: ${result.value.abbrev}"
+            }
 
-                is Result.Failure -> {
-                    resultText.text = result.error.message
-                }
+            is Result.Failure -> {
+                resultText.text = result.error.message
             }
         }
     }
 
     private fun updateTitle(text: String? = null) {
-        runOnUiThread {
-            titleText.text = text
-        }
+        titleText.text = text
     }
 }
