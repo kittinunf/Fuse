@@ -1,1 +1,4 @@
-include(":fuse", ":sample")
+include(
+    ":fuse",
+    ":sample"
+)

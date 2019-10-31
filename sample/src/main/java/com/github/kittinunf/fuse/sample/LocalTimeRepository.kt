@@ -14,16 +14,12 @@ import kotlin.time.minutes
 
 interface LocalTimeRepository {
 
-    fun getLocalTime(area: String, location: String, handler: (Result<LocalTime, Exception>) -> Unit)
+    fun getLocalTime(place: String): Result<LocalTime, Exception>
 }
 
 interface CacheableLocalTimeRepository : LocalTimeRepository {
 
-    fun getLocalTimeIfNotExpired(
-        area: String,
-        location: String,
-        handler: (Result<LocalTime, Exception>, Cache.Source) -> Unit
-    )
+    fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Cache.Source>
 }
 
 private val fuel = FuelManager().apply {
@@ -32,8 +28,10 @@ private val fuel = FuelManager().apply {
 
 class NetworkRepository : LocalTimeRepository {
 
-    override fun getLocalTime(area: String, location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
-        fuel.get("/timezone/$area/$location").responseObject(LocalTime.deserializer, handler)
+    override fun getLocalTime(place: String): Result<LocalTime, Exception> {
+        val area = place.continent
+        val location = place.area
+        return fuel.get("/timezone/$area/$location").responseObject(LocalTime.deserializer).third
     }
 }
 
@@ -42,28 +40,31 @@ class CacheRepository(dir: String) : CacheableLocalTimeRepository {
     private val cache = CacheBuilder.config(dir = dir, name = "SAMPLE", convertible = StringDataConvertible()).build()
     private val expirableCache = ExpirableCache(cache)
 
-    override fun getLocalTime(area: String, location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
-        cache.get(TimeFetcher(area, location)) { result, _ ->
-            handler(result.map { LocalTime.fromJson(it) })
-        }
+    override fun getLocalTime(place: String): Result<LocalTime, Exception> {
+        val area = place.continent
+        val location = place.area
+        return cache.get(TimeFetcher(area, location)).map { LocalTime.fromJson(it) }
     }
 
     @ExperimentalTime
-    override fun getLocalTimeIfNotExpired(
-        area: String,
-        location: String,
-        handler: (Result<LocalTime, Exception>, Cache.Source) -> Unit
-    ) {
-        expirableCache.get(TimeFetcher(area, location), timeLimit = 5.minutes) { result, source ->
-            handler(result.map { LocalTime.fromJson(it) }, source)
-        }
+    override fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Cache.Source> {
+        val area = place.continent
+        val location = place.area
+
+        val result = expirableCache.getWithSource(TimeFetcher(area, location), timeLimit = 5.minutes)
+        return (result.first.map { LocalTime.fromJson(it) } to result.second)
     }
 
     private class TimeFetcher(private val area: String, private val location: String) : Fetcher<String> {
         override val key: String = LocalTime::class.java.name
 
-        override fun fetch(handler: (Result<String, Exception>) -> Unit) {
-            fuel.get("/timezone/$area/$location").responseString(handler)
-        }
+        override fun fetch(): Result<String, Exception> = fuel.get("/timezone/$area/$location").responseString().third
     }
 }
+
+// :)
+private val String.continent: String
+    get() = substringBefore("/")
+
+private val String.area: String
+    get() = substringAfter("/")

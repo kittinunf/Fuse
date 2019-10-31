@@ -7,9 +7,8 @@ import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.scenario.ExpirableCache
 import com.github.kittinunf.fuse.core.scenario.get
+import com.github.kittinunf.fuse.core.scenario.getWithSource
 import com.github.kittinunf.result.Result
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.seconds
@@ -26,10 +25,7 @@ class FuseScenarioTest : BaseTestCase() {
     @ExperimentalTime
     companion object {
         private val tempDir = createTempDir().absolutePath
-        private val cache =
-            CacheBuilder.config(tempDir, StringDataConvertible()) {
-                callbackExecutor = Executor { it.run() }
-            }.build()
+        private val cache = CacheBuilder.config(tempDir, StringDataConvertible()).build()
 
         private val expirableCache = ExpirableCache(cache)
     }
@@ -50,43 +46,21 @@ class FuseScenarioTest : BaseTestCase() {
         expirableCache.remove("hello", Cache.Source.MEM)
         expirableCache.remove("hello", Cache.Source.DISK)
 
-        val lock = CountDownLatch(1)
-
-        var value: String? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
-        expirableCache.get("hello", { "world" }) { (v, e), type ->
-            value = v
-            error = e
-            source = type
-
-            lock.countDown()
-        }
-        lock.wait()
+        val (result, source) = expirableCache.getWithSource("hello", { "world" })
+        val (value, error) = result
 
         assertThat(value, notNullValue())
         assertThat(error, nullValue())
         assertThat(source, equalTo(Cache.Source.ORIGIN))
-        assertThat(expirableCache.getTimestamp("hello"), not(equalTo(-1L)))
+
+        val timestamp = expirableCache.getTimestamp("hello")
+        assertThat(timestamp, not(equalTo(-1L)))
     }
 
     @ExperimentalTime
     @Test
     fun fetchWithTimeLimitExpired() {
-        var lock = CountDownLatch(1)
-
-        var value: String? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
-        expirableCache.get("hello", { "world" }) { (v, e) ->
-            value = v
-            error = e
-
-            lock.countDown()
-        }
-        lock.wait()
+        val (value, error) = expirableCache.get("hello", { "world" })
 
         assertThat(value, notNullValue())
         assertThat(value, equalTo("world"))
@@ -94,38 +68,24 @@ class FuseScenarioTest : BaseTestCase() {
 
         Thread.sleep(6000)
 
-        lock = CountDownLatch(1)
-        expirableCache.get("hello", { "new world" }, timeLimit = 5.seconds) { (v, e), type ->
-            value = v
-            error = e
-            source = type
+        val (anotherResult, anotherSource) = expirableCache.getWithSource(
+            "hello",
+            { "new world" },
+            timeLimit = 5.seconds
+        )
+        val (anotherValue, anotherError) = anotherResult
 
-            lock.countDown()
-        }
-        lock.wait()
-
-        assertThat(value, notNullValue())
-        assertThat(value, equalTo("new world"))
-        assertThat(error, nullValue())
-        assertThat(source, equalTo(Cache.Source.ORIGIN))
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherValue, equalTo("new world"))
+        assertThat(anotherError, nullValue())
+        assertThat(anotherSource, equalTo(Cache.Source.ORIGIN))
     }
 
     @ExperimentalTime
     @Test
     fun fetchWithTimeLimitExpiredButStillForceToUse() {
-        var lock = CountDownLatch(1)
-
-        var value: String? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
-        expirableCache.get("expired", { "world" }) { (v, e) ->
-            value = v
-            error = e
-
-            lock.countDown()
-        }
-        lock.wait()
+        val (result, source) = expirableCache.getWithSource("expired", { "world" })
+        val (value, error) = result
 
         assertThat(value, notNullValue())
         assertThat(value, equalTo("world"))
@@ -133,183 +93,95 @@ class FuseScenarioTest : BaseTestCase() {
 
         Thread.sleep(6000)
 
-        lock = CountDownLatch(1)
-        expirableCache.get(
+        val (anotherResult, anotherSource) = expirableCache.getWithSource(
             "expired",
             { "new world" },
             timeLimit = 5.seconds,
             useEntryEvenIfExpired = true
-        ) { (v, e), type ->
-            value = v
-            error = e
-            source = type
+        )
+        val (anotherValue, anotherError) = anotherResult
 
-            lock.countDown()
-        }
-        lock.wait()
-
-        assertThat(value, notNullValue())
-        assertThat(value, equalTo("world"))
-        assertThat(error, nullValue())
-        assertThat(source, equalTo(Cache.Source.MEM))
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherValue, equalTo("world"))
+        assertThat(anotherError, nullValue())
+        assertThat(anotherSource, equalTo(Cache.Source.MEM))
     }
 
     @ExperimentalTime
     @Test
     fun fetchWithTimeLimitNotExpired() {
-        var lock = CountDownLatch(1)
-
-        var value: String? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
-        expirableCache.get("not expired", { "world" }) { (v, e) ->
-            value = v
-            error = e
-
-            lock.countDown()
-        }
-        lock.wait()
+        val (value, error) = expirableCache.get("not expired", { "world" })
 
         assertThat(value, notNullValue())
         assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
-
-        value = null
-        error = null
 
         Thread.sleep(1000)
 
-        lock = CountDownLatch(1)
-        expirableCache.get("not expired", { "new world" }, 5.seconds) { (v, e), type ->
-            value = v
-            error = e
-            source = type
+        val (anotherResult, anotherSource) = expirableCache.getWithSource("not expired", { "new world" }, 5.seconds)
+        val (anotherValue, anotherError) = anotherResult
 
-            lock.countDown()
-        }
-        lock.wait()
-
-        assertThat(value, notNullValue())
-        assertThat(value, equalTo("world"))
-        assertThat(error, nullValue())
-        assertThat(source, not(equalTo(Cache.Source.ORIGIN)))
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherValue, equalTo("world"))
+        assertThat(anotherError, nullValue())
+        assertThat(anotherSource, not(equalTo(Cache.Source.ORIGIN)))
     }
 
     @ExperimentalTime
     @Test
     fun fetchWithTimeLimitNotExpiredButNotInMemory() {
-        var lock = CountDownLatch(1)
-
-        var value: String? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
-        expirableCache.get("not expired", { "world" }) { (v, e) ->
-            value = v
-            error = e
-
-            lock.countDown()
-        }
-        lock.wait()
+        val (value, error) = expirableCache.get("not expired", { "world" })
 
         assertThat(value, notNullValue())
         assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
-
-        value = null
-        error = null
 
         Thread.sleep(1000)
         expirableCache.remove("not expired", Cache.Source.MEM)
 
-        lock = CountDownLatch(1)
-        expirableCache.get("not expired", { "new world" }, 5.seconds) { (v, e), type ->
-            value = v
-            error = e
-            source = type
+        val (anotherResult, anotherSource) = expirableCache.getWithSource("not expired", { "new world" }, 5.seconds)
+        val (anotherValue, anotherError) = anotherResult
 
-            lock.countDown()
-        }
-        lock.wait()
-
-        assertThat(value, notNullValue())
-        assertThat(value, equalTo("world"))
-        assertThat(error, nullValue())
-        assertThat(source, equalTo(Cache.Source.DISK))
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherValue, equalTo("world"))
+        assertThat(anotherError, nullValue())
+        assertThat(anotherSource, equalTo(Cache.Source.DISK))
     }
 
     @ExperimentalTime
     @Test
     fun fetchWithFetcherThatCouldFail() {
-        var lock = CountDownLatch(1)
-
-        var value: String? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
-        expirableCache.get("can_fail", { "world" }) { (v, e) ->
-            value = v
-            error = e
-
-            lock.countDown()
-        }
-        lock.wait()
+        val (value, error) = expirableCache.get("can_fail", { "world" })
 
         assertThat(value, notNullValue())
         assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
 
-        value = null
-        error = null
-
-        lock = CountDownLatch(1)
-
         val failFetcher = object : Fetcher<String> {
             override val key: String = "can_fail"
-
-            override fun fetch(handler: (Result<String, Exception>) -> Unit) =
-                handler(Result.error(Exception("fail catcher")))
+            override fun fetch(): Result<String, Exception> = Result.error(Exception("fail catcher"))
         }
 
-        expirableCache.get(failFetcher, Duration.ZERO) { (v, e), s ->
-            value = v
-            error = e
+        // this will always force to be expired
+        val (anotherResult, anotherSource) = expirableCache.getWithSource(failFetcher, Duration.ZERO)
+        val (anotherValue, anotherError) = anotherResult
 
-            source = s
-            lock.countDown()
-        }
-        lock.wait()
-
-        assertThat(value, notNullValue())
-        assertThat(error, nullValue())
-        assertThat(source, not(equalTo(Cache.Source.ORIGIN)))
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherError, nullValue())
+        assertThat(anotherSource, not(equalTo(Cache.Source.ORIGIN)))
     }
 
     @ExperimentalTime
     @Test
     fun fetchWithFailureFetcherAndAlwaysExpiringEntry() {
-        val lock = CountDownLatch(1)
-
-        var value: String? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
         val failFetcher = object : Fetcher<String> {
             override val key: String = "will_fail"
 
-            override fun fetch(handler: (Result<String, Exception>) -> Unit) =
-                handler(Result.error(Exception("fail catcher")))
+            override fun fetch(): Result<String, Exception> = Result.error(Exception("fail catcher"))
         }
 
-        expirableCache.get(failFetcher, Duration.ZERO) { (v, e), s ->
-            value = v
-            error = e
-
-            source = s
-            lock.countDown()
-        }
-        lock.wait()
+        val (result, source) = expirableCache.getWithSource(failFetcher, Duration.ZERO)
+        val (value, error) = result
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())

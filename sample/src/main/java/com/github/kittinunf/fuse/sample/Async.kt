@@ -1,4 +1,4 @@
-package com.github.kittinunf.fuse.util
+package com.github.kittinunf.fuse.sample
 
 import android.os.Handler
 import android.os.Looper
