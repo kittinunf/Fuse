@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
             service.getFromBoth(place) {
                 count++
 
-                updateTitle(if (count == 1) "Cache" else "Network")
+                updateTitle(count.toString())
                 updateResult(it)
             }
         }
