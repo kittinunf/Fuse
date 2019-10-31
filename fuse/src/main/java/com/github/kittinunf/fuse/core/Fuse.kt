@@ -42,7 +42,7 @@ class Fuse {
              *  Otherwise it will return the entry from the persistence which specified by Source (ORIGIN, MEM, or DISK)
              *
              * @param fetcher The key associated with the object to be persisted
-             * @return Result<Pair<T, Exception>> The Result that represents the success/failure of the operation and The source of the entry
+             * @return Pair<Result<T, Exception>, Cache.Source> The Pair of the result that represents the success/failure of the operation and The source of the entry
              */
             fun getWithSource(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Cache.Source>
         }
