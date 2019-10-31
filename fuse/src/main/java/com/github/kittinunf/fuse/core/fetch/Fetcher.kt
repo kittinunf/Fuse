@@ -15,10 +15,7 @@ interface Fetcher<out T : Any> {
 
 class NotFoundException(key: String) : RuntimeException("value from $key is not found")
 
-internal class SimpleFetcher<out T : Any>(
-    override val key: String,
-    private val getValue: () -> T?
-) : Fetcher<T> {
+internal class SimpleFetcher<out T : Any>(override val key: String, private val getValue: () -> T?) : Fetcher<T> {
 
     override fun fetch(): Result<T, Exception> = Result.of(getValue(), { NotFoundException(key) })
 }

@@ -62,8 +62,6 @@ class CacheRepository(dir: String) : CacheableLocalTimeRepository {
     private class TimeFetcher(private val area: String, private val location: String) : Fetcher<String> {
         override val key: String = LocalTime::class.java.name
 
-        override fun fetch(handler: (Result<String, Exception>) -> Unit) {
-            fuel.get("/timezone/$area/$location").responseString(handler)
-        }
+        override fun fetch(): Result<String, Exception> = fuel.get("/timezone/$area/$location").responseString().third
     }
 }

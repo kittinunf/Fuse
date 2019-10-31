@@ -4,8 +4,7 @@ import com.jakewharton.disklrucache.DiskLruCache
 import java.io.File
 import java.nio.charset.Charset
 
-internal class DiskCache private constructor(private val cache: DiskLruCache) :
-    Persistence<ByteArray> {
+internal class DiskCache private constructor(private val cache: DiskLruCache) : Persistence<ByteArray> {
 
     enum class OutputStreamIndex {
         Data, Key, Time
