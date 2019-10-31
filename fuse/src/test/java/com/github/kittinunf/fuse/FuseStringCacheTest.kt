@@ -6,13 +6,13 @@ import com.github.kittinunf.fuse.core.StringDataConvertible
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.get
 import com.github.kittinunf.fuse.core.getWithSource
+import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 class FuseStringCacheTest : BaseTestCase() {
 

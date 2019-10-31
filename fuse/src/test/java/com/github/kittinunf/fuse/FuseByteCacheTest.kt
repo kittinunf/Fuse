@@ -8,6 +8,9 @@ import com.github.kittinunf.fuse.core.fetch.NotFoundException
 import com.github.kittinunf.fuse.core.get
 import com.github.kittinunf.fuse.core.getWithSource
 import com.github.kittinunf.fuse.core.put
+import java.nio.charset.Charset
+import java.util.concurrent.CountDownLatch
+import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.CoreMatchers.isA
@@ -21,9 +24,6 @@ import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runners.MethodSorters
-import java.nio.charset.Charset
-import java.util.concurrent.CountDownLatch
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class FuseByteCacheTest : BaseTestCase() {
