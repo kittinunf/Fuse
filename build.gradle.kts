@@ -13,8 +13,11 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:3.5.1")
-        classpath("org.jmailen.gradle:kotlinter-gradle:2.1.2")
+        val androidGradleVersion: String by project
+        val kotlinterVersion: String by project
+
+        classpath("com.android.tools.build:gradle:$androidGradleVersion")
+        classpath("org.jmailen.gradle:kotlinter-gradle:$kotlinterVersion")
     }
 }
 
