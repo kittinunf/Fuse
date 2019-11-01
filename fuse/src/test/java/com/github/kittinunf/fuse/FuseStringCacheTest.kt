@@ -6,7 +6,6 @@ import com.github.kittinunf.fuse.core.StringDataConvertible
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.get
 import com.github.kittinunf.fuse.core.getWithSource
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
@@ -36,9 +35,9 @@ class FuseStringCacheTest : BaseTestCase() {
         val (value, error) = result
 
         assertThat(value, notNullValue())
-        assertThat(value, isEqualTo("world"))
+        assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
-        assertThat(source, isEqualTo(Cache.Source.ORIGIN))
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
     }
 
     @Test
@@ -50,7 +49,7 @@ class FuseStringCacheTest : BaseTestCase() {
         val (value, error) = cache.get("hello", { "world" })
 
         assertThat(value, notNullValue())
-        assertThat(value, isEqualTo("WORLD1"))
+        assertThat(value, equalTo("WORLD1"))
         assertThat(error, nullValue())
     }
 
@@ -66,14 +65,14 @@ class FuseStringCacheTest : BaseTestCase() {
         val (value, error) = cache.get("hello", { "world" })
 
         assertThat(value, notNullValue())
-        assertThat(value, isEqualTo("world"))
+        assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
 
         val (anotherResult, anotherSource) = cache.getWithSource("custom", { "world" })
         val (anotherValue, anotherError) = anotherResult
 
         assertThat(anotherValue, notNullValue())
-        assertThat(anotherValue, isEqualTo("WORLD"))
+        assertThat(anotherValue, equalTo("WORLD"))
         assertThat(anotherError, nullValue())
         assertThat(anotherSource, equalTo(Cache.Source.ORIGIN))
     }
