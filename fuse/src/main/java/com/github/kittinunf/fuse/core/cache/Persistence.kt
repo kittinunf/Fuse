@@ -12,12 +12,12 @@ internal interface Persistence<T> {
     fun put(safeKey: String, key: String, value: T, timeToPersist: Long)
 
     /**
-     * Remove the entry associated with its particular key
+     * Remove the entry associated with its particular safeKey
      *
-     * @param key The key associated with the object to be deleted from persistence
-     * @return Boolean Whether the key was removed successfully
+     * @param safeKey The safeKey associated with the object to be deleted from persistence
+     * @return Boolean Whether the safeKey was removed successfully
      */
-    fun remove(key: String): Boolean
+    fun remove(safeKey: String): Boolean
 
     /**
      * Remove all the entry in the persistence
@@ -37,16 +37,16 @@ internal interface Persistence<T> {
     fun size(): Long
 
     /**
-     * Get the value associated with its particular key
+     * Get the value associated with its particular safeKey
      *
-     * @param key The key associated with the value to be retrieved from persistence
+     * @param safeKey The safeKey associated with the value to be retrieved from persistence
      */
-    fun get(key: String): T?
+    fun get(safeKey: String): T?
 
     /**
-     * Get timestamp in milliseconds associated with its particular key
+     * Get timestamp in milliseconds associated with its particular safeKey
      *
-     * @param key The key associated with the value to be retrieved from persistence
+     * @param safeKey The safeKey associated with the value to be retrieved from persistence
      */
-    fun getTimestamp(key: String): Long?
+    fun getTimestamp(safeKey: String): Long?
 }

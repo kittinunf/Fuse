@@ -142,7 +142,8 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
     }
 
     override fun hasKey(key: String): Boolean {
-        val value = memCache.get(key) ?: diskCache.get(key)
+        val safeKey = key.md5()
+        val value = memCache.get(safeKey) ?: diskCache.get(safeKey)
         return value != null
     }
 

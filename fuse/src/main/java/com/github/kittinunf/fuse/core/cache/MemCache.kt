@@ -22,10 +22,10 @@ internal class MemCache : Persistence<Any> {
         }
     }
 
-    override fun remove(key: String): Boolean {
-        val removedValue = cache.remove(key)
-        cache.remove(convertKey(key, KEY_SUFFIX))
-        cache.remove(convertKey(key, TIME_SUFFIX))
+    override fun remove(safeKey: String): Boolean {
+        val removedValue = cache.remove(safeKey)
+        cache.remove(convertKey(safeKey, KEY_SUFFIX))
+        cache.remove(convertKey(safeKey, TIME_SUFFIX))
         return removedValue != null
     }
 
@@ -38,9 +38,9 @@ internal class MemCache : Persistence<Any> {
 
     override fun size(): Long = cache.size().toLong()
 
-    override fun get(key: String): Any? = cache.get(key)
+    override fun get(safeKey: String): Any? = cache.get(safeKey)
 
-    override fun getTimestamp(key: String): Long? = get(convertKey(key, TIME_SUFFIX)) as? Long
+    override fun getTimestamp(safeKey: String): Long? = get(convertKey(safeKey, TIME_SUFFIX)) as? Long
 
     private fun convertKey(key: String, suffix: String): String = "$key$suffix"
 }
