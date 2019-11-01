@@ -65,7 +65,6 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
     }
 
     private fun _get(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Source> {
-
         val key = fetcher.key
         val safeKey = key.md5()
 
@@ -140,6 +139,11 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
     override fun allKeys(): Set<String> {
         val keys = memCache.allKeys()
         return keys.takeIf { it.isNotEmpty() } ?: diskCache.allKeys()
+    }
+
+    override fun hasKey(key: String): Boolean {
+        val value = memCache.get(key) ?: diskCache.get(key)
+        return value != null
     }
 
     override fun getTimestamp(key: String): Long {
