@@ -1,17 +1,18 @@
 package com.github.kittinunf.fuse
 
+import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.DiskFetcher
-import com.github.kittinunf.fuse.core.fetch.get
-import com.github.kittinunf.fuse.core.fetch.put
+import com.github.kittinunf.fuse.core.get
+import com.github.kittinunf.fuse.core.getWithSource
+import com.github.kittinunf.fuse.core.put
 import java.io.FileNotFoundException
 import java.net.URL
 import java.nio.charset.Charset
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
 import org.hamcrest.CoreMatchers.`is` as isEqualTo
+import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.isA
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
@@ -34,9 +35,7 @@ class FuseJsonCacheTest : BaseTestCase() {
 
     companion object {
         private val tempDir = createTempDir().absolutePath
-        val cache = CacheBuilder.config(tempDir, JsonDataConvertible()) {
-            callbackExecutor = Executor { it.run() }
-        }.build()
+        val cache = CacheBuilder.config(tempDir, JsonDataConvertible()).build()
     }
 
     private var hasSetUp = false
@@ -50,20 +49,9 @@ class FuseJsonCacheTest : BaseTestCase() {
 
     @Test
     fun firstFetch() {
-        val lock = CountDownLatch(1)
         val json = assetDir.resolve("sample_json.json")
 
-        var value: JSONObject? = null
-        var error: Exception? = null
-
-        cache.get(json) { result ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-
-        lock.wait()
+        val (value, error) = cache.get(json)
 
         assertThat(value, notNullValue())
         assertThat(value!!.getString("name"), isEqualTo("Product"))
@@ -72,41 +60,29 @@ class FuseJsonCacheTest : BaseTestCase() {
 
     @Test
     fun fetchFromNetworkSuccess() {
-        val lock = CountDownLatch(1)
         val httpBin = URL("https://www.httpbin.org/get")
+        val (result, source) = cache.getWithSource(httpBin)
+        val (value, error) = result
 
-        var value: JSONObject? = null
-        var error: Exception? = null
-
-        cache.get(httpBin) { result, _ ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-
-        lock.wait()
         assertThat(value, notNullValue())
         assertThat(value!!.getString("url"), isEqualTo("https://www.httpbin.org/get"))
         assertThat(error, nullValue())
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
+
+        val (anotherResult, anotherSource) = cache.getWithSource(httpBin)
+        val (anotherValue, anotherError) = anotherResult
+
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherValue!!.getString("url"), isEqualTo("https://www.httpbin.org/get"))
+        assertThat(anotherError, nullValue())
+        assertThat(anotherSource, equalTo(Cache.Source.MEM))
     }
 
     @Test
     fun fetchFromNetworkFail() {
-        val lock = CountDownLatch(1)
-        val failedHttpBin = URL("http://www.httpbin.org/t")
+        val httpBin = URL("http://www.httpbin.org/fail")
+        val (value, error) = cache.get(httpBin)
 
-        var value: JSONObject? = null
-        var error: Exception? = null
-
-        cache.get(failedHttpBin) { result, _ ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-
-        lock.wait()
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
         assertThat(error as? FileNotFoundException, isA(FileNotFoundException::class.java))
@@ -114,44 +90,25 @@ class FuseJsonCacheTest : BaseTestCase() {
 
     @Test
     fun fetchWithValueJsonNotCompatible() {
-        val lock = CountDownLatch(1)
-
-        var value: JSONObject? = null
-        var error: Exception? = null
-
         val json = assetDir.resolve("broken_json.json")
-        cache.get(json) { result ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-        lock.wait()
+
+        val (result, source) = cache.getWithSource(json)
+        val (value, error) = result
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
         assertThat(error as? JSONException, isA(JSONException::class.java))
     }
 
     @Test
     fun putWithValueJsonCompatible() {
-        val lock = CountDownLatch(1)
-
-        var value: JSONObject? = null
-        var error: Exception? = null
-
         val temp = assetDir.resolve("sample_json.json").copyTo(assetDir.resolve("temp.json"), true)
 
         val newText = temp.readText().replace("Product", "New Product")
         temp.writeText(newText)
 
-        cache.put(temp) { result ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-        lock.wait()
+        val (value, error) = cache.put(temp)
 
         assertThat(value, notNullValue())
         assertThat(error, nullValue())
@@ -160,20 +117,9 @@ class FuseJsonCacheTest : BaseTestCase() {
 
     @Test
     fun putWithValueJsonNotCompatible() {
-        val lock = CountDownLatch(1)
-
-        var value: JSONObject? = null
-        var error: Exception? = null
-
         val json = assetDir.resolve("broken_json.json")
 
-        cache.put(DiskFetcher(json, cache)) { result ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-        lock.wait()
+        val (value, error) = cache.put(DiskFetcher(json, cache))
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())

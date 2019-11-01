@@ -10,41 +10,46 @@ import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.milliseconds
 
-class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by cache,
-    Fuse.Cacheable.Put<T> by cache {
+class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by cache, Fuse.Cacheable.Put<T> by cache {
 
     @ExperimentalTime
     fun get(
         fetcher: Fetcher<T>,
         timeLimit: Duration = Duration.INFINITE,
-        useEntryEvenIfExpired: Boolean = false,
-        handler: ((Result<T, Exception>) -> Unit)? = null
-    ) {
-        get(fetcher, timeLimit, useEntryEvenIfExpired) { result, _ -> handler?.invoke(result) }
-    }
+        useEntryEvenIfExpired: Boolean = false
+    ): Result<T, Exception> = getWithSource(fetcher, timeLimit, useEntryEvenIfExpired).first
 
     @ExperimentalTime
-    fun get(
+    fun getWithSource(
         fetcher: Fetcher<T>,
         timeLimit: Duration = Duration.INFINITE,
-        useEntryEvenIfExpired: Boolean = false,
-        handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
-    ) {
+        useEntryEvenIfExpired: Boolean = false
+    ): Pair<Result<T, Exception>, Cache.Source> {
         val key = fetcher.key
         val persistedTimestamp = getTimestamp(key)
 
-        // no timestamp fetch
-        if (persistedTimestamp == -1L) {
-            put(fetcher) { handler?.invoke(it, Cache.Source.ORIGIN) }
+        // no timestamp fetch, we need to just fetch the new data
+        return if (persistedTimestamp == -1L) {
+            put(fetcher) to Cache.Source.ORIGIN
         } else {
             val isExpired = hasExpired(persistedTimestamp, timeLimit)
 
             // if it is not expired yet, user wants to use it even it is already expired
             if (!isExpired || useEntryEvenIfExpired) {
-                cache.get(fetcher, handler)
+                cache.getWithSource(fetcher)
             } else {
-                // fetch the value from the fetcher and put back
-                put(fetcher) { handler?.invoke(it, Cache.Source.ORIGIN) }
+                // fetch the value from the fetcher and put back if success, if failure we will fallback to the cache
+                putOrGetFromCacheIfFailure(fetcher)
+            }
+        }
+    }
+
+    private fun putOrGetFromCacheIfFailure(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Cache.Source> {
+        return when (val result = put(fetcher)) {
+            is Result.Success -> result to Cache.Source.ORIGIN
+            is Result.Failure -> {
+                // fallback to cache
+                cache.getWithSource(fetcher)
             }
         }
     }
@@ -57,36 +62,35 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
     }
 }
 
+// region Value
 @ExperimentalTime
 fun <T : Any> ExpirableCache<T>.get(
     key: String,
     getValue: (() -> T?)? = null,
     timeLimit: Duration = Duration.INFINITE,
-    useEntryEvenIfExpired: Boolean = false,
-    handler: ((Result<T, Exception>) -> Unit)? = null
-) {
+    useEntryEvenIfExpired: Boolean = false
+): Result<T, Exception> {
     val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    get(fetcher, timeLimit, useEntryEvenIfExpired, handler)
+    return get(fetcher, timeLimit, useEntryEvenIfExpired)
 }
 
 @ExperimentalTime
-fun <T : Any> ExpirableCache<T>.get(
+fun <T : Any> ExpirableCache<T>.getWithSource(
     key: String,
     getValue: (() -> T?)? = null,
     timeLimit: Duration = Duration.INFINITE,
-    useEntryEvenIfExpired: Boolean = false,
-    handler: ((Result<T, Exception>, Cache.Source) -> Unit)? = null
-) {
+    useEntryEvenIfExpired: Boolean = false
+): Pair<Result<T, Exception>, Cache.Source> {
     val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    get(fetcher, timeLimit, useEntryEvenIfExpired, handler)
+    return getWithSource(fetcher, timeLimit, useEntryEvenIfExpired)
 }
 
 @ExperimentalTime
 fun <T : Any> ExpirableCache<T>.put(
     key: String,
-    putValue: T? = null,
-    handler: ((Result<T, Exception>) -> Unit)? = null
-) {
+    putValue: T? = null
+): Result<T, Exception> {
     val fetcher = if (putValue == null) NoFetcher<T>(key) else SimpleFetcher(key, { putValue })
-    put(fetcher, handler)
+    return put(fetcher)
 }
+// endregion

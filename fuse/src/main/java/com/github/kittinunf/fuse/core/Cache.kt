@@ -3,11 +3,14 @@ package com.github.kittinunf.fuse.core
 import com.github.kittinunf.fuse.core.cache.DiskCache
 import com.github.kittinunf.fuse.core.cache.MemCache
 import com.github.kittinunf.fuse.core.cache.Persistence
+import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.fetch.Fetcher
-import com.github.kittinunf.fuse.util.dispatch
+import com.github.kittinunf.fuse.core.fetch.NoFetcher
+import com.github.kittinunf.fuse.core.fetch.SimpleFetcher
 import com.github.kittinunf.fuse.util.md5
-import com.github.kittinunf.fuse.util.thread
 import com.github.kittinunf.result.Result
+import com.github.kittinunf.result.flatMap
+import java.io.File
 
 object CacheBuilder {
 
@@ -49,102 +52,70 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         )
     }
 
-    override fun put(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)?) {
-        dispatch(config.dispatchedExecutor) {
-            fetchAndPut(fetcher) { result ->
-                thread(config.callbackExecutor) {
-                    handler?.invoke(result)
-                }
-            }
-        }
+    override fun put(fetcher: Fetcher<T>): Result<T, Exception> {
+        return fetchAndPut(fetcher)
     }
 
-    override fun get(fetcher: Fetcher<T>, handler: ((Result<T, Exception>) -> Unit)?) {
-        get(fetcher, handler, handler, handler)
+    override fun get(fetcher: Fetcher<T>): Result<T, Exception> {
+        return _get(fetcher).first
     }
 
-    override fun get(fetcher: Fetcher<T>, handler: ((Result<T, Exception>, Source) -> Unit)?) {
-        get(fetcher,
-            { handler?.invoke(it, Source.MEM) },
-            { handler?.invoke(it, Source.DISK) },
-            { handler?.invoke(it, Source.ORIGIN) })
+    override fun getWithSource(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Source> {
+        return _get(fetcher)
     }
 
-    private fun get(
-        fetcher: Fetcher<T>,
-        memHandler: ((Result<T, Exception>) -> Unit)?,
-        diskHandler: ((Result<T, Exception>) -> Unit)?,
-        fetchHandler: ((Result<T, Exception>) -> Unit)?
-    ) {
+    private fun _get(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Source> {
 
         val key = fetcher.key
         val safeKey = key.md5()
 
         // found in memCache
         memCache.get(safeKey)?.let { value ->
-            dispatch(config.dispatchedExecutor) {
-                // move specific key in disk cache up as it is found in mem
-                val result = Result.of<T, Exception> {
-                    val converted = convertToData(value as T)
-                    if (diskCache.get(safeKey) == null) {
-                        // we found this in memCache, so we need to retrieve timeStamp that was saved in memCache back to diskCache
-                        val timeWasPersisted = memCache.getTimestamp(safeKey)
-                        diskCache.put(safeKey, key, converted, timeWasPersisted ?: -1)
-                    }
-                    value
+            // move specific key in disk cache up as it is found in mem
+            val result = Result.of<T, Exception> {
+                val converted = convertToData(value as T)
+                if (diskCache.get(safeKey) == null) {
+                    // we found this in memCache, so we need to retrieve timeStamp that was saved in memCache back to diskCache
+                    val timeWasPersisted = memCache.getTimestamp(safeKey)
+                    diskCache.put(safeKey, key, converted, timeWasPersisted ?: -1)
                 }
-                thread(config.callbackExecutor) {
-                    memHandler?.invoke(result)
-                }
+                value
             }
-            return
+            return result to Source.MEM
         }
 
-        dispatch(config.dispatchedExecutor) {
-            // find in diskCache
-            val bytes = diskCache.get(safeKey)
-            if (bytes == null) {
-                // not found we need to fetch then put it back
-                fetchAndPut(fetcher) { result ->
-                    thread(config.callbackExecutor) {
-                        fetchHandler?.invoke(result)
-                    }
-                }
-            } else {
-                // found in disk, save back into mem
-                val result = Result.of<T, Exception> {
-                    // we found this in disk cache, so we need to retrieve timeStamp that was stored in diskCache back to memCache
-                    val converted = convertFromData(bytes)
+        // find in diskCache
+        val bytes = diskCache.get(safeKey)
+        if (bytes == null) {
+            // not found we need to fetch then put it back
+            return fetchAndPut(fetcher) to Source.ORIGIN
+        } else {
+            // found in disk, save back into mem
+            val result = Result.of<T, Exception> {
+                // we found this in disk cache, so we need to retrieve timeStamp that was stored in diskCache back to memCache
+                val converted = convertFromData(bytes)
 
-                    val timeWasPersisted = diskCache.getTimestamp(safeKey)
-                    // put the converted version into the memCache
-                    memCache.put(safeKey, key, converted, timeWasPersisted ?: -1)
-                    converted
-                }
-                thread(config.callbackExecutor) {
-                    diskHandler?.invoke(result)
-                }
+                val timeWasPersisted = diskCache.getTimestamp(safeKey)
+                // put the converted version into the memCache
+                memCache.put(safeKey, key, converted, timeWasPersisted ?: -1)
+                converted
             }
+            return result to Source.DISK
         }
     }
 
-    private fun put(key: String, value: T, success: ((Result<T, Exception>) -> Unit)? = null) {
-        dispatch(config.dispatchedExecutor) {
-            // save the persist timing
-            val timeToPersist = System.currentTimeMillis()
+    private fun put(key: String, value: T): Result<T, Exception> {
+        val transformed = config.transformer(key, value)
 
-            applyTransformer(key, value) { transformed ->
-                val safeKey = key.md5()
-                memCache.put(safeKey, key, transformed, timeToPersist)
-                val result = Result.of<T, Exception> {
-                    val converted = convertToData(transformed)
-                    diskCache.put(safeKey, key, converted, timeToPersist)
-                    transformed
-                }
-                thread(config.callbackExecutor) {
-                    success?.invoke(result)
-                }
-            }
+        // save the persist timing
+        val timeToPersist = System.currentTimeMillis()
+        val safeKey = key.md5()
+
+        memCache.put(safeKey, key, transformed, timeToPersist)
+        return Result.of {
+            val converted = convertToData(transformed)
+            diskCache.put(safeKey, key, converted, timeToPersist)
+            transformed
         }
     }
 
@@ -176,21 +147,37 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey) ?: -1
     }
 
-    private fun fetchAndPut(
-        fetcher: Fetcher<T>,
-        handler: ((Result<T, Exception>) -> Unit)? = null
-    ) {
-        fetcher.fetch { result ->
-            result.fold({ value ->
-                put(fetcher.key, value, handler)
-            }, { exception ->
-                handler?.invoke(Result.error(exception))
-            })
-        }
-    }
-
-    private fun applyTransformer(key: String, value: T, success: (T) -> Unit) {
-        val transformed = config.transformer(key, value)
-        success(transformed)
+    private fun fetchAndPut(fetcher: Fetcher<T>): Result<T, Exception> {
+        val fetchResult = fetcher.fetch()
+        return fetchResult.flatMap { put(fetcher.key, it) }
     }
 }
+
+// region File
+fun <T : Any> Cache<T>.get(file: File): Result<T, Exception> = get(DiskFetcher(file, this))
+
+fun <T : Any> Cache<T>.getWithSource(file: File): Pair<Result<T, Exception>, Cache.Source> =
+    getWithSource(DiskFetcher(file, this))
+
+fun <T : Any> Cache<T>.put(file: File): Result<T, Exception> = put(DiskFetcher(file, this))
+// endregion File
+
+// region Value
+fun <T : Any> Cache<T>.get(key: String, getValue: (() -> T?)? = null): Result<T, Exception> {
+    val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
+    return get(fetcher)
+}
+
+fun <T : Any> Cache<T>.getWithSource(
+    key: String,
+    getValue: (() -> T?)? = null
+): Pair<Result<T, Exception>, Cache.Source> {
+    val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
+    return getWithSource(fetcher)
+}
+
+fun <T : Any> Cache<T>.put(key: String, putValue: T? = null): Result<T, Exception> {
+    val fetcher = if (putValue == null) NoFetcher<T>(key) else SimpleFetcher(key, { putValue })
+    return put(fetcher)
+}
+// endregion Value

@@ -4,8 +4,7 @@ import com.jakewharton.disklrucache.DiskLruCache
 import java.io.File
 import java.nio.charset.Charset
 
-internal class DiskCache private constructor(private val cache: DiskLruCache) :
-    Persistence<ByteArray> {
+internal class DiskCache private constructor(private val cache: DiskLruCache) : Persistence<ByteArray> {
 
     enum class OutputStreamIndex {
         Data, Key, Time
@@ -15,9 +14,9 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) :
         const val JOURNAL_FILE = "journal"
 
         fun open(cacheDir: String, uniqueName: String, capacity: Long): DiskCache {
-            val f = File(cacheDir)
+            val dir = File(cacheDir)
             val disk = DiskLruCache.open(
-                f.resolve(uniqueName),
+                dir.resolve(uniqueName),
                 1,
                 OutputStreamIndex.values().size,
                 capacity
@@ -41,15 +40,12 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) :
         cache.delete()
     }
 
-    override fun allKeys(): Set<String> {
-        return allSafeKeys()
-            .map { get(it, OutputStreamIndex.Key.ordinal)!!.toString(Charset.defaultCharset()) }
-            .toSet()
-    }
+    override fun allKeys(): Set<String> = allSafeKeys()
+        .map { get(it, OutputStreamIndex.Key.ordinal)!!.toString(Charset.defaultCharset()) }
+        .toSet()
 
     private fun allSafeKeys() = synchronized(this) {
-        cache.directory.listFiles().filter { it.isFile && it.name != JOURNAL_FILE }
-            .map { it.name.substringBefore(".") }
+        cache.directory.listFiles().filter { it.isFile && it.name != JOURNAL_FILE }.map { it.name.substringBefore(".") }
     }
 
     override fun size(): Long = cache.size()

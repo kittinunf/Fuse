@@ -5,11 +5,11 @@ import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.NotFoundException
-import com.github.kittinunf.fuse.core.fetch.get
-import com.github.kittinunf.fuse.core.fetch.put
+import com.github.kittinunf.fuse.core.get
+import com.github.kittinunf.fuse.core.getWithSource
+import com.github.kittinunf.fuse.core.put
 import java.nio.charset.Charset
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
 import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
@@ -32,7 +32,7 @@ class FuseByteCacheTest : BaseTestCase() {
         private val tempDir = createTempDir().absolutePath
         val cache =
             CacheBuilder.config(tempDir, "Byte", ByteArrayDataConvertible()) {
-                callbackExecutor = Executor { it.run() }
+                // do more configuration here
             }.build()
     }
 
@@ -47,90 +47,42 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun fetch() {
-        val lock = CountDownLatch(1)
-
-        var value: ByteArray? = null
-        var error: Exception? = null
-        var cacheSource: Cache.Source? = null
-
-        cache.get("hello", { "world".toByteArray() }) { result, type ->
-            val (v, e) = result
-            value = v
-            error = e
-            cacheSource = type
-            lock.countDown()
-        }
-        lock.wait()
+        val (result, source) = cache.getWithSource("hello", { "world".toByteArray() })
+        val (value, error) = result
 
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
+        assertThat(source, isEqualTo(Cache.Source.ORIGIN))
     }
 
     @Test
     fun fetchSecondFail() {
-        val lock = CountDownLatch(1)
-
         fun fetchFail(): ByteArray? = null
 
-        var value: ByteArray? = null
-        var error: Exception? = null
-        var cacheSource: Cache.Source? = null
-
-        cache.get("fail", ::fetchFail) { result, type ->
-            val (v, e) = result
-            value = v
-            error = e
-            cacheSource = type
-            lock.countDown()
-        }
-        lock.wait()
+        val (result, source) = cache.getWithSource("fail", ::fetchFail)
+        val (value, error) = result
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.ORIGIN))
+        assertThat(source, isEqualTo(Cache.Source.ORIGIN))
     }
 
     @Test
     fun fetchFromMemory() {
-        val lock = CountDownLatch(1)
-
-        var value: ByteArray? = null
-        var error: Exception? = null
-        var cacheSource: Cache.Source? = null
-
-        cache.get("hello", { "world".toByteArray() }) { result, type ->
-            val (v, e) = result
-            value = v
-            error = e
-            cacheSource = type
-            lock.countDown()
-        }
-        lock.wait()
+        val (result, source) = cache.getWithSource("hello", { "world".toByteArray() })
+        val (value, error) = result
 
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
         assertThat(error, nullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.MEM))
+        assertThat(source, isEqualTo(Cache.Source.MEM))
     }
 
     @Test
     fun fetchFromDisk() {
-        var lock = CountDownLatch(1)
-
-        var value: ByteArray? = null
-        var error: Exception? = null
-        var cacheSource: Cache.Source? = null
-
-        cache.get("hello", { "world".toByteArray() }) { result, type ->
-            val (v, e) = result
-            value = v
-            error = e
-            cacheSource = type
-            lock.countDown()
-        }
-        lock.wait()
+        val (result, source) = cache.getWithSource("hello", { "world".toByteArray() })
+        val (value, error) = result
 
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
@@ -139,35 +91,18 @@ class FuseByteCacheTest : BaseTestCase() {
         // remove from memory cache
         cache.remove("hello", Cache.Source.MEM)
 
-        lock = CountDownLatch(1)
-        cache.get("hello", { "world".toByteArray() }) { result, type ->
-            val (v, e) = result
-            value = v
-            error = e
-            cacheSource = type
-            lock.countDown()
-        }
-        lock.wait()
+        val (result2, source2) = cache.getWithSource("hello", { "world".toByteArray() })
+        val (value2, error2) = result2
 
-        assertThat(value, notNullValue())
-        assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
-        assertThat(error, nullValue())
-        assertThat(cacheSource, isEqualTo(Cache.Source.DISK))
+        assertThat(value2, notNullValue())
+        assertThat(value2!!.toString(Charset.defaultCharset()), isEqualTo("world"))
+        assertThat(error2, nullValue())
+        assertThat(source2, isEqualTo(Cache.Source.DISK))
     }
 
     @Test
     fun putStringSuccess1() {
-        val lock = CountDownLatch(1)
-
-        var value: ByteArray? = null
-        var error: Exception? = null
-
-        cache.put("Test Put", "Hello world".toByteArray()) {
-            value = it.component1()
-            error = it.component2()
-            lock.countDown()
-        }
-        lock.wait()
+        val (value, error) = cache.put("Test Put", "Hello world".toByteArray())
 
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), equalTo("Hello world"))
@@ -177,37 +112,18 @@ class FuseByteCacheTest : BaseTestCase() {
     @Test
     fun putStringSuccess2() {
         // this needs to be run sequentially after running the putStringSuccess1
-        val anotherLock = CountDownLatch(1)
-        var anotherValue: ByteArray? = null
-        var anotherError: Exception? = null
-        cache.get("Test Put") { result ->
-            anotherValue = result.component1()
-            anotherError = result.component2()
-            anotherLock.countDown()
-        }
-        anotherLock.wait()
+        val (value, error) = cache.get("Test Put")
 
-        assertThat(anotherValue, notNullValue())
-        assertThat(anotherValue!!.toString(Charset.defaultCharset()), equalTo("Hello world"))
-        assertThat(anotherError, nullValue())
+        assertThat(value, notNullValue())
+        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("Hello world"))
+        assertThat(error, nullValue())
     }
 
     @Test
     fun fetchFileSuccess() {
-        val lock = CountDownLatch(1)
         val song = assetDir.resolve("sample_song.mp3")
 
-        var value: ByteArray? = null
-        var error: Exception? = null
-
-        cache.get(song) { result ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-
-        lock.wait()
+        val (value, error) = cache.get(song)
 
         assertThat(value, notNullValue())
         assertThat(error, nullValue())
@@ -215,20 +131,9 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun fetchFileImageSuccess() {
-        val lock = CountDownLatch(1)
         val image = assetDir.resolve("sample.jpg")
 
-        var value: ByteArray? = null
-        var error: Exception? = null
-
-        cache.get(image) { result ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-
-        lock.wait()
+        val (value, error) = cache.get(image)
 
         assertThat(value, notNullValue())
         assertThat(error, nullValue())
@@ -236,20 +141,9 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun fetchFileFail() {
-        val lock = CountDownLatch(1)
         val song = assetDir.resolve("not_found_song.mp3")
 
-        var value: ByteArray? = null
-        var error: Exception? = null
-
-        cache.get(song) { result ->
-            val (v, e) = result
-            value = v
-            error = e
-            lock.countDown()
-        }
-
-        lock.wait()
+        val (value, error) = cache.get(song)
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
@@ -257,11 +151,9 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun checkTimestamp() {
-        val lock = CountDownLatch(1)
+        cache.get("timestamp", { System.currentTimeMillis().toString().toByteArray() })
 
-        cache.get("timestamp", { System.currentTimeMillis().toString().toByteArray() }) { _ -> }
-
-        lock.wait(3)
+        Thread.sleep(2100)
 
         val timestamp = cache.getTimestamp("timestamp")
 
@@ -271,21 +163,8 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun remove() {
-        var lock = CountDownLatch(1)
-
-        var value: ByteArray? = null
-        var error: Exception? = null
-        var source: Cache.Source? = null
-
-        cache.get("YOYO", { "yoyo".toByteArray() }) { result, type ->
-            val (v, e) = result
-            value = v
-            error = e
-            source = type
-            lock.countDown()
-        }
-
-        lock.wait()
+        val (result, source) = cache.getWithSource("YOYO", { "yoyo".toByteArray() })
+        val (value, error) = result
 
         assertThat(value, notNullValue())
         assertThat(value!!.toString(Charset.defaultCharset()), equalTo("yoyo"))
@@ -295,33 +174,16 @@ class FuseByteCacheTest : BaseTestCase() {
         cache.remove("YOYO", Cache.Source.MEM)
         cache.remove("YOYO", Cache.Source.DISK)
 
-        value = null
-        error = null
-        source = null
+        val (anotherValue, anotherError) = cache.get("YOYO")
 
-        lock = CountDownLatch(1)
-        cache.get("YOYO") { result, type ->
-            val (v, e) = result
-            value = v
-            error = e
-            source = type
-            lock.countDown()
-        }
-        lock.wait()
-
-        assertThat(value, nullValue())
-        assertThat(error, notNullValue())
-        assertThat(error as NotFoundException, isA(NotFoundException::class.java))
+        assertThat(anotherValue, nullValue())
+        assertThat(anotherError, notNullValue())
+        assertThat(anotherError as NotFoundException, isA(NotFoundException::class.java))
     }
 
     @Test
     fun removeFromMem() {
-        val lock = CountDownLatch(1)
-
-        cache.put("remove", "test".toByteArray()) { _ ->
-            lock.countDown()
-        }
-        lock.wait()
+        cache.put("remove", "test".toByteArray())
 
         val result = cache.remove("remove")
         assertThat(result, equalTo(true))
@@ -332,12 +194,7 @@ class FuseByteCacheTest : BaseTestCase() {
 
     @Test
     fun removeFromDisk() {
-        val lock = CountDownLatch(1)
-
-        cache.put("remove", "test".toByteArray()) { result ->
-            lock.countDown()
-        }
-        lock.wait()
+        cache.put("remove", "test".toByteArray())
 
         val result = cache.remove("remove", Cache.Source.DISK)
         assertThat(result, equalTo(true))
@@ -352,9 +209,7 @@ class FuseByteCacheTest : BaseTestCase() {
         val lock = CountDownLatch(count)
 
         (1..count).forEach {
-            cache.get("remove $it", { "yoyo".toByteArray() }) { result, type ->
-                lock.countDown()
-            }
+            cache.put("remove $it", "yoyo".toByteArray())
         }
         lock.wait()
 

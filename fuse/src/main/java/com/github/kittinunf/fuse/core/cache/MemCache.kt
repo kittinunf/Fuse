@@ -33,10 +33,8 @@ internal class MemCache : Persistence<Any> {
         cache.evictAll()
     }
 
-    override fun allKeys(): Set<String> =
-        cache.snapshot().keys.filter { !it.contains(".") }.map {
-            get(convertKey(it, KEY_SUFFIX)) as String
-        }.toSet()
+    override fun allKeys(): Set<String> = cache.snapshot()
+        .keys.filter { !it.contains(".") }.map { get(convertKey(it, KEY_SUFFIX)) as String }.toSet()
 
     override fun size(): Long = cache.size().toLong()
 
