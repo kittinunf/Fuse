@@ -1,6 +1,6 @@
-
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.internal.artifacts.dsl.LazyPublishArtifact
+import org.gradle.api.publish.maven.MavenPom
 import org.jmailen.gradle.kotlinter.support.ReporterType
 
 buildscript {
@@ -146,6 +146,10 @@ subprojects {
                                 }
                             }
                         }
+
+                        if (project.hasProperty("android")) {
+                            pom.addDependencies()
+                        }
                     }
                 }
             }
@@ -167,6 +171,18 @@ subprojects {
 
     kotlinter {
         reporters = arrayOf(ReporterType.plain.name, ReporterType.checkstyle.name)
+    }
+}
+
+fun MavenPom.addDependencies() = withXml {
+    asNode().appendNode("dependencies").let { depNode ->
+        configurations.implementation.allDependencies.forEach {
+            depNode.appendNode("dependency").apply {
+                appendNode("groupId", it.group)
+                appendNode("artifactId", it.name)
+                appendNode("version", it.version)
+            }
+        }
     }
 }
 
