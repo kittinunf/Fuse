@@ -1,6 +1,5 @@
-
 import com.android.build.gradle.BaseExtension
-import org.gradle.api.internal.artifacts.dsl.LazyPublishArtifact
+import org.gradle.api.publish.maven.MavenPom
 import org.jmailen.gradle.kotlinter.support.ReporterType
 
 buildscript {
@@ -13,8 +12,11 @@ buildscript {
     }
 
     dependencies {
-        classpath("com.android.tools.build:gradle:3.5.1")
-        classpath("org.jmailen.gradle:kotlinter-gradle:2.1.2")
+        val androidGradleVersion: String by project
+        val kotlinterVersion: String by project
+
+        classpath("com.android.tools.build:gradle:$androidGradleVersion")
+        classpath("org.jmailen.gradle:kotlinter-gradle:$kotlinterVersion")
     }
 }
 
@@ -81,20 +83,9 @@ subprojects {
         }
 
         if (!isSample) {
-            val sourcesJar by tasks.registering(Jar::class) {
-                from(sourceSets["main"].java.srcDirs)
-                archiveClassifier.set("sources")
-            }
-
-            val doc by tasks.creating(Javadoc::class) {
-                isFailOnError = false
-                source = sourceSets["main"].java.sourceFiles
-                classpath += files(bootClasspath.joinToString(File.pathSeparator))
-                classpath += configurations.compile
-            }
-
             val artifactVersion: String by project
             val artifactGroup: String by project
+
             version = artifactVersion
             group = artifactGroup
 
@@ -116,6 +107,18 @@ subprojects {
                 }
             }
 
+            val sourcesJar by tasks.registering(Jar::class) {
+                from(sourceSets["main"].java.srcDirs)
+                archiveClassifier.set("sources")
+            }
+
+            val doc by tasks.creating(Javadoc::class) {
+                isFailOnError = false
+                source = sourceSets["main"].java.sourceFiles
+                classpath += files(bootClasspath.joinToString(File.pathSeparator))
+                classpath += configurations.compile
+            }
+
             val javadocJar by tasks.creating(Jar::class) {
                 val doc by tasks
                 dependsOn(doc)
@@ -124,17 +127,36 @@ subprojects {
                 archiveClassifier.set("javadoc")
             }
 
+            fun MavenPom.addDependencies() = withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
+                configurations["implementation"].allDependencies.forEach {
+                    dependenciesNode.appendNode("dependency").apply {
+                        appendNode("groupId", it.group)
+                        appendNode("artifactId", it.name)
+                        appendNode("version", it.version)
+                    }
+                }
+            }
+
             publishing {
+                val sourcesJar by tasks
+
                 publications {
                     register(project.name, MavenPublication::class) {
-                        artifact("$buildDir/outputs/aar/${project.name}-release.aar") {
-                            builtBy(tasks.getByPath("assemble"))
+                        if (project.hasProperty("android")) {
+                            artifact("$buildDir/outputs/aar/${project.name}-release.aar") {
+                                builtBy(tasks.getByPath("assemble"))
+                            }
+                        } else {
+                            from(components["java"])
                         }
-                        artifact(LazyPublishArtifact(sourcesJar))
+                        artifact(sourcesJar)
                         artifact(javadocJar)
+
                         groupId = artifactGroup
                         artifactId = project.name
                         version = artifactVersion
+
                         pom {
                             licenses {
                                 license {
@@ -142,6 +164,10 @@ subprojects {
                                     url.set("http://www.opensource.org/licenses/mit-license.php")
                                 }
                             }
+                        }
+
+                        if (project.hasProperty("android")) {
+                            pom.addDependencies()
                         }
                     }
                 }
