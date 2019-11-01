@@ -11,7 +11,6 @@ import com.github.kittinunf.fuse.core.put
 import java.io.FileNotFoundException
 import java.net.URL
 import java.nio.charset.Charset
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.isA
 import org.hamcrest.CoreMatchers.notNullValue
@@ -54,7 +53,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         val (value, error) = cache.get(json)
 
         assertThat(value, notNullValue())
-        assertThat(value!!.getString("name"), isEqualTo("Product"))
+        assertThat(value!!.getString("name"), equalTo("Product"))
         assertThat(error, nullValue())
     }
 
@@ -65,7 +64,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         val (value, error) = result
 
         assertThat(value, notNullValue())
-        assertThat(value!!.getString("url"), isEqualTo("https://www.httpbin.org/get"))
+        assertThat(value!!.getString("url"), equalTo("https://www.httpbin.org/get"))
         assertThat(error, nullValue())
         assertThat(source, equalTo(Cache.Source.ORIGIN))
 
@@ -73,7 +72,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         val (anotherValue, anotherError) = anotherResult
 
         assertThat(anotherValue, notNullValue())
-        assertThat(anotherValue!!.getString("url"), isEqualTo("https://www.httpbin.org/get"))
+        assertThat(anotherValue!!.getString("url"), equalTo("https://www.httpbin.org/get"))
         assertThat(anotherError, nullValue())
         assertThat(anotherSource, equalTo(Cache.Source.MEM))
     }
@@ -112,7 +111,7 @@ class FuseJsonCacheTest : BaseTestCase() {
 
         assertThat(value, notNullValue())
         assertThat(error, nullValue())
-        assertThat(value!!.getString("name"), isEqualTo("New Product"))
+        assertThat(value!!.getString("name"), equalTo("New Product"))
     }
 
     @Test

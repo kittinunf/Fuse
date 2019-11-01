@@ -10,7 +10,6 @@ import com.github.kittinunf.fuse.core.getWithSource
 import com.github.kittinunf.fuse.core.put
 import java.nio.charset.Charset
 import java.util.concurrent.CountDownLatch
-import org.hamcrest.CoreMatchers.`is` as isEqualTo
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.CoreMatchers.isA
@@ -51,9 +50,21 @@ class FuseByteCacheTest : BaseTestCase() {
         val (value, error) = result
 
         assertThat(value, notNullValue())
-        assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
+        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("world"))
         assertThat(error, nullValue())
-        assertThat(source, isEqualTo(Cache.Source.ORIGIN))
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
+    }
+
+    @Test
+    fun hasKey() {
+        val (value, error) = cache.get("hello")
+
+        val hasKey = cache.hasKey("hello")
+
+        assertThat(value, notNullValue())
+        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("world"))
+        assertThat(error, nullValue())
+        assertThat(hasKey, equalTo(true))
     }
 
     @Test
@@ -65,7 +76,7 @@ class FuseByteCacheTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
-        assertThat(source, isEqualTo(Cache.Source.ORIGIN))
+        assertThat(source, equalTo(Cache.Source.ORIGIN))
     }
 
     @Test
@@ -74,9 +85,9 @@ class FuseByteCacheTest : BaseTestCase() {
         val (value, error) = result
 
         assertThat(value, notNullValue())
-        assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
+        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("world"))
         assertThat(error, nullValue())
-        assertThat(source, isEqualTo(Cache.Source.MEM))
+        assertThat(source, equalTo(Cache.Source.MEM))
     }
 
     @Test
@@ -85,7 +96,7 @@ class FuseByteCacheTest : BaseTestCase() {
         val (value, error) = result
 
         assertThat(value, notNullValue())
-        assertThat(value!!.toString(Charset.defaultCharset()), isEqualTo("world"))
+        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("world"))
         assertThat(error, nullValue())
 
         // remove from memory cache
@@ -95,9 +106,9 @@ class FuseByteCacheTest : BaseTestCase() {
         val (value2, error2) = result2
 
         assertThat(value2, notNullValue())
-        assertThat(value2!!.toString(Charset.defaultCharset()), isEqualTo("world"))
+        assertThat(value2!!.toString(Charset.defaultCharset()), equalTo("world"))
         assertThat(error2, nullValue())
-        assertThat(source2, isEqualTo(Cache.Source.DISK))
+        assertThat(source2, equalTo(Cache.Source.DISK))
     }
 
     @Test
@@ -157,7 +168,7 @@ class FuseByteCacheTest : BaseTestCase() {
 
         val timestamp = cache.getTimestamp("timestamp")
 
-        assertThat(timestamp, not(isEqualTo(-1L)))
+        assertThat(timestamp, not(equalTo(-1L)))
         assertThat(System.currentTimeMillis() - timestamp, greaterThan(2000L))
     }
 
@@ -201,6 +212,9 @@ class FuseByteCacheTest : BaseTestCase() {
 
         val anotherResult = cache.remove("remove", Cache.Source.MEM)
         assertThat(anotherResult, equalTo(true))
+
+        val hasKey = cache.hasKey("remove")
+        assertThat(hasKey, equalTo(false))
     }
 
     @Test

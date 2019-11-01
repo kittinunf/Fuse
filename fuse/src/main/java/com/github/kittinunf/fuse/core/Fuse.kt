@@ -69,6 +69,12 @@ class Fuse {
         fun allKeys(): Set<String>
 
         /**
+         *  Check whether the entry for the given key is there in the persistence or not
+         * @return Boolean The result of the check, true if the entry is there otherwise false
+         */
+        fun hasKey(key: String): Boolean
+
+        /**
          *  Retrieve the keys from all values persisted
          * @param key The key associated with the object to be persisted
          * @return Long represents the timestamp in milliseconds since epoch 1970

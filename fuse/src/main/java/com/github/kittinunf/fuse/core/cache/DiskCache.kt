@@ -34,7 +34,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
         }
     }
 
-    override fun remove(key: String) = cache.remove(key)
+    override fun remove(safeKey: String) = cache.remove(safeKey)
 
     override fun removeAll() {
         cache.delete()
@@ -50,10 +50,10 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
 
     override fun size(): Long = cache.size()
 
-    override fun get(key: String): ByteArray? = get(key, OutputStreamIndex.Data.ordinal)
+    override fun get(safeKey: String): ByteArray? = get(safeKey, OutputStreamIndex.Data.ordinal)
 
-    override fun getTimestamp(key: String): Long? =
-        get(key, OutputStreamIndex.Time.ordinal)?.toString(Charset.defaultCharset())?.toLong()
+    override fun getTimestamp(safeKey: String): Long? =
+        get(safeKey, OutputStreamIndex.Time.ordinal)?.toString(Charset.defaultCharset())?.toLong()
 
     private fun get(key: String, indexStream: Int): ByteArray? {
         val snapshot = cache.get(key)
