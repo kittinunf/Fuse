@@ -1,13 +1,19 @@
-package com.github.kittinunf.fuse.core.cache
+package com.github.kittinunf.fuse.core
 
-internal class MemCache : Persistence<Any> {
+import android.util.LruCache
+import com.github.kittinunf.fuse.core.cache.Persistence
+
+class MemLruCache : Persistence<Any> {
 
     companion object {
         const val KEY_SUFFIX = ".key"
         const val TIME_SUFFIX = ".time"
     }
 
-    private val cache = LinkedHashMap<String, Any>(0, 0.75f, true)
+    private val maxMemory = Runtime.getRuntime().maxMemory() / 1024
+
+    private val cache = object : LruCache<String, Any>((maxMemory / 8).toInt()) {
+    }
 
     override fun put(safeKey: String, key: String, value: Any, timeToPersist: Long) {
         cache.apply {
@@ -25,22 +31,13 @@ internal class MemCache : Persistence<Any> {
     }
 
     override fun removeAll() {
-        cache.clear()
+        cache.evictAll()
     }
 
-    override fun allKeys(): Set<String> {
-        return synchronized(this) {
-            val snapshot = LinkedHashMap(cache)
-            snapshot.keys.filter { !it.contains(".") }.map { get(convertKey(it, KEY_SUFFIX)) as String }.toSet()
-        }
-    }
+    override fun allKeys(): Set<String> = cache.snapshot()
+        .keys.filter { !it.contains(".") }.map { get(convertKey(it, KEY_SUFFIX)) as String }.toSet()
 
-    override fun size(): Long {
-        return synchronized(this) {
-            val snapshot = LinkedHashMap(cache)
-            snapshot.size.toLong()
-        }
-    }
+    override fun size(): Long = cache.size().toLong()
 
     override fun get(safeKey: String): Any? = cache.get(safeKey)
 

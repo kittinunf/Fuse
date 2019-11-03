@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core.cache
 
-internal interface Persistence<T> {
+interface Persistence<T : Any> {
     /**
      * Save the entry supplied based on a certain mechanism which provides persistence
      *

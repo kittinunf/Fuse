@@ -1,8 +1,5 @@
 package com.github.kittinunf.fuse.core
 
-import com.github.kittinunf.fuse.core.cache.DiskCache
-import com.github.kittinunf.fuse.core.cache.MemCache
-import com.github.kittinunf.fuse.core.cache.Persistence
 import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.fetch.NoFetcher
@@ -43,14 +40,8 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         DISK,
     }
 
-    private val memCache: Persistence<Any> by lazy { MemCache() }
-    private val diskCache: Persistence<ByteArray> by lazy {
-        DiskCache.open(
-            config.cacheDir,
-            config.name,
-            config.diskCapacity
-        )
-    }
+    private val memCache = config.memCache
+    private val diskCache = config.diskCache
 
     override fun put(fetcher: Fetcher<T>): Result<T, Exception> {
         return fetchAndPut(fetcher)
