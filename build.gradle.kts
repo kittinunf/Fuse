@@ -38,8 +38,8 @@ allprojects {
 }
 
 val jvm = setOf("fuse")
-val sample = setOf("sample")
 val android = setOf("fuse-android")
+val sample = setOf("sample")
 
 subprojects {
     val isJvm = project.name in jvm
@@ -81,6 +81,7 @@ subprojects {
             plugin("com.android.library")
             plugin("org.jetbrains.kotlin.android")
         }
+
         configure<BaseExtension> {
             compileSdkVersion(28)
 
@@ -142,11 +143,9 @@ subprojects {
             }
 
             buildTypes {
-                debug {
-                }
+                debug {}
 
-                release {
-                }
+                release {}
             }
         }
     }
