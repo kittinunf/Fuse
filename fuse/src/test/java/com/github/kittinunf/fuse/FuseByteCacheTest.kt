@@ -68,7 +68,7 @@ class FuseByteCacheTest : BaseTestCase() {
     }
 
     @Test
-    fun `I will do this with yuto later できると思う ++ プラス　だめだよ 強い`() {
+    fun fetchSecondFail() {
         fun fetchFail(): ByteArray? = null
 
         val (result, source) = cache.getWithSource("fail", ::fetchFail)
