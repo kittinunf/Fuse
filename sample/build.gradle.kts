@@ -16,5 +16,6 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:$constraintLayoutVersion")
 
     implementation(project(":fuse"))
+    implementation(project(":fuse-android"))
     implementation("com.github.kittinunf.fuel:fuel:$fuelVersion")
 }

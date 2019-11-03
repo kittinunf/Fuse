@@ -8,6 +8,9 @@ import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.get
 import com.github.kittinunf.fuse.core.getWithSource
 import com.github.kittinunf.fuse.core.put
+import java.io.FileNotFoundException
+import java.net.URL
+import java.nio.charset.Charset
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.isA
 import org.hamcrest.CoreMatchers.notNullValue
@@ -17,9 +20,6 @@ import org.json.JSONObject
 import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
-import java.io.FileNotFoundException
-import java.net.URL
-import java.nio.charset.Charset
 
 class FuseJsonCacheTest : BaseTestCase() {
 
