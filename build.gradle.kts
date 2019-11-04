@@ -37,74 +37,77 @@ allprojects {
     }
 }
 
-subprojects {
-    val isSample = project.name.contains("sample")
+val jvm = setOf("fuse")
+val android = setOf("fuse-android")
+val sample = setOf("sample")
 
-    apply {
-        if (isSample) {
-            plugin("com.android.application")
-            plugin("org.jetbrains.kotlin.android.extensions")
-        } else {
-            plugin("com.android.library")
+subprojects {
+    val isJvm = project.name in jvm
+    val isSample = project.name in sample
+    val isAndroid = project.name in android
+
+    if (isJvm) {
+        apply {
+            plugin("org.jetbrains.kotlin.jvm")
+            plugin("jacoco")
         }
-        plugin("org.jetbrains.kotlin.android")
-        plugin("org.jmailen.kotlinter")
-        plugin("jacoco")
-        plugin("maven-publish")
-        plugin("com.jfrog.bintray")
+
+        val sourcesJar by tasks.registering(Jar::class) {
+            from(sourceSets["main"].allSource)
+            archiveClassifier.set("sources")
+        }
+
+        val doc by tasks.creating(Javadoc::class) {
+            isFailOnError = false
+            source = sourceSets["main"].allJava
+        }
+
+        jacoco {
+            val jacocoVersion: String by project
+            toolVersion = jacocoVersion
+        }
+
+        tasks.withType<JacocoReport> {
+            reports {
+                html.isEnabled = false
+                xml.isEnabled = true
+                csv.isEnabled = false
+            }
+        }
     }
 
-    configure<BaseExtension> {
-        compileSdkVersion(28)
-
-        defaultConfig {
-            minSdkVersion(21)
-            targetSdkVersion(28)
-
-            versionCode = 1
-            versionName = "1.0"
-
-            testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+    if (isAndroid) {
+        apply {
+            plugin("com.android.library")
+            plugin("org.jetbrains.kotlin.android")
         }
 
-        buildTypes {
-            debug {
-                isTestCoverageEnabled = false
+        configure<BaseExtension> {
+            compileSdkVersion(28)
+
+            defaultConfig {
+                minSdkVersion(21)
+                targetSdkVersion(28)
+
+                versionCode = 1
+                versionName = "1.0"
+
+                testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
             }
 
-            release {
-                consumerProguardFiles("proguard-rules.pro")
-            }
-        }
-
-        testOptions {
-            unitTests.isReturnDefaultValues = true
-            unitTests.isIncludeAndroidResources = true
-        }
-
-        if (!isSample) {
-            val artifactVersion: String by project
-            val artifactGroup: String by project
-
-            version = artifactVersion
-            group = artifactGroup
-
-            bintray {
-                user = findProperty("BINTRAY_USER") as? String
-                key = findProperty("BINTRAY_KEY") as? String
-                setPublications(project.name)
-                with(pkg) {
-                    repo = "maven"
-                    name = "Fuse"
-                    desc = "The simple generic LRU memory/disk cache for Android written in Kotlin."
-                    userOrg = "kittinunf"
-                    websiteUrl = "https://github.com/kittinunf/Fuse"
-                    vcsUrl = "https://github.com/kittinunf/Fuse"
-                    setLicenses("MIT")
-                    with(version) {
-                        name = artifactVersion
-                    }
+            buildTypes {
+                debug {
+                    isTestCoverageEnabled = false
                 }
+
+                release {
+                    consumerProguardFiles("proguard-rules.pro")
+                }
+            }
+
+            testOptions {
+                unitTests.isReturnDefaultValues = true
+                unitTests.isIncludeAndroidResources = true
             }
 
             val sourcesJar by tasks.registering(Jar::class) {
@@ -118,78 +121,122 @@ subprojects {
                 classpath += files(bootClasspath.joinToString(File.pathSeparator))
                 classpath += configurations.compile
             }
+        }
+    }
 
-            val javadocJar by tasks.creating(Jar::class) {
-                val doc by tasks
-                dependsOn(doc)
-                from(doc)
+    if (isSample) {
+        apply {
+            plugin("com.android.application")
+            plugin("org.jetbrains.kotlin.android")
+            plugin("org.jetbrains.kotlin.android.extensions")
+        }
 
-                archiveClassifier.set("javadoc")
+        configure<BaseExtension> {
+            compileSdkVersion(29)
+
+            defaultConfig {
+                minSdkVersion(21)
+                targetSdkVersion(29)
+
+                versionCode = 1
+                versionName = "1.0"
             }
 
-            fun MavenPom.addDependencies() = withXml {
-                val dependenciesNode = asNode().appendNode("dependencies")
-                configurations["implementation"].allDependencies.forEach {
-                    dependenciesNode.appendNode("dependency").apply {
-                        appendNode("groupId", it.group)
-                        appendNode("artifactId", it.name)
-                        appendNode("version", it.version)
-                    }
-                }
-            }
+            buildTypes {
+                debug {}
 
-            publishing {
-                val sourcesJar by tasks
-
-                publications {
-                    register(project.name, MavenPublication::class) {
-                        if (project.hasProperty("android")) {
-                            artifact("$buildDir/outputs/aar/${project.name}-release.aar") {
-                                builtBy(tasks.getByPath("assemble"))
-                            }
-                        } else {
-                            from(components["java"])
-                        }
-                        artifact(sourcesJar)
-                        artifact(javadocJar)
-
-                        groupId = artifactGroup
-                        artifactId = project.name
-                        version = artifactVersion
-
-                        pom {
-                            licenses {
-                                license {
-                                    name.set("MIT License")
-                                    url.set("http://www.opensource.org/licenses/mit-license.php")
-                                }
-                            }
-                        }
-
-                        if (project.hasProperty("android")) {
-                            pom.addDependencies()
-                        }
-                    }
-                }
+                release {}
             }
         }
     }
 
-    jacoco {
-        val jacocoVersion: String by project
-        toolVersion = jacocoVersion
-    }
-
-    tasks.withType<JacocoReport> {
-        reports {
-            html.isEnabled = false
-            xml.isEnabled = true
-            csv.isEnabled = false
+    if (!isSample) {
+        apply {
+            plugin("maven-publish")
+            plugin("com.jfrog.bintray")
+            plugin("org.jmailen.kotlinter")
         }
-    }
+        val artifactVersion: String by project
+        val artifactGroup: String by project
 
-    kotlinter {
-        reporters = arrayOf(ReporterType.plain.name, ReporterType.checkstyle.name)
+        version = artifactVersion
+        group = artifactGroup
+
+        bintray {
+            user = findProperty("BINTRAY_USER") as? String
+            key = findProperty("BINTRAY_KEY") as? String
+            setPublications(project.name)
+            with(pkg) {
+                repo = "maven"
+                name = "Fuse"
+                desc = "The simple generic LRU memory/disk cache for Android written in Kotlin."
+                userOrg = "kittinunf"
+                websiteUrl = "https://github.com/kittinunf/Fuse"
+                vcsUrl = "https://github.com/kittinunf/Fuse"
+                setLicenses("MIT")
+                with(version) {
+                    name = artifactVersion
+                }
+            }
+        }
+
+        val javadocJar by tasks.creating(Jar::class) {
+            val doc by tasks
+            dependsOn(doc)
+            from(doc)
+
+            archiveClassifier.set("javadoc")
+        }
+
+        fun MavenPom.addDependencies() = withXml {
+            val dependenciesNode = asNode().appendNode("dependencies")
+            configurations["implementation"].allDependencies.forEach {
+                dependenciesNode.appendNode("dependency").apply {
+                    appendNode("groupId", it.group)
+                    appendNode("artifactId", it.name)
+                    appendNode("version", it.version)
+                }
+            }
+        }
+
+        publishing {
+            val sourcesJar by tasks
+
+            publications {
+                register(project.name, MavenPublication::class) {
+                    if (project.hasProperty("android")) {
+                        artifact("$buildDir/outputs/aar/${project.name}-release.aar") {
+                            builtBy(tasks.getByPath("assemble"))
+                        }
+                    } else {
+                        from(components["java"])
+                    }
+                    artifact(sourcesJar)
+                    artifact(javadocJar)
+
+                    groupId = artifactGroup
+                    artifactId = project.name
+                    version = artifactVersion
+
+                    pom {
+                        licenses {
+                            license {
+                                name.set("MIT License")
+                                url.set("http://www.opensource.org/licenses/mit-license.php")
+                            }
+                        }
+                    }
+
+                    if (project.hasProperty("android")) {
+                        pom.addDependencies()
+                    }
+                }
+            }
+        }
+
+        kotlinter {
+            reporters = arrayOf(ReporterType.plain.name, ReporterType.checkstyle.name)
+        }
     }
 }
 

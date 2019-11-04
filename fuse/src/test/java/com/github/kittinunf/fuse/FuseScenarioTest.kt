@@ -11,6 +11,7 @@ import com.github.kittinunf.fuse.core.scenario.getWithSource
 import com.github.kittinunf.result.Result
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
+import kotlin.time.milliseconds
 import kotlin.time.seconds
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
@@ -66,12 +67,12 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
 
-        Thread.sleep(6000)
+        Thread.sleep(600)
 
         val (anotherResult, anotherSource) = expirableCache.getWithSource(
             "hello",
             { "new world" },
-            timeLimit = 5.seconds
+            timeLimit = 500.milliseconds
         )
         val (anotherValue, anotherError) = anotherResult
 
@@ -91,12 +92,12 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(value, equalTo("world"))
         assertThat(error, nullValue())
 
-        Thread.sleep(6000)
+        Thread.sleep(600)
 
         val (anotherResult, anotherSource) = expirableCache.getWithSource(
             "expired",
             { "new world" },
-            timeLimit = 5.seconds,
+            timeLimit = 500.milliseconds,
             useEntryEvenIfExpired = true
         )
         val (anotherValue, anotherError) = anotherResult

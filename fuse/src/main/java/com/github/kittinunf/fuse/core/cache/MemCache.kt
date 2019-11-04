@@ -1,7 +1,5 @@
 package com.github.kittinunf.fuse.core.cache
 
-import android.util.LruCache
-
 internal class MemCache : Persistence<Any> {
 
     companion object {
@@ -9,10 +7,7 @@ internal class MemCache : Persistence<Any> {
         const val TIME_SUFFIX = ".time"
     }
 
-    private val maxMemory = Runtime.getRuntime().maxMemory() / 1024
-
-    private val cache = object : LruCache<String, Any>((maxMemory / 8).toInt()) {
-    }
+    private val cache = LinkedHashMap<String, Any>(0, 0.75f, true)
 
     override fun put(safeKey: String, key: String, value: Any, timeToPersist: Long) {
         cache.apply {
@@ -30,13 +25,22 @@ internal class MemCache : Persistence<Any> {
     }
 
     override fun removeAll() {
-        cache.evictAll()
+        cache.clear()
     }
 
-    override fun allKeys(): Set<String> = cache.snapshot()
-        .keys.filter { !it.contains(".") }.map { get(convertKey(it, KEY_SUFFIX)) as String }.toSet()
+    override fun allKeys(): Set<String> {
+        return synchronized(this) {
+            val snapshot = LinkedHashMap(cache)
+            snapshot.keys.filter { !it.contains(".") }.map { get(convertKey(it, KEY_SUFFIX)) as String }.toSet()
+        }
+    }
 
-    override fun size(): Long = cache.size().toLong()
+    override fun size(): Long {
+        return synchronized(this) {
+            val snapshot = LinkedHashMap(cache)
+            snapshot.size.toLong()
+        }
+    }
 
     override fun get(safeKey: String): Any? = cache.get(safeKey)
 

@@ -1,6 +1,7 @@
 package com.github.kittinunf.fuse.sample
 
 import com.github.kittinunf.fuel.core.FuelManager
+import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
 import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.StringDataConvertible
@@ -37,7 +38,10 @@ class NetworkRepository : LocalTimeRepository {
 
 class CacheRepository(dir: String) : CacheableLocalTimeRepository {
 
-    private val cache = CacheBuilder.config(dir = dir, name = "SAMPLE", convertible = StringDataConvertible()).build()
+    private val cache = CacheBuilder.config(dir = dir, name = "SAMPLE", convertible = StringDataConvertible()) {
+        memCache = defaultAndroidMemoryCache()
+    }.build()
+
     private val expirableCache = ExpirableCache(cache)
 
     override fun getLocalTime(place: String): Result<LocalTime, Exception> {
