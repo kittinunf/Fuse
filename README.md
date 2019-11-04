@@ -5,7 +5,57 @@
 
 The simple generic LRU cache for Android, backed by both memory cache ([LruCache](http://developer.android.com/reference/android/util/LruCache.html)) and disk-based cache ([DiskLruCache](https://github.com/JakeWharton/DiskLruCache)) by Jake Wharton 
 
-# How to use
+# Installation
+
+You can install `Fuse` from `jcenter` as usual. 
+
+The core package has following dependencies;
+
+ - Kotlin
+ - [Result](https://github.com/kittinunf/Result)
+
+```groovy
+  //core
+  implementation 'com.github.kittinunf.fuse:fuse:<latest-version>'
+  
+  //android
+  implementation 'com.github.kittinunf.fuse:fuse-android:<latest-version>'
+```
+
+# How to use (Quick Start)
+
+`Fuse` is designed to be simple and easy to use. All you need is `CacheBuilder` to setup configuration for your cache. 
+
+```kotlin
+private val tempDir = createTempDir().absolutePath // use any readable/writable directory of your choice
+
+val cache = CacheBuilder.config(tempDir, <DataConvertible>) {
+  // do more configuration here
+}.build()
+```
+
+Then, you can start using your cache like;
+
+```kotlin
+cache = //cache instance that was instantiated earlier
+
+//put value "world" for key "hello", "put" will always add new value into the cache
+cache.put("hello", { "world" })
+
+//later
+
+cache.get("hello") // this returns Result.Success["world"]
+val (result, source) = cache.getWithSource("hello") // this also returns Source which is one of the following, 1. MEM, 2. DISK, 3. ORIGIN
+
+
+val result = cache.get("hello", { "world" }) // this return previously cached value otherwise it will save value "world" into the cache for later use
+when (result) {
+  is Success -> // value is successfully return/fetch, result.value is data
+  is Failure -> // something wrong, check result.error for more details
+}
+```
+
+# Advanced usage
 
 TBD
 
