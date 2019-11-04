@@ -11,8 +11,8 @@ The simple generic LRU cache for Android, backed by both memory cache ([LruCache
 
 The core package has following dependencies;
 
-Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.3.50-blue.svg)](http://kotlinlang.org) 
-[Result](https://github.com/kittinunf/Result) - 2.2.0
+- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.3.50-blue.svg)](http://kotlinlang.org)
+- [Result](https://github.com/kittinunf/Result) - 2.2.0
 
 ```groovy
   //core
@@ -29,7 +29,8 @@ Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.3.50-blue.svg)](http:/
 ```kotlin
 private val tempDir = createTempDir().absolutePath // use any readable/writable directory of your choice
 
-val cache = CacheBuilder.config(tempDir, <DataConvertible>) {
+val convertible = // there is 1 built-in DataConvertible, StringDataConvertible
+val cache = CacheBuilder.config(tempDir, convertible) { 
   // do more configuration here
 }.build()
 ```
@@ -78,11 +79,13 @@ For Android, it is basically a thin layer on top of the memory cache by using a 
 
 ```kotlin
 // same configuration as above
-val cache = CacheBuilder.config(tempDir, <DataConvertible>) {
+val cache = CacheBuilder.config(tempDir, convertible) {
   // do more configuration here
   memCache = defaultAndroidMemoryCache() // this will utilize the LruCache provided by Android SDK
 }.build()
 ```
+
+By default, the Cache is perpetual meaning that it will never expired by itself. Please check [Detail Usage] for more information about expirable cache.
 
 # Detailed usage
 
