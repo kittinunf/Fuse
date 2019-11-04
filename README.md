@@ -59,7 +59,7 @@ when (result) {
 
 ### Source
 
-`Source` will let you know where the data is coming from.
+`Source` gives you an information where the data is coming from.
 
 ```kotlin
 enum class Source {
@@ -71,7 +71,9 @@ enum class Source {
 
 - ORIGIN - The data is coming from the original source. This means that it is being fetched from the `Fetcher<T>` class.
 - DISK - The data is coming from the Disk cache. In this cache, it is specifically retrieved from DiskLruCache
-- MEM - The data is coming from the memory cache. 
+- MEM - The data is coming from the memory cache.
+
+All of the interfaces that provides `Source` have `WithSource` suffix, i.e. `getWithSource()` etc.
 
 ### Android Usage
 
