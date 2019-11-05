@@ -4,11 +4,13 @@ if [[ "$TRAVIS_BRANCH" == */release-v* ]]; then
 
   echo "We're on release branch, deploying"
 
-  modules=("fuse")
-
-  for i in "${modules[@]}"
+  for i in $(ls -d */);
   do
-    ./gradlew :$i:clean :$i:build :$i:bintrayUpload -PBINTRAY_USER=$BINTRAY_USER -PBINTRAY_KEY=$BINTRAY_KEY -PdryRun=false
+    m=${i%%/}
+    if [[ $m == fuse* ]]; then
+      echo ">> Deploying $m ..."
+      ./gradlew :$i:clean :$i:build :$i:bintrayUpload -PBINTRAY_USER=$BINTRAY_USER -PBINTRAY_KEY=$BINTRAY_KEY -PdryRun=false
+    fi
   done
 
 fi
