@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ "$TRAVIS_BRANCH" == */release-v* ]]; then
+if [[ "$TRAVIS_BRANCH" == */release-* ]]; then
 
   echo "We're on release branch, deploying"
 
@@ -9,7 +9,7 @@ if [[ "$TRAVIS_BRANCH" == */release-v* ]]; then
     m=${i%%/}
     if [[ $m == fuse* ]]; then
       echo ">> Deploying $m ..."
-      ./gradlew :$i:clean :$i:build :$i:bintrayUpload -PBINTRAY_USER=$BINTRAY_USER -PBINTRAY_KEY=$BINTRAY_KEY -PdryRun=false
+      ./gradlew :$m:clean :$m:build :$m:bintrayUpload -PBINTRAY_USER=$BINTRAY_USER -PBINTRAY_KEY=$BINTRAY_KEY -PdryRun=false
     fi
   done
 
