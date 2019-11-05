@@ -1,11 +1,95 @@
 # Fuse
 
-[ ![Kotlin](https://img.shields.io/badge/Kotlin-1.3.50-blue.svg)](http://kotlinlang.org) [ ![jcenter](https://api.bintray.com/packages/kittinunf/maven/Fuse/images/download.svg) ](https://bintray.com/kittinunf/maven/Fuse/_latestVersion) [![Build Status](https://travis-ci.org/kittinunf/Fuse.svg?branch=master)](https://travis-ci.org/kittinunf/Fuse)
+[![jcenter](https://api.bintray.com/packages/kittinunf/maven/Fuse/images/download.svg)](https://bintray.com/kittinunf/maven/Fuse/_latestVersion) 
+[![Build Status](https://travis-ci.org/kittinunf/Fuse.svg?branch=master)](https://travis-ci.org/kittinunf/Fuse) 
+[![Codecov](https://codecov.io/github/kittinunf/Fuse/coverage.svg?branch=master)](https://codecov.io/gh/kittinunf/Fuse)
 
 
 The simple generic LRU cache for Android, backed by both memory cache ([LruCache](http://developer.android.com/reference/android/util/LruCache.html)) and disk-based cache ([DiskLruCache](https://github.com/JakeWharton/DiskLruCache)) by Jake Wharton 
 
-# How to use
+# Installation
+
+The core package has following dependencies;
+
+- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.3.50-blue.svg)](http://kotlinlang.org)
+- [Result](https://github.com/kittinunf/Result) - 2.2.0
+
+```groovy
+  //core
+  implementation 'com.github.kittinunf.fuse:fuse:<latest-version>'
+  
+  //android
+  implementation 'com.github.kittinunf.fuse:fuse-android:<latest-version>'
+```
+
+# How to use (Quick Start)
+
+`Fuse` is designed to be simple and easy to use. All you need is `CacheBuilder` to setup configuration for your cache. 
+
+```kotlin
+private val tempDir = createTempDir().absolutePath // use any readable/writable directory of your choice
+
+val convertible = // there is 1 built-in DataConvertible, StringDataConvertible
+val cache = CacheBuilder.config(tempDir, convertible) { 
+  // do more configuration here
+}.build()
+```
+
+Then, you can build `Cache` from the `CacheBuilder` and, you can start using your cache like;
+
+```kotlin
+cache = //cache instance that was instantiated earlier
+
+//put value "world" for key "hello", "put" will always add new value into the cache
+cache.put("hello", { "world" })
+
+//later
+cache.get("hello") // this returns Result.Success["world"]
+val (result, source) = cache.getWithSource("hello") // this also returns Source which is one of the following, 1. MEM, 2. DISK, 3. ORIGIN
+
+
+val result = cache.get("hello", { "world" }) // this return previously cached value otherwise it will save value "world" into the cache for later use
+when (result) {
+  is Success -> { // value is successfully return/fetch, result.value is data 
+  }
+  is Failure -> { // something wrong, check result.error for more details 
+  }
+}
+```
+
+### Source
+
+`Source` gives you an information where the data is coming from.
+
+```kotlin
+enum class Source {
+  ORIGIN,
+  DISK,
+  MEM
+}
+```
+
+- ORIGIN - The data is coming from the original source. This means that it is being fetched from the `Fetcher<T>` class.
+- DISK - The data is coming from the Disk cache. In this cache, it is specifically retrieved from DiskLruCache
+- MEM - The data is coming from the memory cache.
+
+All of the interfaces that provides `Source` have `WithSource` suffix, i.e. `getWithSource()` etc.
+
+### Android Usage
+
+For Android, it is basically a thin layer on top of the memory cache by using a [LruCache](https://developer.android.com/reference/android/util/LruCache)
+
+```kotlin
+// same configuration as above
+val cache = CacheBuilder.config(tempDir, convertible) {
+  // do more configuration here
+  memCache = defaultAndroidMemoryCache() // this will utilize the LruCache provided by Android SDK
+}.build()
+```
+
+By default, the Cache is perpetual meaning that it will never expired by itself. Please check [Detail Usage] for more information about expirable cache.
+
+# Detailed usage
 
 TBD
 

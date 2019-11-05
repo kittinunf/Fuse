@@ -29,11 +29,10 @@ class FuseByteCacheTest : BaseTestCase() {
 
     companion object {
         private val tempDir = createTempDir().absolutePath
-        val cache =
-            CacheBuilder.config(tempDir, "Byte", ByteArrayDataConvertible()) {
-                // do more configuration here
-                memCache = defaultAndroidMemoryCache()
-            }.build()
+        val cache = CacheBuilder.config(tempDir, "Byte", ByteArrayDataConvertible()) {
+            // do more configuration here
+            memCache = defaultAndroidMemoryCache()
+        }.build()
     }
 
     private var hasSetUp = false
