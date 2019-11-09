@@ -33,7 +33,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
     override fun remove(safeKey: String) = cache.remove(safeKey)
 
     override fun removeAll() {
-        cache.delete()
+        allSafeKeys().forEach { cache.remove(it) }
     }
 
     override fun allKeys(): Set<String> = allSafeKeys()

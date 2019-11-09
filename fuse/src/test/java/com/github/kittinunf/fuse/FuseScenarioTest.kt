@@ -8,6 +8,7 @@ import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.scenario.ExpirableCache
 import com.github.kittinunf.fuse.core.scenario.get
 import com.github.kittinunf.fuse.core.scenario.getWithSource
+import com.github.kittinunf.fuse.core.scenario.put
 import com.github.kittinunf.result.Result
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
@@ -151,7 +152,22 @@ class FuseScenarioTest : BaseTestCase() {
 
     @ExperimentalTime
     @Test
-    fun fetchWithFetcherThatCouldFail() {
+    fun fetchWithFetcherThatWillSuccess() {
+        val goodFetcher = object : Fetcher<String> {
+            override val key: String = "foofoo"
+
+            override fun fetch(): Result<String, Exception> = Result.success("foofoo2")
+        }
+
+        val (value, error) = expirableCache.get(goodFetcher)
+        assertThat(value, notNullValue())
+        assertThat(value, equalTo("foofoo2"))
+        assertThat(error, nullValue())
+    }
+
+    @ExperimentalTime
+    @Test
+    fun fetchWithFetcherThatWillFail() {
         val (value, error) = expirableCache.get("can_fail", { "world" })
 
         assertThat(value, notNullValue())
@@ -170,6 +186,30 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(anotherValue, notNullValue())
         assertThat(anotherError, nullValue())
         assertThat(anotherSource, not(equalTo(Cache.Source.ORIGIN)))
+    }
+
+    @ExperimentalTime
+    @Test
+    fun putWillRetrieveDataFromTheFetcher() {
+        val (value, error) = expirableCache.put("foofoo", "foofoo2")
+
+        assertThat(value, notNullValue())
+        assertThat(value, equalTo("foofoo2"))
+        assertThat(error, nullValue())
+
+        expirableCache.remove("foofoo", Cache.Source.MEM)
+        expirableCache.remove("foofoo", Cache.Source.DISK)
+
+        val goodFetcher = object : Fetcher<String> {
+            override val key: String = "foofoo"
+
+            override fun fetch(): Result<String, Exception> = Result.success("foofoo2")
+        }
+
+        val (anotherValue, anotherError) = expirableCache.put(goodFetcher)
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherValue, equalTo("foofoo2"))
+        assertThat(anotherError, nullValue())
     }
 
     @ExperimentalTime
