@@ -6,10 +6,6 @@ import java.nio.charset.Charset
 
 internal class DiskCache private constructor(private val cache: DiskLruCache) : Persistence<ByteArray> {
 
-    enum class OutputStreamIndex {
-        Data, Key, Time
-    }
-
     companion object {
         const val JOURNAL_FILE = "journal"
 
@@ -18,7 +14,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
             val disk = DiskLruCache.open(
                 dir.resolve(uniqueName),
                 1,
-                OutputStreamIndex.values().size,
+                KeyType.values().size,
                 capacity
             )
             return DiskCache(disk)
@@ -27,9 +23,9 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
 
     override fun put(safeKey: String, key: String, value: ByteArray, timeToPersist: Long) {
         cache.edit(safeKey).apply {
-            newOutputStream(OutputStreamIndex.Data.ordinal).use { it.write(value) }
-            newOutputStream(OutputStreamIndex.Key.ordinal).use { it.write(key.toByteArray()) }
-            newOutputStream(OutputStreamIndex.Time.ordinal).use { it.write(timeToPersist.toString().toByteArray()) }
+            newOutputStream(KeyType.Data.ordinal).use { it.write(value) }
+            newOutputStream(KeyType.Key.ordinal).use { it.write(key.toByteArray()) }
+            newOutputStream(KeyType.Time.ordinal).use { it.write(timeToPersist.toString().toByteArray()) }
             commit()
         }
     }
@@ -41,7 +37,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
     }
 
     override fun allKeys(): Set<String> = allSafeKeys()
-        .map { get(it, OutputStreamIndex.Key.ordinal)!!.toString(Charset.defaultCharset()) }
+        .map { get(it, KeyType.Key.ordinal)!!.toString(Charset.defaultCharset()) }
         .toSet()
 
     private fun allSafeKeys() = synchronized(this) {
@@ -50,10 +46,10 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
 
     override fun size(): Long = cache.size()
 
-    override fun get(safeKey: String): ByteArray? = get(safeKey, OutputStreamIndex.Data.ordinal)
+    override fun get(safeKey: String): ByteArray? = get(safeKey, KeyType.Data.ordinal)
 
     override fun getTimestamp(safeKey: String): Long? =
-        get(safeKey, OutputStreamIndex.Time.ordinal)?.toString(Charset.defaultCharset())?.toLong()
+        get(safeKey, KeyType.Time.ordinal)?.toString(Charset.defaultCharset())?.toLong()
 
     private fun get(key: String, indexStream: Int): ByteArray? {
         val snapshot = cache.get(key)

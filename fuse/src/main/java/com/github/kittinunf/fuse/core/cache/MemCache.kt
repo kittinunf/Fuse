@@ -1,26 +1,32 @@
 package com.github.kittinunf.fuse.core.cache
 
-internal class MemCache : Persistence<Any> {
+internal class MemCache(private val minimalSize: Int = 128) : Persistence<Any> {
 
-    companion object {
-        const val KEY_SUFFIX = ".key"
-        const val TIME_SUFFIX = ".time"
+    private val cache = object : LinkedHashMap<String, Any>(0, 0.75f, true) {
+
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Any>?): Boolean {
+            eldest ?: return false
+
+            if ((size / KeyType.values().size) > minimalSize) {
+                val keyToRemove = eldest.key.substringBefore(".")
+                remove(keyToRemove)
+            }
+            return false
+        }
     }
-
-    private val cache = LinkedHashMap<String, Any>(0, 0.75f, true)
 
     override fun put(safeKey: String, key: String, value: Any, timeToPersist: Long) {
         cache.apply {
             put(safeKey, value)
-            put(convertKey(safeKey, KEY_SUFFIX), key)
-            put(convertKey(safeKey, TIME_SUFFIX), timeToPersist)
+            put(convertKey(safeKey, KeyType.Key.name), key)
+            put(convertKey(safeKey, KeyType.Time.name), timeToPersist)
         }
     }
 
     override fun remove(safeKey: String): Boolean {
         val removedValue = cache.remove(safeKey)
-        cache.remove(convertKey(safeKey, KEY_SUFFIX))
-        cache.remove(convertKey(safeKey, TIME_SUFFIX))
+        cache.remove(convertKey(safeKey, KeyType.Key.name))
+        cache.remove(convertKey(safeKey, KeyType.Time.name))
         return removedValue != null
     }
 
@@ -31,7 +37,7 @@ internal class MemCache : Persistence<Any> {
     override fun allKeys(): Set<String> {
         return synchronized(this) {
             val snapshot = LinkedHashMap(cache)
-            snapshot.keys.filter { !it.contains(".") }.map { get(convertKey(it, KEY_SUFFIX)) as String }.toSet()
+            snapshot.keys.filter { !it.contains(".") }.map { get(convertKey(it, KeyType.Key.name)) as String }.toSet()
         }
     }
 
@@ -44,7 +50,7 @@ internal class MemCache : Persistence<Any> {
 
     override fun get(safeKey: String): Any? = cache.get(safeKey)
 
-    override fun getTimestamp(safeKey: String): Long? = get(convertKey(safeKey, TIME_SUFFIX)) as? Long
+    override fun getTimestamp(safeKey: String): Long? = get(convertKey(safeKey, KeyType.Time.name)) as? Long
 
-    private fun convertKey(key: String, suffix: String): String = "$key$suffix"
+    private fun convertKey(key: String, suffix: String): String = "$key.$suffix"
 }
