@@ -1,5 +1,6 @@
 package com.github.kittinunf.fuse.core
 
+import com.github.kittinunf.fuse.core.cache.DelegatedHashMap
 import com.github.kittinunf.fuse.core.cache.DiskCache
 import com.github.kittinunf.fuse.core.cache.MemCache
 import com.github.kittinunf.fuse.core.cache.Persistence
@@ -20,7 +21,7 @@ class Config<T : Any>(
     var transformer: ((key: String, value: T) -> T) = { _, value -> value }
 }
 
-internal fun defaultMemoryCache(): Persistence<Any> = MemCache()
+internal fun defaultMemoryCache(minimalSize: Int = 128): Persistence<Any> = MemCache(DelegatedHashMap(minimalSize))
 internal fun defaultDiskCache(cacheDir: String, name: String, diskCapacity: Long): Persistence<ByteArray> =
     DiskCache.open(
         cacheDir,

@@ -1,19 +1,19 @@
 package com.github.kittinunf.fuse.core.cache
 
-internal class MemCache(private val minimalSize: Int = 128) : Persistence<Any> {
+internal class DelegatedHashMap(private val minimalSize: Int) : LinkedHashMap<String, Any>(0, 0.75f, true) {
 
-    private val cache = object : LinkedHashMap<String, Any>(0, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Any>?): Boolean {
+        eldest ?: return false
 
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Any>?): Boolean {
-            eldest ?: return false
-
-            if ((size / KeyType.values().size) > minimalSize) {
-                val keyToRemove = eldest.key.substringBefore(".")
-                remove(keyToRemove)
-            }
-            return false
+        if ((size / KeyType.values().size) > minimalSize) {
+            val keyToRemove = eldest.key.substringBefore(".")
+            remove(keyToRemove)
         }
+        return false
     }
+}
+
+class MemCache(val cache: MutableMap<String, Any>) : Persistence<Any> {
 
     override fun put(safeKey: String, key: String, value: Any, timeToPersist: Long) {
         cache.apply {
