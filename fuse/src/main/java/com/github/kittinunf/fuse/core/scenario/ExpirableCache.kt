@@ -12,6 +12,20 @@ import kotlin.time.milliseconds
 
 class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by cache, Fuse.Cacheable.Put<T> by cache {
 
+    /**
+     *  Get the entry associated with its particular key which provided by the persistence.
+     *  This method will automatically fetch if and only if the entry was not already saved in the persistence previously
+     *  Otherwise it will return the entry from the persistence.
+     *
+     *  However, this method concerns the timeLimit specified by the call-site as well, if timeLimit is set, the entry
+     *  considered expired if and only if the current - persistedTimestamp > timeLimit. The fetcher will be used to fetch the data from the
+     *  the origin again unless the flag useEntryEvenIfExpired is set to true
+     *
+     * @param fetcher The fetcher object that can be used to fetch the new value from the origin
+     * @param timeLimit The time limit that will be considered as expired, default is INFINITE which means that it will never be expired.
+     * @param useEntryEvenIfExpired The flag indicates whether we still want to use the entry or not
+     * @return Result<T, Exception> The Result that represents the success/failure of the operation
+     */
     @ExperimentalTime
     fun get(
         fetcher: Fetcher<T>,
@@ -19,6 +33,20 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
         useEntryEvenIfExpired: Boolean = false
     ): Result<T, Exception> = getWithSource(fetcher, timeLimit, useEntryEvenIfExpired).first
 
+    /**
+     *  Get the entry associated with its particular key which provided by the persistence and source of the entry
+     *  This method will automatically fetch if and only if the entry was not already saved in the persistence previously
+     *  Otherwise it will return the entry from the persistence.
+     *
+     *  However, this method concerns the timeLimit specified by the call-site as well, if timeLimit is set, the entry
+     *  considered expired if and only if the current - persistedTimestamp > timeLimit. The fetcher will be used to fetch the data from the
+     *  the origin again unless the flag useEntryEvenIfExpired is set to true
+     *
+     * @param fetcher The fetcher object that can be used to fetch the new value from the origin
+     * @param timeLimit The time limit that will be considered as expired, default is INFINITE which means that it will never be expired.
+     * @param useEntryEvenIfExpired The flag indicates whether we still want to use the entry or not
+     * @return Pair<Result<T, Exception>, Cache.Source> The Pair of the result that represents the success/failure of the operation and The source of the entry
+     */
     @ExperimentalTime
     fun getWithSource(
         fetcher: Fetcher<T>,
@@ -34,7 +62,7 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
         } else {
             val isExpired = hasExpired(persistedTimestamp, timeLimit)
 
-            // if it is not expired yet, user wants to use it even it is already expired
+            // if it is not expired yet or user wants to use it even it is already expired
             if (!isExpired || useEntryEvenIfExpired) {
                 cache.getWithSource(fetcher)
             } else {
@@ -85,11 +113,7 @@ fun <T : Any> ExpirableCache<T>.getWithSource(
     return getWithSource(fetcher, timeLimit, useEntryEvenIfExpired)
 }
 
-@ExperimentalTime
-fun <T : Any> ExpirableCache<T>.put(
-    key: String,
-    putValue: T? = null
-): Result<T, Exception> {
+fun <T : Any> ExpirableCache<T>.put(key: String, putValue: T? = null): Result<T, Exception> {
     val fetcher = if (putValue == null) NoFetcher<T>(key) else SimpleFetcher(key, { putValue })
     return put(fetcher)
 }

@@ -20,7 +20,7 @@ class Config<T : Any>(
     var transformer: ((key: String, value: T) -> T) = { _, value -> value }
 }
 
-internal fun defaultMemoryCache(): Persistence<Any> = MemCache()
+internal fun defaultMemoryCache(minimalSize: Int = 128): Persistence<Any> = MemCache(minimalSize)
 internal fun defaultDiskCache(cacheDir: String, name: String, diskCapacity: Long): Persistence<ByteArray> =
     DiskCache.open(
         cacheDir,

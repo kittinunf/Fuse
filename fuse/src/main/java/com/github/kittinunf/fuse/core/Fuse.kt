@@ -18,7 +18,7 @@ class Fuse {
              *  Put the entry supplied by fetcher into the persistence.
              *  This method will automatically fetch the value from the fetcher and put the entry into the cache (both Memory, and Disk).
              *
-             * @param fetcher The key associated with the object to be persisted
+             * @param fetcher The fetcher object that can be used to fetch the new value from the origin
              * @return Result<T, Exception> The Result that represents the success/failure of the operation
              */
             fun put(fetcher: Fetcher<T>): Result<T, Exception>
@@ -31,7 +31,7 @@ class Fuse {
              *  This method will automatically fetch if and only if the entry was not already saved in the persistence previously
              *  Otherwise it will return the entry from the persistence
              *
-             * @param fetcher The key associated with the object to be persisted
+             * @param fetcher The fetcher object that can be used to fetch the new value from the origin
              * @return Result<T, Exception> The Result that represents the success/failure of the operation
              */
             fun get(fetcher: Fetcher<T>): Result<T, Exception>
@@ -41,7 +41,7 @@ class Fuse {
              *  This method will automatically fetch if and only if the entry was not already saved in the persistence previously
              *  Otherwise it will return the entry from the persistence which specified by Source (ORIGIN, MEM, or DISK)
              *
-             * @param fetcher The key associated with the object to be persisted
+             * @param fetcher The fetcher object that can be used to fetch the new value from the origin
              * @return Pair<Result<T, Exception>, Cache.Source> The Pair of the result that represents the success/failure of the operation and The source of the entry
              */
             fun getWithSource(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Cache.Source>
