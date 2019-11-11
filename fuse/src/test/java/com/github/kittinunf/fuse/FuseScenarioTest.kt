@@ -70,8 +70,30 @@ class FuseScenarioTest : BaseTestCase() {
 
         Thread.sleep(600)
 
-        val (anotherResult, anotherSource) = expirableCache.getWithSource(
+        val (anotherValue, anotherError) = expirableCache.get(
             "hello",
+            { "new world" },
+            timeLimit = 500.milliseconds
+        )
+
+        assertThat(anotherValue, notNullValue())
+        assertThat(anotherValue, equalTo("new world"))
+        assertThat(anotherError, nullValue())
+    }
+
+    @ExperimentalTime
+    @Test
+    fun fetchWithTimeLimitExpiredWithSource() {
+        val (value, error) = expirableCache.get("hello-source", { "world" })
+
+        assertThat(value, notNullValue())
+        assertThat(value, equalTo("world"))
+        assertThat(error, nullValue())
+
+        Thread.sleep(600)
+
+        val (anotherResult, anotherSource) = expirableCache.getWithSource(
+            "hello-source",
             { "new world" },
             timeLimit = 500.milliseconds
         )
@@ -86,8 +108,7 @@ class FuseScenarioTest : BaseTestCase() {
     @ExperimentalTime
     @Test
     fun fetchWithTimeLimitExpiredButStillForceToUse() {
-        val (result, source) = expirableCache.getWithSource("expired", { "world" })
-        val (value, error) = result
+        val (value, error) = expirableCache.get("expired", { "world" })
 
         assertThat(value, notNullValue())
         assertThat(value, equalTo("world"))
