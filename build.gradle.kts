@@ -86,7 +86,7 @@ subprojects {
             compileSdkVersion(28)
 
             defaultConfig {
-                minSdkVersion(21)
+                minSdkVersion(15)
                 targetSdkVersion(28)
 
                 versionCode = 1
@@ -135,7 +135,7 @@ subprojects {
             compileSdkVersion(29)
 
             defaultConfig {
-                minSdkVersion(21)
+                minSdkVersion(15)
                 targetSdkVersion(29)
 
                 versionCode = 1
