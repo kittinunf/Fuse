@@ -1,11 +1,11 @@
 package com.github.kittinunf.fuse.core.cache
 
 import com.jakewharton.disklrucache.DiskLruCache
+import java.io.File
+import java.nio.charset.Charset
 import kotlinx.serialization.internal.ByteArraySerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
-import java.io.File
-import java.nio.charset.Charset
 
 internal class DiskCache private constructor(private val cache: DiskLruCache) : Persistence<ByteArray> {
 
