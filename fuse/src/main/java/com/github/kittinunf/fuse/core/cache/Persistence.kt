@@ -9,7 +9,7 @@ interface Persistence<T : Any> {
      * @param value The value to be persisted
      * @param timeToPersist The timestamp associated with the value to be persisted
      */
-    fun put(safeKey: String, key: String, value: T, timeToPersist: Long)
+    fun put(safeKey: String, entry: Entry<T>)
 
     /**
      * Remove the entry associated with its particular safeKey

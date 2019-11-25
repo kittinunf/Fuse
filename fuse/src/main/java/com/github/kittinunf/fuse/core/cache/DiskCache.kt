@@ -1,6 +1,9 @@
 package com.github.kittinunf.fuse.core.cache
 
 import com.jakewharton.disklrucache.DiskLruCache
+import kotlinx.serialization.internal.ByteArraySerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
 import java.io.File
 import java.nio.charset.Charset
 
@@ -11,21 +14,19 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
 
         fun open(cacheDir: String, uniqueName: String, capacity: Long): DiskCache {
             val dir = File(cacheDir)
-            val disk = DiskLruCache.open(
-                dir.resolve(uniqueName),
-                1,
-                KeyType.values().size,
-                capacity
-            )
+            val disk = DiskLruCache.open(dir.resolve(uniqueName), 1, 1, capacity)
             return DiskCache(disk)
         }
     }
 
-    override fun put(safeKey: String, key: String, value: ByteArray, timeToPersist: Long) {
+    private val json = Json(JsonConfiguration.Default)
+
+    override fun put(safeKey: String, entry: Entry<ByteArray>) {
         cache.edit(safeKey).apply {
-            newOutputStream(KeyType.Data.ordinal).use { it.write(value) }
-            newOutputStream(KeyType.Key.ordinal).use { it.write(key.toByteArray()) }
-            newOutputStream(KeyType.Time.ordinal).use { it.write(timeToPersist.toString().toByteArray()) }
+            newOutputStream(0).use {
+                val serialized = json.stringify(Entry.serializer(ByteArraySerializer), entry)
+                it.write(serialized.toByteArray())
+            }
             commit()
         }
     }
@@ -37,7 +38,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
     }
 
     override fun allKeys(): Set<String> = allSafeKeys()
-        .map { get(it, KeyType.Key.ordinal)!!.toString(Charset.defaultCharset()) }
+        .map { getEntry(it)!!.key }
         .toSet()
 
     private fun allSafeKeys() = synchronized(this) {
@@ -46,15 +47,15 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
 
     override fun size(): Long = cache.size()
 
-    override fun get(safeKey: String): ByteArray? = get(safeKey, KeyType.Data.ordinal)
+    override fun get(safeKey: String): ByteArray? = getEntry(safeKey)?.data
 
-    override fun getTimestamp(safeKey: String): Long? =
-        get(safeKey, KeyType.Time.ordinal)?.toString(Charset.defaultCharset())?.toLong()
+    override fun getTimestamp(safeKey: String): Long? = getEntry(safeKey)?.timestamp
 
-    private fun get(key: String, indexStream: Int): ByteArray? {
-        val snapshot = cache.get(key)
-        return snapshot?.let {
-            it.getInputStream(indexStream).use { it.readBytes() }
+    private fun getEntry(safeKey: String): Entry<ByteArray>? {
+        val snapshot = cache.get(safeKey)
+        val bytes = snapshot?.let { it.getInputStream(0).use { it.readBytes() } }
+        return bytes?.toString(Charset.defaultCharset())?.let {
+            json.parse(Entry.serializer(ByteArraySerializer), it)
         }
     }
 }
