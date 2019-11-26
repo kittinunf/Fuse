@@ -27,7 +27,9 @@ class MemCache(val minimalSize: Int) : Persistence<Any> {
     override fun allKeys(): Set<String> {
         return synchronized(this) {
             val snapshot = LinkedHashMap(cache)
-            snapshot.keys.map { getEntry(it)!!.key }.toSet()
+            snapshot.keys
+                .mapNotNull { getEntry(it)?.key }
+                .toSet()
         }
     }
 

@@ -38,7 +38,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
     }
 
     override fun allKeys(): Set<String> = allSafeKeys()
-        .map { getEntry(it)!!.key }
+        .mapNotNull { getEntry(it)?.key }
         .toSet()
 
     private fun allSafeKeys() = synchronized(this) {
