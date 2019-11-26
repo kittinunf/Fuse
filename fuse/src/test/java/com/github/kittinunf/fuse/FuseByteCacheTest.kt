@@ -173,11 +173,6 @@ class FuseByteCacheTest : BaseTestCase() {
     }
 
     @Test
-    fun size() {
-        cache
-    }
-
-    @Test
     fun remove() {
         val (result, source) = cache.getWithSource("YOYO", { "yoyo".toByteArray() })
         val (value, error) = result
