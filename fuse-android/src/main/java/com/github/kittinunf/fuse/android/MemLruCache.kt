@@ -19,7 +19,9 @@ class MemLruCache(private val cache: LruCache<String, Any>) : Persistence<Any> {
     override fun allKeys(): Set<String> {
         return synchronized(this) {
             val snapshot = cache.snapshot()
-            snapshot.keys.map { getEntry(it)!!.key }.toSet()
+            snapshot.keys
+                .mapNotNull { getEntry(it)?.key }
+                .toSet()
         }
     }
 
