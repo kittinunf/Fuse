@@ -93,7 +93,7 @@ By default, the Cache is perpetual meaning that it will never expired by itself.
 
 The default Cache that is provided by Fuse is a perpetual cache that will never expire the entry. In some cases, this is not what you want. If you are looking for non-perpetual cache, luckily, Fuse also provides you with a `ExpirableCache` as well. 
 
-The usage of `ExpirableCache` is almost exactly the same as regular cache, but with a time constraint that is configurable for the entry to be expired.
+The usage of `ExpirableCache` is almost exactly the same as a regular cache, but with a time constraint that is configurable for the entry to be expired.
 
 ```kotlin
 private val cache = CacheBuilder.config(tempDir, StringDataConvertible()).build().let(::ExpirableCache)
@@ -111,7 +111,7 @@ println(value) //Result.Success["new world"], it got refreshed as the entry is e
 
 # Sample
 
-Please see sample Android app that utilize Fuse in the [Sample](https://github.com/kittinunf/Fuse/tree/master/sample) folder
+Please see the sample Android app that utilize Fuse in the [Sample](https://github.com/kittinunf/Fuse/tree/master/sample) folder
 
 ## License
 
