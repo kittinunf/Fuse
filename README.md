@@ -11,7 +11,7 @@ The simple generic LRU cache for Android, backed by both memory cache ([LruCache
 
 The core package has following dependencies;
 
-- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.3.50-blue.svg)](http://kotlinlang.org)
+- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.3.60-blue.svg)](http://kotlinlang.org)
 - [Result](https://github.com/kittinunf/Result) - 2.2.0
 
 ```groovy
@@ -22,7 +22,7 @@ The core package has following dependencies;
   implementation 'com.github.kittinunf.fuse:fuse-android:<latest-version>'
 ```
 
-# How to use (Quick Start)
+# How to use
 
 `Fuse` is designed to be simple and easy to use. All you need is `CacheBuilder` to setup configuration for your cache. 
 
@@ -91,7 +91,27 @@ By default, the Cache is perpetual meaning that it will never expired by itself.
 
 # Detailed usage
 
-TBD
+The default Cache that is provided by Fuse is a perpetual cache that will never expire the entry. In some cases, this is not what you want. If you are looking for non-perpetual cache, luckily, Fuse also provides you with a `ExpirableCache` as well. 
+
+The usage of `ExpirableCache` is almost exactly the same as a regular cache, but with a time constraint that is configurable for the entry to be expired.
+
+```kotlin
+private val cache = CacheBuilder.config(tempDir, StringDataConvertible()).build().let(::ExpirableCache)
+
+// cache is ExpirableCache type
+val (value, error) = expirableCache.get("hello", { "world" }) // this works the same as regular cache
+
+println(value) //Result.Success["world"]
+
+// after 5 seconds has passed
+val (value, error) = expirableCache.get("hello", { "new world" }, timeLimit = 5.seconds) // if the cached value has a lifetime longer than 5 seconds, entry becomes invalid
+
+println(value) //Result.Success["new world"], it got refreshed as the entry is expired
+```
+
+# Sample
+
+Please see the sample Android app that utilize Fuse in the [Sample](https://github.com/kittinunf/Fuse/tree/master/sample) folder
 
 ## License
 

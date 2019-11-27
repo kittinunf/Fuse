@@ -1,5 +1,6 @@
 package com.github.kittinunf.fuse.core
 
+import com.github.kittinunf.fuse.core.cache.Entry
 import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.fetch.NoFetcher
@@ -67,7 +68,7 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
                 if (diskCache.get(safeKey) == null) {
                     // we found this in memCache, so we need to retrieve timeStamp that was saved in memCache back to diskCache
                     val timeWasPersisted = memCache.getTimestamp(safeKey)
-                    diskCache.put(safeKey, key, converted, timeWasPersisted ?: -1)
+                    diskCache.put(safeKey, Entry(key, converted, timeWasPersisted ?: -1))
                 }
                 value
             }
@@ -87,7 +88,7 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
 
                 val timeWasPersisted = diskCache.getTimestamp(safeKey)
                 // put the converted version into the memCache
-                memCache.put(safeKey, key, converted, timeWasPersisted ?: -1)
+                memCache.put(safeKey, Entry(key, converted, timeWasPersisted ?: -1))
                 converted
             }
             return result to Source.DISK
@@ -101,10 +102,10 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         val timeToPersist = System.currentTimeMillis()
         val safeKey = key.md5()
 
-        memCache.put(safeKey, key, transformed, timeToPersist)
+        memCache.put(safeKey, Entry(key, transformed, timeToPersist))
         return Result.of {
             val converted = convertToData(transformed)
-            diskCache.put(safeKey, key, converted, timeToPersist)
+            diskCache.put(safeKey, Entry(key, converted, timeToPersist))
             transformed
         }
     }

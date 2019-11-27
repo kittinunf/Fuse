@@ -21,7 +21,7 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.3.60"
     id("org.jmailen.kotlinter") version "2.1.2"
 
     jacoco

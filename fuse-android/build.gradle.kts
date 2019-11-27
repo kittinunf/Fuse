@@ -1,3 +1,9 @@
+android {
+    defaultConfig {
+        consumerProguardFiles("proguard-rules.pro")
+    }
+}
+
 dependencies {
     implementation(project(":fuse"))
 

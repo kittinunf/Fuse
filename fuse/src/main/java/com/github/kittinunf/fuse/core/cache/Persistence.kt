@@ -5,11 +5,9 @@ interface Persistence<T : Any> {
      * Save the entry supplied based on a certain mechanism which provides persistence
      *
      * @param safeKey The safeKey associated with the value to be persisted, this is sanitized key and it is conformed to regex <strong>[a-z0-9_-]{1,64}</strong>
-     * @param key The key associated with the value to be persisted, this is an un-sanitized key which is the same as the call-site key
-     * @param value The value to be persisted
-     * @param timeToPersist The timestamp associated with the value to be persisted
+     * @param entry The Entry associated with the value to be persisted, please visit [Entry] for more information on the object's definition
      */
-    fun put(safeKey: String, key: String, value: T, timeToPersist: Long)
+    fun put(safeKey: String, entry: Entry<T>)
 
     /**
      * Remove the entry associated with its particular safeKey

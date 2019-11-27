@@ -228,12 +228,13 @@ class FuseByteCacheTest : BaseTestCase() {
         lock.wait()
 
         assertThat(cache.allKeys(), not(empty()))
-
         (1..count).forEach {
-            assertThat(cache.allKeys(), hasItems("remove $it"))
+            assertThat(
+                cache.allKeys(),
+                hasItems("remove $it")
+            )
         }
         cache.removeAll()
-
         assertThat(cache.allKeys(), empty())
     }
 }
