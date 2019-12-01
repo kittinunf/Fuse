@@ -52,8 +52,9 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
     override fun getTimestamp(safeKey: String): Long? = getEntry(safeKey)?.timestamp
 
     private fun getEntry(safeKey: String): Entry<ByteArray>? {
-        val snapshot = cache.get(safeKey)
-        val bytes = snapshot?.let { it.getInputStream(0).use { it.readBytes() } }
+        val bytes = cache.get(safeKey)?.use { snapshot ->
+            snapshot.getInputStream(0).use { it.readBytes() }
+        }
         return bytes?.toString(Charset.defaultCharset())?.let {
             json.parse(Entry.serializer(ByteArraySerializer), it)
         }
