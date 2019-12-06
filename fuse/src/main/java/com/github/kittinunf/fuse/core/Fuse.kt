@@ -44,7 +44,7 @@ class Fuse {
              * @param fetcher The fetcher object that can be used to fetch the new value from the origin
              * @return Pair<Result<T, Exception>, Cache.Source> The Pair of the result that represents the success/failure of the operation and The source of the entry
              */
-            fun getWithSource(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Cache.Source>
+            fun getWithSource(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Source>
         }
 
         /**
@@ -55,7 +55,7 @@ class Fuse {
          * @param fromSource The source of the value to be removed, either MEM or DISK
          * @return Boolean Whether the value was removed successfully
          */
-        fun remove(key: String, fromSource: Cache.Source = Cache.Source.MEM): Boolean
+        fun remove(key: String, fromSource: Source = Source.MEM): Boolean
 
         /**
          *  Remove all the entry in the persistence

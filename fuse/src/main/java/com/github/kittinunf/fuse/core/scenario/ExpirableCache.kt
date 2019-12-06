@@ -2,6 +2,7 @@ package com.github.kittinunf.fuse.core.scenario
 
 import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.Source
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.fetch.NoFetcher
 import com.github.kittinunf.fuse.core.fetch.SimpleFetcher
@@ -52,13 +53,13 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
         fetcher: Fetcher<T>,
         timeLimit: Duration = Duration.INFINITE,
         useEntryEvenIfExpired: Boolean = false
-    ): Pair<Result<T, Exception>, Cache.Source> {
+    ): Pair<Result<T, Exception>, Source> {
         val key = fetcher.key
         val persistedTimestamp = getTimestamp(key)
 
         // no timestamp fetch, we need to just fetch the new data
         return if (persistedTimestamp == -1L) {
-            put(fetcher) to Cache.Source.ORIGIN
+            put(fetcher) to Source.ORIGIN
         } else {
             val isExpired = hasExpired(persistedTimestamp, timeLimit)
 
@@ -72,9 +73,9 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
         }
     }
 
-    private fun putOrGetFromCacheIfFailure(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Cache.Source> {
+    private fun putOrGetFromCacheIfFailure(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Source> {
         return when (val result = put(fetcher)) {
-            is Result.Success -> result to Cache.Source.ORIGIN
+            is Result.Success -> result to Source.ORIGIN
             is Result.Failure -> {
                 // fallback to cache
                 cache.getWithSource(fetcher)
@@ -108,7 +109,7 @@ fun <T : Any> ExpirableCache<T>.getWithSource(
     getValue: (() -> T?)? = null,
     timeLimit: Duration = Duration.INFINITE,
     useEntryEvenIfExpired: Boolean = false
-): Pair<Result<T, Exception>, Cache.Source> {
+): Pair<Result<T, Exception>, Source> {
     val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
     return getWithSource(fetcher, timeLimit, useEntryEvenIfExpired)
 }

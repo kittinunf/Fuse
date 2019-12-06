@@ -30,16 +30,20 @@ object CacheBuilder {
     }
 }
 
-fun <T : Any> Config<T>.build() = Cache(this)
+fun <T : Any> Config<T>.build(): Cache<T> = CacheImpl(this)
 
-class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.Cacheable,
-    Fuse.Cacheable.Put<T>, Fuse.Cacheable.Get<T>, Fuse.DataConvertible<T> by config.convertible {
+enum class Source {
+    ORIGIN,
+    MEM,
+    DISK,
+}
 
-    enum class Source {
-        ORIGIN,
-        MEM,
-        DISK,
-    }
+interface Cache<T : Any> : Fuse.Cacheable, Fuse.Cacheable.Put<T>, Fuse.Cacheable.Get<T>,
+    Fuse.DataConvertible<T>
+
+class CacheImpl<T : Any> internal constructor(
+    private val config: Config<T>
+) : Cache<T>, Fuse.DataConvertible<T> by config.convertible {
 
     private val memCache = config.memCache
     private val diskCache = config.diskCache
@@ -64,13 +68,13 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
         memCache.get(safeKey)?.let { value ->
             // move specific key in disk cache up as it is found in mem
             val result = Result.of<T, Exception> {
-                val converted = convertToData(value as T)
                 if (diskCache.get(safeKey) == null) {
+                    val converted = convertToData(value as T)
                     // we found this in memCache, so we need to retrieve timeStamp that was saved in memCache back to diskCache
                     val timeWasPersisted = memCache.getTimestamp(safeKey)
                     diskCache.put(safeKey, Entry(key, converted, timeWasPersisted ?: -1))
                 }
-                value
+                value as T
             }
             return result to Source.MEM
         }
@@ -153,7 +157,7 @@ class Cache<T : Any> internal constructor(private val config: Config<T>) : Fuse.
 // region File
 fun <T : Any> Cache<T>.get(file: File): Result<T, Exception> = get(DiskFetcher(file, this))
 
-fun <T : Any> Cache<T>.getWithSource(file: File): Pair<Result<T, Exception>, Cache.Source> =
+fun <T : Any> Cache<T>.getWithSource(file: File): Pair<Result<T, Exception>, Source> =
     getWithSource(DiskFetcher(file, this))
 
 fun <T : Any> Cache<T>.put(file: File): Result<T, Exception> = put(DiskFetcher(file, this))
@@ -168,7 +172,7 @@ fun <T : Any> Cache<T>.get(key: String, getValue: (() -> T?)? = null): Result<T,
 fun <T : Any> Cache<T>.getWithSource(
     key: String,
     getValue: (() -> T?)? = null
-): Pair<Result<T, Exception>, Cache.Source> {
+): Pair<Result<T, Exception>, Source> {
     val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
     return getWithSource(fetcher)
 }

@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.sample
 
-import com.github.kittinunf.fuse.core.Cache
+import com.github.kittinunf.fuse.core.Source
 import com.github.kittinunf.result.Result
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -15,7 +15,7 @@ interface LocalTimeService {
     fun getFromBoth(location: String, handler: (Result<LocalTime, Exception>) -> Unit)
 
     // get from cache if available within 5 minutes otherwise refresh from network
-    fun getFromCacheIfNotExpired(location: String, handler: (Result<LocalTime, Exception>, Cache.Source) -> Unit)
+    fun getFromCacheIfNotExpired(location: String, handler: (Result<LocalTime, Exception>, Source) -> Unit)
 }
 
 class LocalTimeServiceImpl(private val network: LocalTimeRepository, private val cache: CacheableLocalTimeRepository) :
@@ -63,7 +63,7 @@ class LocalTimeServiceImpl(private val network: LocalTimeRepository, private val
 
     override fun getFromCacheIfNotExpired(
         location: String,
-        handler: (Result<LocalTime, Exception>, Cache.Source) -> Unit
+        handler: (Result<LocalTime, Exception>, Source) -> Unit
     ) {
         dispatchDefault {
             val (result, source) = cache.getLocalTimeIfNotExpired(location)

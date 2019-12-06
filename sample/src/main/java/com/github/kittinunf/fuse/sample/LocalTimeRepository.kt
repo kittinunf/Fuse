@@ -2,8 +2,8 @@ package com.github.kittinunf.fuse.sample
 
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
-import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
+import com.github.kittinunf.fuse.core.Source
 import com.github.kittinunf.fuse.core.StringDataConvertible
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.Fetcher
@@ -20,7 +20,7 @@ interface LocalTimeRepository {
 
 interface CacheableLocalTimeRepository : LocalTimeRepository {
 
-    fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Cache.Source>
+    fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Source>
 }
 
 private val fuel = FuelManager().apply {
@@ -51,7 +51,7 @@ class CacheRepository(dir: String) : CacheableLocalTimeRepository {
     }
 
     @ExperimentalTime
-    override fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Cache.Source> {
+    override fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Source> {
         val area = place.continent
         val location = place.area
 
