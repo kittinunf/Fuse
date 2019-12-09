@@ -1,8 +1,8 @@
 package com.github.kittinunf.fuse
 
-import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.Source
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.get
@@ -66,7 +66,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         assertThat(value, notNullValue())
         assertThat(value!!.getString("url"), equalTo("https://www.httpbin.org/get"))
         assertThat(error, nullValue())
-        assertThat(source, equalTo(Cache.Source.ORIGIN))
+        assertThat(source, equalTo(Source.ORIGIN))
 
         val (anotherResult, anotherSource) = cache.getWithSource(httpBin)
         val (anotherValue, anotherError) = anotherResult
@@ -74,7 +74,7 @@ class FuseJsonCacheTest : BaseTestCase() {
         assertThat(anotherValue, notNullValue())
         assertThat(anotherValue!!.getString("url"), equalTo("https://www.httpbin.org/get"))
         assertThat(anotherError, nullValue())
-        assertThat(anotherSource, equalTo(Cache.Source.MEM))
+        assertThat(anotherSource, equalTo(Source.MEM))
     }
 
     @Test
@@ -96,7 +96,7 @@ class FuseJsonCacheTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
-        assertThat(source, equalTo(Cache.Source.ORIGIN))
+        assertThat(source, equalTo(Source.ORIGIN))
         assertThat(error as? JSONException, isA(JSONException::class.java))
     }
 

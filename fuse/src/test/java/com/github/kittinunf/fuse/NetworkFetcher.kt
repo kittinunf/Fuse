@@ -2,6 +2,7 @@ package com.github.kittinunf.fuse
 
 import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Fuse
+import com.github.kittinunf.fuse.core.Source
 import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.map
@@ -55,5 +56,5 @@ class NetworkFetcher<T : Any>(
 
 fun <T : Any> Cache<T>.get(url: URL): Result<T, Exception> = get(NetworkFetcher(url, this))
 
-fun <T : Any> Cache<T>.getWithSource(url: URL): Pair<Result<T, Exception>, Cache.Source> =
+fun <T : Any> Cache<T>.getWithSource(url: URL): Pair<Result<T, Exception>, Source> =
     getWithSource(NetworkFetcher(url, this))

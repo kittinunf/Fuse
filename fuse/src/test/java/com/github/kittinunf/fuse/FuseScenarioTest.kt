@@ -1,7 +1,7 @@
 package com.github.kittinunf.fuse
 
-import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.CacheBuilder
+import com.github.kittinunf.fuse.core.Source
 import com.github.kittinunf.fuse.core.StringDataConvertible
 import com.github.kittinunf.fuse.core.build
 import com.github.kittinunf.fuse.core.fetch.Fetcher
@@ -45,15 +45,15 @@ class FuseScenarioTest : BaseTestCase() {
     @Test
     fun fetchWhenNoData() {
         // remove first if it exists
-        expirableCache.remove("hello", Cache.Source.MEM)
-        expirableCache.remove("hello", Cache.Source.DISK)
+        expirableCache.remove("hello", Source.MEM)
+        expirableCache.remove("hello", Source.DISK)
 
         val (result, source) = expirableCache.getWithSource("hello", { "world" })
         val (value, error) = result
 
         assertThat(value, notNullValue())
         assertThat(error, nullValue())
-        assertThat(source, equalTo(Cache.Source.ORIGIN))
+        assertThat(source, equalTo(Source.ORIGIN))
 
         val timestamp = expirableCache.getTimestamp("hello")
         assertThat(timestamp, not(equalTo(-1L)))
@@ -102,7 +102,7 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(anotherValue, notNullValue())
         assertThat(anotherValue, equalTo("new world"))
         assertThat(anotherError, nullValue())
-        assertThat(anotherSource, equalTo(Cache.Source.ORIGIN))
+        assertThat(anotherSource, equalTo(Source.ORIGIN))
     }
 
     @ExperimentalTime
@@ -127,7 +127,7 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(anotherValue, notNullValue())
         assertThat(anotherValue, equalTo("world"))
         assertThat(anotherError, nullValue())
-        assertThat(anotherSource, equalTo(Cache.Source.MEM))
+        assertThat(anotherSource, equalTo(Source.MEM))
     }
 
     @ExperimentalTime
@@ -147,7 +147,7 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(anotherValue, notNullValue())
         assertThat(anotherValue, equalTo("world"))
         assertThat(anotherError, nullValue())
-        assertThat(anotherSource, not(equalTo(Cache.Source.ORIGIN)))
+        assertThat(anotherSource, not(equalTo(Source.ORIGIN)))
     }
 
     @ExperimentalTime
@@ -160,7 +160,7 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(error, nullValue())
 
         Thread.sleep(1000)
-        expirableCache.remove("not expired", Cache.Source.MEM)
+        expirableCache.remove("not expired", Source.MEM)
 
         val (anotherResult, anotherSource) = expirableCache.getWithSource("not expired", { "new world" }, 5.seconds)
         val (anotherValue, anotherError) = anotherResult
@@ -168,7 +168,7 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(anotherValue, notNullValue())
         assertThat(anotherValue, equalTo("world"))
         assertThat(anotherError, nullValue())
-        assertThat(anotherSource, equalTo(Cache.Source.DISK))
+        assertThat(anotherSource, equalTo(Source.DISK))
     }
 
     @ExperimentalTime
@@ -206,7 +206,7 @@ class FuseScenarioTest : BaseTestCase() {
 
         assertThat(anotherValue, notNullValue())
         assertThat(anotherError, nullValue())
-        assertThat(anotherSource, not(equalTo(Cache.Source.ORIGIN)))
+        assertThat(anotherSource, not(equalTo(Source.ORIGIN)))
     }
 
     @ExperimentalTime
@@ -218,8 +218,8 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(value, equalTo("foofoo2"))
         assertThat(error, nullValue())
 
-        expirableCache.remove("foofoo", Cache.Source.MEM)
-        expirableCache.remove("foofoo", Cache.Source.DISK)
+        expirableCache.remove("foofoo", Source.MEM)
+        expirableCache.remove("foofoo", Source.DISK)
 
         val goodFetcher = object : Fetcher<String> {
             override val key: String = "foofoo"
@@ -247,6 +247,6 @@ class FuseScenarioTest : BaseTestCase() {
 
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
-        assertThat(source, equalTo(Cache.Source.ORIGIN))
+        assertThat(source, equalTo(Source.ORIGIN))
     }
 }
