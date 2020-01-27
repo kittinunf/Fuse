@@ -21,6 +21,7 @@ import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
+import java.io.File
 
 class FuseScenarioTest : BaseTestCase() {
 
@@ -248,5 +249,25 @@ class FuseScenarioTest : BaseTestCase() {
         assertThat(value, nullValue())
         assertThat(error, notNullValue())
         assertThat(source, equalTo(Source.ORIGIN))
+    }
+
+    @ExperimentalTime
+    @Test
+    fun cleanEmptyCacheWillNotCrash() {
+        val (value, error) = expirableCache.put("foofoo", "foofoo2")
+
+        assertThat(value, notNullValue())
+        assertThat(value, equalTo("foofoo2"))
+        assertThat(error, nullValue())
+
+        val cacheDir = File(tempDir)
+        assert(cacheDir.exists())
+
+        cacheDir.deleteRecursively()
+        assert(!cacheDir.exists())
+
+        expirableCache.removeAll()
+
+        assert(expirableCache.allKeys().isEmpty())
     }
 }
