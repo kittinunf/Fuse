@@ -42,7 +42,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
         .toSet()
 
     private fun allSafeKeys() = synchronized(this) {
-        cache.directory.listFiles().filter { it.isFile && it.name != JOURNAL_FILE }.map { it.name.substringBefore(".") }
+        cache.directory.listFiles()?.filter { it.isFile && it.name != JOURNAL_FILE }?.map { it.name.substringBefore(".") } ?: emptyList()
     }
 
     override fun size(): Long = cache.size()
