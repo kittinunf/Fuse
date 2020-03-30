@@ -29,7 +29,7 @@ The core package has following dependencies;
 ```kotlin
 private val tempDir = createTempDir().absolutePath // use any readable/writable directory of your choice
 
-val convertible = // there is 1 built-in DataConvertible, StringDataConvertible
+val convertible = // there are couple of built-in Convertibles such as DataConvertible, StringDataConvertible
 val cache = CacheBuilder.config(tempDir, convertible) { 
   // do more configuration here
 }.build()
