@@ -3,7 +3,7 @@ package com.github.kittinunf.fuse.core.cache
 import com.jakewharton.disklrucache.DiskLruCache
 import java.io.File
 import java.nio.charset.Charset
-import kotlinx.serialization.internal.ByteArraySerializer
+import kotlinx.serialization.builtins.ByteArraySerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonConfiguration
 
@@ -24,7 +24,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
     override fun put(safeKey: String, entry: Entry<ByteArray>) {
         cache.edit(safeKey).apply {
             newOutputStream(0).use {
-                val serialized = json.stringify(Entry.serializer(ByteArraySerializer), entry)
+                val serialized = json.stringify(Entry.serializer(ByteArraySerializer()), entry)
                 it.write(serialized.toByteArray())
             }
             commit()
@@ -56,7 +56,7 @@ internal class DiskCache private constructor(private val cache: DiskLruCache) : 
             snapshot.getInputStream(0).use { it.readBytes() }
         }
         return bytes?.toString(Charset.defaultCharset())?.let {
-            json.parse(Entry.serializer(ByteArraySerializer), it)
+            json.parse(Entry.serializer(ByteArraySerializer()), it)
         }
     }
 }
