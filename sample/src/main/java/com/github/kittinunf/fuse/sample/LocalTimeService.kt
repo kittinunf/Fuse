@@ -75,5 +75,5 @@ class LocalTimeServiceImpl(private val network: LocalTimeRepository, private val
     }
 }
 
-private val executor = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors())
-private fun <T> T.dispatchDefault(block: FuseAsync<T>.() -> Unit): Future<Unit> = dispatch(executor, block)
+private fun <T> T.dispatchDefault(block: FuseAsync<T>.() -> Unit): Future<Unit> =
+    dispatch(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()), block)
