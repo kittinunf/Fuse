@@ -10,11 +10,6 @@ import com.github.kittinunf.fuse.core.scenario.get
 import com.github.kittinunf.fuse.core.scenario.getWithSource
 import com.github.kittinunf.fuse.core.scenario.put
 import com.github.kittinunf.result.Result
-import java.io.File
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
-import kotlin.time.milliseconds
-import kotlin.time.seconds
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
@@ -22,6 +17,11 @@ import org.hamcrest.CoreMatchers.nullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Before
 import org.junit.Test
+import java.io.File
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.milliseconds
+import kotlin.time.seconds
 
 class FuseScenarioTest : BaseTestCase() {
 

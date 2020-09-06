@@ -38,7 +38,10 @@ enum class Source {
     DISK,
 }
 
-interface Cache<T : Any> : Fuse.Cacheable, Fuse.Cacheable.Put<T>, Fuse.Cacheable.Get<T>,
+interface Cache<T : Any> :
+    Fuse.Cacheable,
+    Fuse.Cacheable.Put<T>,
+    Fuse.Cacheable.Get<T>,
     Fuse.DataConvertible<T>
 
 class CacheImpl<T : Any> internal constructor(
