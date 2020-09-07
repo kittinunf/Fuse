@@ -5,13 +5,10 @@ android {
 }
 
 dependencies {
-    val kotlinVersion: String by project
-
     val appCompatVersion: String by project
     val constraintLayoutVersion: String by project
     val fuelVersion: String by project
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion")
     implementation("androidx.appcompat:appcompat:$appCompatVersion")
     implementation("androidx.constraintlayout:constraintlayout:$constraintLayoutVersion")
 
