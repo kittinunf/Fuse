@@ -11,8 +11,6 @@ dependencies {
     val robolectricVersion: String by project
     val kotlinVersion: String by project
 
-    implementation(kotlin("stdlib", kotlinVersion))
-
     testImplementation("junit:junit:$junitVersion")
     testImplementation("org.robolectric:robolectric:$robolectricVersion")
 }
