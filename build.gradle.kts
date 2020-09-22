@@ -22,7 +22,7 @@ buildscript {
 
 plugins {
     kotlin("jvm") version "1.4.10"
-    id("org.jmailen.kotlinter") version "2.1.2"
+    id("org.jmailen.kotlinter") version "3.0.2"
 
     jacoco
     `maven-publish`

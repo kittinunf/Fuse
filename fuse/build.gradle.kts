@@ -9,7 +9,7 @@ dependencies {
     val junitVersion: String by project
     val jsonVersion: String by project
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:$kotlinXSerializationVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinXSerializationVersion")
     implementation("com.jakewharton:disklrucache:$diskLruCacheVersion")
 
     api("com.github.kittinunf.result:result:$resultVersion")
