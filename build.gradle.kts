@@ -1,5 +1,6 @@
 import com.android.build.gradle.BaseExtension
 import com.jfrog.bintray.gradle.BintrayExtension.GpgConfig
+import org.gradle.api.publish.maven.MavenPom
 import org.jmailen.gradle.kotlinter.support.ReporterType
 
 buildscript {
@@ -228,6 +229,22 @@ subprojects {
                             url.set(artifactUrl)
                             connection.set(artifactScm)
                             developerConnection.set(artifactScm)
+                        }
+
+                        fun MavenPom.addDependencies() = withXml {
+                            asNode().appendNode("dependencies").let { depNode ->
+                                configurations.implementation.get().allDependencies.forEach {
+                                    depNode.appendNode("dependency").apply {
+                                        appendNode("groupId", it.group)
+                                        appendNode("artifactId", it.name)
+                                        appendNode("version", it.version)
+                                    }
+                                }
+                            }
+                        }
+
+                        if (isAndroid) {
+                            pom.addDependencies()
                         }
                     }
                 }
