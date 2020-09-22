@@ -57,14 +57,6 @@ subprojects {
             toolVersion = jacocoVersion
         }
 
-        tasks.withType<JacocoReport> {
-            reports {
-                html.isEnabled = false
-                xml.isEnabled = true
-                csv.isEnabled = false
-            }
-        }
-
         val sourcesJar by tasks.registering(Jar::class) {
             from(sourceSets["main"].allSource)
             archiveClassifier.set("sources")
