@@ -1,4 +1,5 @@
 import com.android.build.gradle.BaseExtension
+import com.jfrog.bintray.gradle.BintrayExtension.GpgConfig
 import org.gradle.api.publish.maven.MavenPom
 import org.jmailen.gradle.kotlinter.support.ReporterType
 
@@ -21,8 +22,8 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "1.4.0"
-    id("org.jmailen.kotlinter") version "2.1.2"
+    kotlin("jvm") version "1.4.10"
+    id("org.jmailen.kotlinter") version "3.0.2"
 
     jacoco
     `maven-publish`
@@ -52,6 +53,11 @@ subprojects {
             plugin("jacoco")
         }
 
+        jacoco {
+            val jacocoVersion: String by project
+            toolVersion = jacocoVersion
+        }
+
         val sourcesJar by tasks.registering(Jar::class) {
             from(sourceSets["main"].allSource)
             archiveClassifier.set("sources")
@@ -60,19 +66,6 @@ subprojects {
         val doc by tasks.creating(Javadoc::class) {
             isFailOnError = false
             source = sourceSets["main"].allJava
-        }
-
-        jacoco {
-            val jacocoVersion: String by project
-            toolVersion = jacocoVersion
-        }
-
-        tasks.withType<JacocoReport> {
-            reports {
-                html.isEnabled = false
-                xml.isEnabled = true
-                csv.isEnabled = false
-            }
         }
     }
 
@@ -156,55 +149,36 @@ subprojects {
             plugin("com.jfrog.bintray")
             plugin("org.jmailen.kotlinter")
         }
-        val artifactVersion: String by project
-        val artifactGroup: String by project
 
-        version = artifactVersion
-        group = artifactGroup
+        val artifactRepo: String by project
+        val artifactName: String by project
+        val artifactDesc: String by project
+        val artifactUserOrg: String by project
+        val artifactUrl: String by project
+        val artifactScm: String by project
+        val artifactLicenseName: String by project
+        val artifactLicenseUrl: String by project
 
-        bintray {
-            user = findProperty("BINTRAY_USER") as? String
-            key = findProperty("BINTRAY_KEY") as? String
-            setPublications(project.name)
-            with(pkg) {
-                repo = "maven"
-                name = "Fuse"
-                desc = "The simple generic LRU memory/disk cache for Android written in Kotlin."
-                userOrg = "kittinunf"
-                websiteUrl = "https://github.com/kittinunf/Fuse"
-                vcsUrl = "https://github.com/kittinunf/Fuse"
-                setLicenses("MIT")
-                with(version) {
-                    name = artifactVersion
-                }
-            }
-        }
+        val artifactPublish: String by project
+        val artifactGroupId: String by project
+        version = artifactPublish
+        group = artifactGroupId
 
-        val javadocJar by tasks.creating(Jar::class) {
-            val doc by tasks
-            dependsOn(doc)
-            from(doc)
-
-            archiveClassifier.set("javadoc")
-        }
-
-        fun MavenPom.addDependencies() = withXml {
-            val dependenciesNode = asNode().appendNode("dependencies")
-            configurations["implementation"].allDependencies.forEach {
-                dependenciesNode.appendNode("dependency").apply {
-                    appendNode("groupId", it.group)
-                    appendNode("artifactId", it.name)
-                    appendNode("version", it.version)
-                }
-            }
-        }
-
+        //publishing
         publishing {
+            val javadocJar by tasks.creating(Jar::class) {
+                val doc by tasks
+                dependsOn(doc)
+                from(doc)
+
+                archiveClassifier.set("javadoc")
+            }
+
             val sourcesJar by tasks
 
             publications {
                 register(project.name, MavenPublication::class) {
-                    if (project.hasProperty("android")) {
+                    if (isAndroid) {
                         artifact("$buildDir/outputs/aar/${project.name}-release.aar") {
                             builtBy(tasks.getByPath("assemble"))
                         }
@@ -213,24 +187,99 @@ subprojects {
                     }
                     artifact(sourcesJar)
                     artifact(javadocJar)
-
-                    groupId = artifactGroup
+                    groupId = artifactGroupId
                     artifactId = project.name
-                    version = artifactVersion
+                    version = artifactPublish
 
                     pom {
+                        name.set(project.name)
+                        description.set(artifactDesc)
+
+                        packaging = if (isAndroid) "aar" else "jar"
+                        url.set(artifactUrl)
+
                         licenses {
                             license {
-                                name.set("MIT License")
-                                url.set("http://www.opensource.org/licenses/mit-license.php")
+                                name.set(artifactLicenseName)
+                                url.set(artifactLicenseUrl)
                             }
                         }
-                    }
 
-                    if (project.hasProperty("android")) {
-                        pom.addDependencies()
+                        developers {
+                            developer {
+                                name.set("kittinunf")
+                            }
+
+                            developer {
+                                name.set("BabeDev")
+                            }
+                            developer {
+                                name.set("beylerian")
+                            }
+                            developer {
+                                name.set("zalewskise")
+                            }
+                        }
+
+                        contributors {
+                            // https://github.com/kittinunf/Result/graphs/contributors
+                        }
+
+                        scm {
+                            url.set(artifactUrl)
+                            connection.set(artifactScm)
+                            developerConnection.set(artifactScm)
+                        }
+
+                        fun MavenPom.addDependencies() = withXml {
+                            asNode().appendNode("dependencies").let { depNode ->
+                                configurations.implementation.get().allDependencies.forEach {
+                                    depNode.appendNode("dependency").apply {
+                                        appendNode("groupId", it.group)
+                                        appendNode("artifactId", it.name)
+                                        appendNode("version", it.version)
+                                    }
+                                }
+                            }
+                        }
+
+                        if (isAndroid) {
+                            pom.addDependencies()
+                        }
                     }
                 }
+            }
+        }
+
+        // bintray
+        bintray {
+            user = findProperty("BINTRAY_USER") as? String
+            key = findProperty("BINTRAY_KEY") as? String
+            setPublications(project.name)
+            publish = true
+            pkg.apply {
+                repo = artifactRepo
+                name = artifactName
+                desc = artifactDesc
+                userOrg = artifactUserOrg
+                websiteUrl = artifactUrl
+                vcsUrl = artifactUrl
+                setLicenses(artifactLicenseName)
+                version.apply {
+                    name = artifactPublish
+                    gpg(delegateClosureOf<GpgConfig> {
+                        sign = true
+                        passphrase = System.getenv("GPG_PASSPHRASE") ?: ""
+                    })
+                }
+            }
+        }
+
+        tasks.withType<JacocoReport> {
+            reports {
+                html.isEnabled = true
+                xml.isEnabled = true
+                csv.isEnabled = false
             }
         }
 

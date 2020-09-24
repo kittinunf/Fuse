@@ -1,9 +1,9 @@
 # Fuse
 
-[![jcenter](https://api.bintray.com/packages/kittinunf/maven/Fuse/images/download.svg)](https://bintray.com/kittinunf/maven/Fuse/_latestVersion) 
-[![Build Status](https://travis-ci.org/kittinunf/Fuse.svg?branch=master)](https://travis-ci.org/kittinunf/Fuse) 
+[![jcenter](https://api.bintray.com/packages/kittinunf/maven/Fuse/images/download.svg)](https://bintray.com/kittinunf/maven/Fuse/_latestVersion)
+[![MavenCentral](https://maven-badges.herokuapp.com/maven-central/com.github.kittinunf.fuse/fuse/badge.svg)](https://search.maven.org/search?q=g:com.github.kittinunf.fuse)
+[![Build Status](https://travis-ci.org/kittinunf/fuse.svg?branch=master)](https://travis-ci.org/kittinunf/fuse)
 [![Codecov](https://codecov.io/github/kittinunf/Fuse/coverage.svg?branch=master)](https://codecov.io/gh/kittinunf/Fuse)
-
 
 The simple generic LRU cache for Android, backed by both memory cache ([LruCache](http://developer.android.com/reference/android/util/LruCache.html)) and disk-based cache ([DiskLruCache](https://github.com/JakeWharton/DiskLruCache)) by Jake Wharton 
 
@@ -11,8 +11,8 @@ The simple generic LRU cache for Android, backed by both memory cache ([LruCache
 
 The core package has following dependencies;
 
-- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.3.72-blue.svg)](http://kotlinlang.org)
-- [Result](https://github.com/kittinunf/Result) - 2.2.0
+- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.4.10-blue.svg)](http://kotlinlang.org)
+- [Result](https://github.com/kittinunf/Result) - 3.1.0
 
 ```groovy
   //core
