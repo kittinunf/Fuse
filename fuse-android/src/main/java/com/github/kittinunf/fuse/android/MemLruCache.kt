@@ -33,5 +33,6 @@ class MemLruCache(private val cache: LruCache<String, Any>) : Persistence<Any> {
 
     override fun getTimestamp(safeKey: String): Long? = getEntry(safeKey)?.timestamp
 
+    @Suppress("UNCHECKED_CAST")
     private fun getEntry(safeKey: String): Entry<Any>? = cache.get(safeKey) as? Entry<Any>
 }

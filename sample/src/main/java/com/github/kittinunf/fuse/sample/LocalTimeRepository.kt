@@ -10,6 +10,7 @@ import com.github.kittinunf.fuse.core.fetch.Fetcher
 import com.github.kittinunf.fuse.core.scenario.ExpirableCache
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.map
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.minutes
 
@@ -50,12 +51,12 @@ class CacheRepository(dir: String) : CacheableLocalTimeRepository {
         return cache.get(TimeFetcher(area, location)).map { LocalTime.fromJson(it) }
     }
 
-    @ExperimentalTime
+    @OptIn(ExperimentalTime::class)
     override fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Source> {
         val area = place.continent
         val location = place.area
 
-        val result = expirableCache.getWithSource(TimeFetcher(area, location), timeLimit = 5.minutes)
+        val result = expirableCache.getWithSource(TimeFetcher(area, location), timeLimit = Duration.minutes(5))
         return (result.first.map { LocalTime.fromJson(it) } to result.second)
     }
 
