@@ -51,7 +51,7 @@ class CacheRepository(dir: String) : CacheableLocalTimeRepository {
         return cache.get(TimeFetcher(area, location)).map { LocalTime.fromJson(it) }
     }
 
-    @ExperimentalTime
+    @OptIn(ExperimentalTime::class)
     override fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Source> {
         val area = place.continent
         val location = place.area
