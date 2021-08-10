@@ -65,13 +65,6 @@ object Robolectric {
     const val jvm = "org.robolectric:robolectric:$version"
 }
 
-// Publishing libraries
-object Publishing {
-   
-    const val groupId = "com.github.kittinunf.fuse"
-    const val version = ""
-}
-
 object GradleNexus {
 
     private const val version = "1.1.0"
