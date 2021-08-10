@@ -63,6 +63,7 @@ class CacheImpl<T : Any> internal constructor(
         return _get(fetcher)
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun _get(fetcher: Fetcher<T>): Pair<Result<T, Exception>, Source> {
         val key = fetcher.key
         val safeKey = key.md5()
