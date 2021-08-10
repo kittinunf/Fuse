@@ -8,15 +8,15 @@ import com.github.kittinunf.fuse.core.fetch.NotFoundException
 import com.github.kittinunf.fuse.core.get
 import com.github.kittinunf.fuse.core.getWithSource
 import com.github.kittinunf.fuse.core.put
+import org.hamcrest.BaseMatcher
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.hasItems
 import org.hamcrest.CoreMatchers.isA
 import org.hamcrest.CoreMatchers.not
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.CoreMatchers.nullValue
+import org.hamcrest.Description
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.empty
-import org.hamcrest.Matchers.greaterThan
 import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -169,7 +169,13 @@ class FuseByteCacheTest : BaseTestCase() {
         val timestamp = cache.getTimestamp("timestamp")
 
         assertThat(timestamp, not(equalTo(-1L)))
-        assertThat(System.currentTimeMillis() - timestamp, greaterThan(2000L))
+        assertThat(System.currentTimeMillis() - timestamp, object : BaseMatcher<Long>() {
+            override fun describeTo(description: Description?) {}
+
+            override fun matches(item: Any?): Boolean {
+                return (item as Long) > 2000L
+            }
+        })
     }
 
     @Test
@@ -227,7 +233,7 @@ class FuseByteCacheTest : BaseTestCase() {
         }
         lock.wait()
 
-        assertThat(cache.allKeys(), not(empty()))
+        assertThat(cache.allKeys().size, not(equalTo(0)))
         (1..count).forEach {
             assertThat(
                 cache.allKeys(),
@@ -235,6 +241,6 @@ class FuseByteCacheTest : BaseTestCase() {
             )
         }
         cache.removeAll()
-        assertThat(cache.allKeys(), empty())
+        assertThat(cache.allKeys().size, equalTo(0))
     }
 }

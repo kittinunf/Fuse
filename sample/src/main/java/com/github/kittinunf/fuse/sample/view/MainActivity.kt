@@ -8,10 +8,12 @@ import com.github.kittinunf.fuse.sample.LocalTime
 import com.github.kittinunf.fuse.sample.LocalTimeServiceImpl
 import com.github.kittinunf.fuse.sample.NetworkRepository
 import com.github.kittinunf.fuse.sample.R
+import com.github.kittinunf.fuse.sample.databinding.ActivityMainBinding
 import com.github.kittinunf.result.Result
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
+
+    private lateinit var binding: ActivityMainBinding
 
     private val service by lazy {
         LocalTimeServiceImpl(
@@ -23,68 +25,78 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
         val place = "Asia/Bangkok"
 
-        networkButton.setOnClickListener {
-            setLoading(true)
-            service.getFromNetwork(place) {
-                updateTitle("Network")
-                updateResult(it)
+        with(binding) {
+            networkButton.setOnClickListener {
+                setLoading(true)
+                service.getFromNetwork(place) {
+                    updateTitle("Network")
+                    updateResult(it)
+                }
             }
-        }
 
-        cacheButton.setOnClickListener {
-            setLoading(true)
-            service.getFromCache(place) {
-                updateTitle("Cache")
-                updateResult(it)
+            cacheButton.setOnClickListener {
+                setLoading(true)
+                service.getFromCache(place) {
+                    updateTitle("Cache")
+                    updateResult(it)
+                }
             }
-        }
 
-        bothButton.setOnClickListener {
-            setLoading(true)
-            var count = 0
-            service.getFromBoth(place) {
-                count++
-                updateTitle(count.toString())
-                updateResult(it)
+            bothButton.setOnClickListener {
+                setLoading(true)
+                var count = 0
+                service.getFromBoth(place) {
+                    count++
+                    updateTitle(count.toString())
+                    updateResult(it)
+                }
             }
-        }
 
-        cacheIfNotExpired.setOnClickListener {
-            setLoading(true)
-            service.getFromCacheIfNotExpired(place) { result, source ->
-                updateTitle(source.name)
-                updateResult(result)
+            cacheIfNotExpired.setOnClickListener {
+                setLoading(true)
+                service.getFromCacheIfNotExpired(place) { result, source ->
+                    updateTitle(source.name)
+                    updateResult(result)
+                }
             }
         }
     }
 
     private fun updateResult(result: Result<LocalTime, Exception>) {
         setLoading(false)
-        when (result) {
-            is Result.Success -> {
-                resultText.text =
-                    "Location: ${result.value.timezone}\nTime: ${result.value.dateTime}\nTZ: ${result.value.abbrev}"
-            }
+        with(binding) {
+            when (result) {
+                is Result.Success -> {
+                    resultText.text =
+                        "Location: ${result.value.timezone}\nTime: ${result.value.dateTime}\nTZ: ${result.value.abbrev}"
+                }
 
-            is Result.Failure -> {
-                resultText.text = result.error.message
+                is Result.Failure -> {
+                    resultText.text = result.error.message
+                }
             }
         }
     }
 
     private fun updateTitle(text: String? = null) {
-        titleText.text = text
+        binding.titleText.text = text
     }
 
     private fun setLoading(isLoading: Boolean) {
-        if (isLoading) {
-            progress.visibility = View.VISIBLE
-            resultText.visibility = View.GONE
-        } else {
-            progress.visibility = View.GONE
-            resultText.visibility = View.VISIBLE
+        with(binding) {
+            if (isLoading) {
+                progress.visibility = View.VISIBLE
+                resultText.visibility = View.GONE
+            } else {
+                progress.visibility = View.GONE
+                resultText.visibility = View.VISIBLE
+            }
         }
     }
 }

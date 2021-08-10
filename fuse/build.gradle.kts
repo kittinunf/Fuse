@@ -1,19 +1,14 @@
 plugins {
-    kotlin("plugin.serialization") version "1.4.20"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
+    id("publication")
 }
 
 dependencies {
-    val kotlinXSerializationVersion: String by project
-    val diskLruCacheVersion: String by project
-    val resultVersion: String by project
-    val junitVersion: String by project
-    val jsonVersion: String by project
+    implementation(Serialization.json)
+    implementation(Cache.diskAndroid)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$kotlinXSerializationVersion")
-    implementation("com.jakewharton:disklrucache:$diskLruCacheVersion")
+    api(Result.android)
 
-    api("com.github.kittinunf.result:result:$resultVersion")
-
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("org.json:json:$jsonVersion")
+    testImplementation(JUnit.jvm)
 }

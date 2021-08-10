@@ -1,16 +1,35 @@
+plugins {
+    id("com.android.library")
+    kotlin("android")
+    id("publication")
+}
+
 android {
+    compileSdk = Android.compileSdkVersion
+
     defaultConfig {
-        consumerProguardFiles("proguard-rules.pro")
+        minSdk = Android.minSdkVersion
+        targetSdk = Android.targetSdkVersion
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
     implementation(project(":fuse"))
 
-    val junitVersion: String by project
-    val robolectricVersion: String by project
-    val kotlinVersion: String by project
-
-    testImplementation("junit:junit:$junitVersion")
-    testImplementation("org.robolectric:robolectric:$robolectricVersion")
+    testImplementation(JUnit.jvm)
+    testImplementation(Robolectric.jvm)
 }

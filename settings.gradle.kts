@@ -3,3 +3,5 @@ include(
     ":fuse-android",
     ":sample"
 )
+
+includeBuild("plugins")
