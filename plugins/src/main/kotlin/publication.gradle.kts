@@ -28,96 +28,120 @@ if (secretPropsFile.exists()) {
     ext["sonatype.password"] = System.getenv("SONATYPE_PASSWORD")
 }
 
-val javadocJar by tasks.registering(Jar::class) {
-    archiveClassifier.set("javadoc")
-}
-
 fun getExtraString(name: String) = ext[name]?.toString()
 
 val isReleaseBuild: Boolean
     get() = properties.containsKey("release")
 
-publishing {
-    repositories {
-        maven {
-            name = "sonatype"
-            url = uri(
-                if (isReleaseBuild) {
-                    "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                } else {
-                    "https://oss.sonatype.org/content/repositories/snapshots"
-                }
-            )
+afterEvaluate {
+    publishing {
+        repositories {
+            maven {
+                name = "sonatype"
+                url = uri(
+                    if (isReleaseBuild) {
+                        "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                    } else {
+                        "https://oss.sonatype.org/content/repositories/snapshots"
+                    }
+                )
 
-            credentials {
-                username = getExtraString("sonatype.username")
-                password = getExtraString("sonatype.password")
+                credentials {
+                    username = getExtraString("sonatype.username")
+                    password = getExtraString("sonatype.password")
+                }
             }
         }
-    }
 
-    // Configure all publications
-    publications.withType<MavenPublication> {
-        val artifactName: String by project
-        val artifactDesc: String by project
-        val artifactUrl: String by project
-        val artifactScm: String by project
-        val artifactUserOrg: String by project
-        val artifactLicenseName: String by project
-        val artifactLicenseUrl: String by project
-
-        artifactId = project.name
-
-        artifact(javadocJar)
-
-        // Provide artifacts information requited by Maven Central
-        pom {
-            name.set(artifactName)
-            description.set(artifactDesc)
-            url.set(artifactUrl)
-
-            licenses {
-                license {
-                    name.set(artifactLicenseName)
-                    url.set(artifactLicenseUrl)
-                    distribution.set("repo")
-                }
+        publications.register<MavenPublication>(project.name) {
+            val javadocJar by tasks.registering(Jar::class) {
+                archiveClassifier.set("javadoc")
             }
-            developers {
-                developer {
-                    id.set(artifactUserOrg)
+
+            // Configure all publications
+            val artifactName: String by project
+            val artifactDesc: String by project
+            val artifactUrl: String by project
+            val artifactScm: String by project
+            val artifactUserOrg: String by project
+            val artifactLicenseName: String by project
+            val artifactLicenseUrl: String by project
+
+            artifactId = project.name
+
+            if (project.hasProperty("android")) {
+                artifact("$buildDir/outputs/aar/${project.name}-release.aar") {
+                    builtBy(tasks.getByPath("assemble"))
                 }
+            } else {
+                from(components["java"])
             }
-            contributors {
-                contributor {
-                    name.set("zalewskise")
-                }
-                contributor {
-                    name.set("eschlenz")
-                }
-                contributor {
-                    name.set("babedev")
-                }
-                contributor {
-                    name.set("nicolashaan")
-                }
-            }
-            scm {
-                connection.set(artifactScm)
-                developerConnection.set(artifactScm)
+
+            artifact(javadocJar)
+
+            // Provide artifacts information requited by Maven Central
+            pom {
+                name.set(artifactName)
+                description.set(artifactDesc)
                 url.set(artifactUrl)
+
+                licenses {
+                    license {
+                        name.set(artifactLicenseName)
+                        url.set(artifactLicenseUrl)
+                        distribution.set("repo")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set(artifactUserOrg)
+                    }
+                }
+                contributors {
+                    contributor {
+                        name.set("zalewskise")
+                    }
+                    contributor {
+                        name.set("eschlenz")
+                    }
+                    contributor {
+                        name.set("babedev")
+                    }
+                    contributor {
+                        name.set("nicolashaan")
+                    }
+                }
+                scm {
+                    connection.set(artifactScm)
+                    developerConnection.set(artifactScm)
+                    url.set(artifactUrl)
+                }
+            }
+
+            fun MavenPom.addDependencies() = withXml {
+                asNode().appendNode("dependencies").let { depNode ->
+                    configurations.getByName("implementation").allDependencies.forEach {
+                        depNode.appendNode("dependency").apply {
+                            appendNode("groupId", it.group)
+                            appendNode("artifactId", it.name)
+                            appendNode("version", it.version)
+                        }
+                    }
+                }
+            }
+
+            if (project.hasProperty("android")) {
+                pom.addDependencies()
             }
         }
     }
+
+    signing {
+        val signingKey = project.ext["signing.key"] as? String
+        val signingPassword = project.ext["signing.password"] as? String
+        if (signingKey == null || signingPassword == null) return@signing
+
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign(publishing.publications)
+    }
 }
-
-signing {
-    val signingKey = project.ext["signing.key"] as? String
-    val signingPassword = project.ext["signing.password"] as? String
-    if (signingKey == null || signingPassword == null) return@signing
-
-    useInMemoryPgpKeys(signingKey, signingPassword)
-    sign(publishing.publications)
-}
-
-//# Publishing artifact
