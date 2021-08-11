@@ -44,3 +44,8 @@ dependencies {
     testImplementation(JUnit.jvm)
     testImplementation(Robolectric.jvm)
 }
+
+val sourcesJar by tasks.registering(Jar::class) {
+    from(android.sourceSets["main"].java.srcDirs)
+    archiveClassifier.set("sources")
+}

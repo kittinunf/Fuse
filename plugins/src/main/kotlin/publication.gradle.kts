@@ -77,7 +77,10 @@ afterEvaluate {
                 from(components["java"])
             }
 
+            val sourcesJar by tasks.getting
+
             artifact(javadocJar)
+            artifact(sourcesJar)
 
             // Provide artifacts information requited by Maven Central
             pom {

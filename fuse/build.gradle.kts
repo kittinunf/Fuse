@@ -23,3 +23,8 @@ dependencies {
 
     testImplementation(JUnit.jvm)
 }
+
+val sourcesJar by tasks.registering(Jar::class) {
+    from(extensions.getByType<SourceSetContainer>()["main"].allSource)
+    archiveClassifier.set("sources")
+}
