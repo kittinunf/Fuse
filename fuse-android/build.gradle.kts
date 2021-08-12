@@ -16,11 +16,11 @@ val artifactPublishVersion: String by project
 version = if (isReleaseBuild) artifactPublishVersion else "master-$gitSha-SNAPSHOT"
 
 android {
-    compileSdk = Android.compileSdkVersion
+    compileSdk = libs.versions.targetSdk.get().toInt()
 
     defaultConfig {
-        minSdk = Android.minSdkVersion
-        targetSdk = Android.targetSdkVersion
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -41,8 +41,8 @@ android {
 dependencies {
     implementation(project(":fuse"))
 
-    testImplementation(JUnit.jvm)
-    testImplementation(Robolectric.jvm)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.robolectric)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {

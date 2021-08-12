@@ -1,0 +1,31 @@
+[versions]
+kotlin = "1.5.10"
+androidGradle = "7.0.0"
+kotlinxSerialization = "1.2.1"
+diskCache = "2.0.2"
+result = "3.1.0"
+
+jacoco = "0.8.7"
+junit = "4.13.1"
+robolectric = "4.4"
+
+minSdk = "21"
+targetSdk = "30"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+
+kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "kotlin" }
+kotlin-test-annotations = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlin" }
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+diskCache = { module = "com.jakewharton:disklrucache", version.ref = "diskCache" }
+result = { module = "com.github.kittinunf.result:result", version.ref = "result" }
+
+test-junit = { module = "junit:junit", version.ref = "junit" }
+test-robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+
+[bundles]
+kotlin-test = ["kotlin-test-common", "kotlin-test-annotations"]

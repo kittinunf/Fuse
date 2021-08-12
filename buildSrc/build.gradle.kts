@@ -13,12 +13,3 @@ kotlin {
         kotlin.srcDir("buildSrc/src/main/kotlin")
     }
 }
-
-dependencies {
-    // main
-    implementation(Kotlin.plugin)
-
-    // plugins
-    implementation(Android.plugin)
-    implementation(Kotlin.pluginSerialization)
-}

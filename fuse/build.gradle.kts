@@ -16,12 +16,12 @@ val artifactPublishVersion: String by project
 version = if (isReleaseBuild) artifactPublishVersion else "master-$gitSha-SNAPSHOT"
 
 dependencies {
-    implementation(Serialization.json)
-    implementation(Cache.diskAndroid)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.diskCache)
 
-    api(Result.android)
+    api(libs.result)
 
-    testImplementation(JUnit.jvm)
+    testImplementation(libs.test.junit)
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
