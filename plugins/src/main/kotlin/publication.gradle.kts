@@ -14,7 +14,7 @@ ext["signing.password"] = null
 ext["sonatype.username"] = null
 ext["sonatype.password"] = null
 
-val secretPropsFile = project.rootProject.file("local.properties")
+val secretPropsFile = project.rootDir.resolve("local.properties")
 if (secretPropsFile.exists()) {
     secretPropsFile.reader().use {
         Properties().apply { load(it) }
