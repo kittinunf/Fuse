@@ -1,6 +1,5 @@
 # Fuse
 
-[![jcenter](https://api.bintray.com/packages/kittinunf/maven/Fuse/images/download.svg)](https://bintray.com/kittinunf/maven/Fuse/_latestVersion)
 [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/com.github.kittinunf.fuse/fuse/badge.svg)](https://search.maven.org/search?q=g:com.github.kittinunf.fuse)
 [![Build Status](https://travis-ci.org/kittinunf/fuse.svg?branch=master)](https://travis-ci.org/kittinunf/fuse)
 [![Codecov](https://codecov.io/github/kittinunf/Fuse/coverage.svg?branch=master)](https://codecov.io/gh/kittinunf/Fuse)
