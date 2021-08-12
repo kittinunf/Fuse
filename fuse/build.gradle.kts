@@ -25,6 +25,6 @@ dependencies {
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
-    from(extensions.getByType<SourceSetContainer>()["main"].allSource)
+    from(project.extensions.getByType<SourceSetContainer>()["main"].allSource)
     archiveClassifier.set("sources")
 }
