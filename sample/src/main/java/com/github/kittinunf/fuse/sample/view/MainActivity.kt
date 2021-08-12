@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
     private val service by lazy {
         LocalTimeServiceImpl(
             network = NetworkRepository(),
-            cache = CacheRepository(cacheDir.path)
+            cache = CacheRepository(this)
         )
     }
 

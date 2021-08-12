@@ -1,6 +1,8 @@
 package com.github.kittinunf.fuse.sample
 
+import android.content.Context
 import com.github.kittinunf.fuel.core.FuelManager
+import com.github.kittinunf.fuse.android.config
 import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
 import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.Source
@@ -12,7 +14,6 @@ import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.map
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.minutes
 
 interface LocalTimeRepository {
 
@@ -37,9 +38,10 @@ class NetworkRepository : LocalTimeRepository {
     }
 }
 
-class CacheRepository(dir: String) : CacheableLocalTimeRepository {
+// in real-world application you should not do this, you should do some injection to construct this or something else, but this is a sample application so ¯\_(ツ)_/¯
+class CacheRepository(context: Context) : CacheableLocalTimeRepository {
 
-    private val cache = CacheBuilder.config(dir = dir, name = "SAMPLE", convertible = StringDataConvertible()) {
+    private val cache = CacheBuilder.config(context, convertible = StringDataConvertible()) {
         memCache = defaultAndroidMemoryCache()
     }.build()
 
@@ -67,7 +69,6 @@ class CacheRepository(dir: String) : CacheableLocalTimeRepository {
     }
 }
 
-// :)
 private val String.continent: String
     get() = substringBefore("/")
 

@@ -14,7 +14,7 @@ class Config<T : Any>(
 ) {
 
     companion object {
-        const val DEFAULT_NAME = "FUSE_DEFAULT"
+        const val DEFAULT_NAME = "com.github.kittinunf.fuse"
     }
 
     var transformer: ((key: String, value: T) -> T) = { _, value -> value }
