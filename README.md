@@ -10,7 +10,7 @@ The simple generic LRU cache for Android, backed by both memory cache ([LruCache
 
 The core package has following dependencies;
 
-- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.4.20-blue.svg)](http://kotlinlang.org)
+- Kotlin - [![Kotlin](https://img.shields.io/badge/Kotlin-1.5-blue.svg)](http://kotlinlang.org)
 - [Result](https://github.com/kittinunf/Result) - 3.1.0
 
 ```groovy
