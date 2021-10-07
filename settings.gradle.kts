@@ -6,8 +6,8 @@ includeBuild("plugins")
 
 include(
     ":fuse",
-    ":fuse-android",
-    ":sample"
+//    ":fuse-android",
+//    ":sample"
 )
 
 pluginManagement {
@@ -16,7 +16,6 @@ pluginManagement {
         mavenCentral()
         google()
         maven { setUrl("https://plugins.gradle.org/m2/") }
-        jcenter()
     }
 
     val kotlinVersion = rootDir.resolve("gradle/libs.versions.toml").reader().use { java.util.Properties().apply { load(it) } }
@@ -27,8 +26,9 @@ pluginManagement {
         .removeSurrounding("\"")
 
     plugins {
-        kotlin("jvm") version kotlinVersion
-        kotlin("android") version kotlinVersion
+//        kotlin("jvm") version kotlinVersion
+//        kotlin("android") version kotlinVersion
+        kotlin("multiplatform") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
         id("com.android.library") version androidGradleVersion
         id("com.android.application") version androidGradleVersion
