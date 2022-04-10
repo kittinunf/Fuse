@@ -4,7 +4,7 @@ import com.github.kittinunf.fuse.core.Cache
 import com.github.kittinunf.fuse.core.Fuse
 import com.github.kittinunf.fuse.core.Source
 import com.github.kittinunf.fuse.core.fetch.Fetcher
-import com.github.kittinunf.fuse.core.fetch.NoFetcher
+import com.github.kittinunf.fuse.core.fetch.NeverFetcher
 import com.github.kittinunf.fuse.core.fetch.SimpleFetcher
 import com.github.kittinunf.result.Result
 import kotlin.time.Duration
@@ -94,27 +94,27 @@ class ExpirableCache<T : Any>(private val cache: Cache<T>) : Fuse.Cacheable by c
 @OptIn(ExperimentalTime::class)
 fun <T : Any> ExpirableCache<T>.get(
     key: String,
-    getValue: (() -> T?)? = null,
+    getValue: (() -> T)? = null,
     timeLimit: Duration = Duration.INFINITE,
     useEntryEvenIfExpired: Boolean = false
 ): Result<T, Exception> {
-    val fetcher = if (getValue == null) NoFetcher(key) else SimpleFetcher(key, getValue)
+    val fetcher = if (getValue == null) NeverFetcher(key) else SimpleFetcher(key, getValue)
     return get(fetcher, timeLimit, useEntryEvenIfExpired)
 }
 
 @OptIn(ExperimentalTime::class)
 fun <T : Any> ExpirableCache<T>.getWithSource(
     key: String,
-    getValue: (() -> T?)? = null,
+    getValue: (() -> T)? = null,
     timeLimit: Duration = Duration.INFINITE,
     useEntryEvenIfExpired: Boolean = false
 ): Pair<Result<T, Exception>, Source> {
-    val fetcher = if (getValue == null) NoFetcher(key) else SimpleFetcher(key, getValue)
+    val fetcher = if (getValue == null) NeverFetcher(key) else SimpleFetcher(key, getValue)
     return getWithSource(fetcher, timeLimit, useEntryEvenIfExpired)
 }
 
 fun <T : Any> ExpirableCache<T>.put(key: String, putValue: T? = null): Result<T, Exception> {
-    val fetcher = if (putValue == null) NoFetcher(key) else SimpleFetcher(key, { putValue })
+    val fetcher = if (putValue == null) NeverFetcher(key) else SimpleFetcher(key, { putValue })
     return put(fetcher)
 }
 // endregion

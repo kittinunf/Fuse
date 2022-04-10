@@ -1,76 +1,80 @@
 package com.github.kittinunf.fuse.sample
 
-import android.content.Context
-import com.github.kittinunf.fuel.core.FuelManager
-import com.github.kittinunf.fuse.android.config
-import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
-import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.Source
-import com.github.kittinunf.fuse.core.StringDataConvertible
-import com.github.kittinunf.fuse.core.build
-import com.github.kittinunf.fuse.core.fetch.Fetcher
-import com.github.kittinunf.fuse.core.scenario.ExpirableCache
 import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.map
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
 interface LocalTimeRepository {
 
-    fun getLocalTime(place: String): Result<LocalTime, Exception>
+    fun getFromNetwork(location: String, handler: (Result<LocalTime, Exception>) -> Unit)
+
+    fun getFromCache(location: String, handler: (Result<LocalTime, Exception>) -> Unit)
+
+    // cache + network
+    fun getFromCacheThenNetwork(location: String, handler: (Result<LocalTime, Exception>) -> Unit)
+
+    fun getFromCacheIfNotExpired(location: String, duration: Duration, handler: (Result<LocalTime, Exception>, Source) -> Unit)
+
+    fun evictCache()
 }
 
-interface CacheableLocalTimeRepository : LocalTimeRepository {
+class LocalTimeRepositoryImpl(private val network: LocalTimeService, private val cache: CacheableLocalTimeService) : LocalTimeRepository {
 
-    fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Source>
-}
+    override fun getFromNetwork(location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
+        dispatchDefault {
+            val result = network.getTime(location)
 
-private val fuel = FuelManager().apply {
-    basePath = "http://worldtimeapi.org/api/"
-}
+            mainThread {
+                handler(result)
+            }
+        }
+    }
 
-class NetworkRepository : LocalTimeRepository {
+    override fun getFromCache(location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
+        dispatchDefault {
+            val result = cache.getLocalTimeOnlyCache(location)
 
-    override fun getLocalTime(place: String): Result<LocalTime, Exception> {
-        val area = place.continent
-        val location = place.area
-        return fuel.get("/timezone/$area/$location").responseObject(LocalTime.deserializer).third
+            mainThread {
+                handler(result)
+            }
+        }
+    }
+
+    override fun getFromCacheThenNetwork(location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
+        dispatchDefault {
+            val r1 = cache.getTime(location)
+
+            mainThread {
+                handler(r1)
+            }
+        }
+
+        dispatchDefault {
+            Thread.sleep(500) // deliberately make it slower
+            val r2 = network.getTime(location)
+
+            mainThread {
+                handler(r2)
+            }
+        }
+    }
+
+    override fun getFromCacheIfNotExpired(location: String, duration: Duration, handler: (Result<LocalTime, Exception>, Source) -> Unit) {
+        dispatchDefault {
+            val (result, source) = cache.getLocalTimeIfNotExpired(location, duration)
+
+            mainThread {
+                handler(result, source)
+            }
+        }
+    }
+
+    override fun evictCache() {
+        cache.evictCache()
     }
 }
 
-// in real-world application you should not do this, you should do some injection to construct this or something else, but this is a sample application so ¯\_(ツ)_/¯
-class CacheRepository(context: Context) : CacheableLocalTimeRepository {
-
-    private val cache = CacheBuilder.config(context, convertible = StringDataConvertible()) {
-        memCache = defaultAndroidMemoryCache()
-    }.build()
-
-    private val expirableCache = ExpirableCache(cache)
-
-    override fun getLocalTime(place: String): Result<LocalTime, Exception> {
-        val area = place.continent
-        val location = place.area
-        return cache.get(TimeFetcher(area, location)).map { LocalTime.fromJson(it) }
-    }
-
-    @OptIn(ExperimentalTime::class)
-    override fun getLocalTimeIfNotExpired(place: String): Pair<Result<LocalTime, Exception>, Source> {
-        val area = place.continent
-        val location = place.area
-
-        val result = expirableCache.getWithSource(TimeFetcher(area, location), timeLimit = Duration.minutes(5))
-        return (result.first.map { LocalTime.fromJson(it) } to result.second)
-    }
-
-    private class TimeFetcher(private val area: String, private val location: String) : Fetcher<String> {
-        override val key: String = LocalTime::class.java.name
-
-        override fun fetch(): Result<String, Exception> = fuel.get("/timezone/$area/$location").responseString().third
-    }
-}
-
-private val String.continent: String
-    get() = substringBefore("/")
-
-private val String.area: String
-    get() = substringAfter("/")
+private fun <T> T.dispatchDefault(block: FuseAsync<T>.() -> Unit): Future<Unit> =
+    dispatch(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()), block)

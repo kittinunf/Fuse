@@ -1,9 +1,13 @@
 package com.github.kittinunf.fuse.core
 
+import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.fetch.Fetcher
+import com.github.kittinunf.fuse.core.fetch.NeverFetcher
+import com.github.kittinunf.fuse.core.fetch.SimpleFetcher
 import com.github.kittinunf.result.Result
+import java.io.File
 
-class Fuse {
+object Fuse {
 
     interface DataConvertible<T : Any> {
         fun convertFromData(bytes: ByteArray): T
@@ -82,3 +86,84 @@ class Fuse {
         fun getTimestamp(key: String): Long
     }
 }
+
+// region File
+/**
+ *  Get the entry associated as a Data of file content in T with its particular key as File path. If File is not there or too large, it returns as [Result.Failure]
+ *  Otherwise, it returns [Result.Success] of data of a given file in T
+ *
+ * @param file The file object that represent file data on the disk
+ * @return Result<T, Exception> The Result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.get(file: File): Result<T, Exception> = get(DiskFetcher(file, this))
+
+/**
+ *  Get the entry associated as a Data of file content in T with its particular key as File path. If File is not there or too large, it returns as [Result.Failure]
+ *  Otherwise, it returns [Result.Success] data of a given file in T
+ *
+ * @param file The file object that represent file data on the disk
+ * @return Pair<Result<T, Exception>, Source>> The Result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.getWithSource(file: File): Pair<Result<T, Exception>, Source> =
+    getWithSource(DiskFetcher(file, this))
+
+/**
+ *  Put the entry as a content of a file into Cache
+ *
+ * @param file The file object that represent file data on the disk
+ * @return Result<T, Exception> The Result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.put(file: File): Result<T, Exception> = put(DiskFetcher(file, this))
+// endregion File
+
+// region Value
+/**
+ *  Get the entry associated as a value in T by using lambda getValue as a default value generator. If value for associated Key is not there, it saves with value from defaultValue.
+ *
+ * @param key The String represent key of the entry
+ * @return Result<T, Exception> The Result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.get(key: String, defaultValue: (() -> T?)): Result<T, Exception> {
+    val fetcher = SimpleFetcher(key, defaultValue)
+    return get(fetcher)
+}
+
+/**
+ *  Get the entry associated as a value in T. Unlike [Cache<T>.get(key: String, defaultValue: (() -> T))] counterpart, if value for associated Key is not there, it returns as [Result.Failure]
+ *
+ * @param key The String represent key of the entry
+ * @return Result<T, Exception> The Result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.get(key: String): Result<T, Exception> = get(NeverFetcher(key))
+
+/**
+ *  Get the entry associated as a value in T by using lambda as a default value generator. if value for associated key is not there, it saves with value from defaultValue.
+ *
+ * @param key The string represent key of the entry
+ * @return Pair<Result<T, Exception>, Source>> The result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.getWithSource(key: String, getValue: (() -> T?)): Pair<Result<T, Exception>, Source> {
+    val fetcher = SimpleFetcher(key, getValue)
+    return getWithSource(fetcher)
+}
+
+/**
+ *  Get the entry associated as a value in T by using lambda as a default value generator. if value for associated key is not there, it saves with value from defaultValue.
+ *
+ * @param key The string represent key of the entry
+ * @return Pair<Result<T, Exception>, Source>> The result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.getWithSource(key: String): Pair<Result<T, Exception>, Source> = getWithSource(NeverFetcher(key))
+
+/**
+ *  Put the entry as a content of a file into Cache
+ *
+ * @param key file object that represent file data on the disk
+ * @return Result<T, Exception> The Result that represents the success/failure of the operation
+ */
+fun <T : Any> Cache<T>.put(key: String, putValue: T): Result<T, Exception> {
+    val fetcher = SimpleFetcher(key, { putValue })
+    return put(fetcher)
+}
+// endregion Value
+

@@ -198,7 +198,7 @@ class FuseScenarioTest : BaseTestCase() {
 
         val failFetcher = object : Fetcher<String> {
             override val key: String = "can_fail"
-            override fun fetch(): Result<String, Exception> = Result.error(Exception("fail catcher"))
+            override fun fetch(): Result<String, Exception> = Result.failure(Exception("fail catcher"))
         }
 
         // this will always force to be expired
@@ -240,7 +240,7 @@ class FuseScenarioTest : BaseTestCase() {
         val failFetcher = object : Fetcher<String> {
             override val key: String = "will_fail"
 
-            override fun fetch(): Result<String, Exception> = Result.error(Exception("fail catcher"))
+            override fun fetch(): Result<String, Exception> = Result.failure(Exception("fail catcher"))
         }
 
         val (result, source) = expirableCache.getWithSource(failFetcher, Duration.ZERO)

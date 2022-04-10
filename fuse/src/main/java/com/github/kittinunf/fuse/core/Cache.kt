@@ -1,14 +1,10 @@
 package com.github.kittinunf.fuse.core
 
 import com.github.kittinunf.fuse.core.cache.Entry
-import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.fetch.Fetcher
-import com.github.kittinunf.fuse.core.fetch.NoFetcher
-import com.github.kittinunf.fuse.core.fetch.SimpleFetcher
 import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
-import java.io.File
 
 object CacheBuilder {
 
@@ -157,32 +153,3 @@ class CacheImpl<T : Any> internal constructor(
         return fetchResult.flatMap { put(fetcher.key, it) }
     }
 }
-
-// region File
-fun <T : Any> Cache<T>.get(file: File): Result<T, Exception> = get(DiskFetcher(file, this))
-
-fun <T : Any> Cache<T>.getWithSource(file: File): Pair<Result<T, Exception>, Source> =
-    getWithSource(DiskFetcher(file, this))
-
-fun <T : Any> Cache<T>.put(file: File): Result<T, Exception> = put(DiskFetcher(file, this))
-// endregion File
-
-// region Value
-fun <T : Any> Cache<T>.get(key: String, getValue: (() -> T?)? = null): Result<T, Exception> {
-    val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    return get(fetcher)
-}
-
-fun <T : Any> Cache<T>.getWithSource(
-    key: String,
-    getValue: (() -> T?)? = null
-): Pair<Result<T, Exception>, Source> {
-    val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    return getWithSource(fetcher)
-}
-
-fun <T : Any> Cache<T>.put(key: String, putValue: T? = null): Result<T, Exception> {
-    val fetcher = if (putValue == null) NoFetcher<T>(key) else SimpleFetcher(key, { putValue })
-    return put(fetcher)
-}
-// endregion Value
