@@ -12,7 +12,7 @@ import com.github.kittinunf.fuse.sample.databinding.ActivityMainBinding
 import com.github.kittinunf.result.Result
 import kotlin.time.Duration.Companion.minutes
 
-class MainActivity : AppCompatActivity(R.layout.activity_main) {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
             evictCacheButton.setOnClickListener {
                 service.evictCache()
+                updateTitle()
                 updateResult(Result.failure(RuntimeException("Cache is evicted")))
             }
         }
