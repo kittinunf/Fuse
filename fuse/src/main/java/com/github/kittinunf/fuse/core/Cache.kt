@@ -8,20 +8,11 @@ import com.github.kittinunf.result.flatMap
 
 object CacheBuilder {
 
-    fun <T : Any> config(
-        dir: String,
-        convertible: Fuse.DataConvertible<T>,
-        construct: Config<T>.() -> Unit = {}
-    ): Config<T> {
+    fun <T : Any> config(dir: String, convertible: Fuse.DataConvertible<T>, construct: Config<T>.() -> Unit = {}): Config<T> {
         return Config(dir, convertible = convertible).apply(construct)
     }
 
-    fun <T : Any> config(
-        dir: String,
-        name: String,
-        convertible: Fuse.DataConvertible<T>,
-        construct: Config<T>.() -> Unit = {}
-    ): Config<T> {
+    fun <T : Any> config(dir: String, name: String, convertible: Fuse.DataConvertible<T>, construct: Config<T>.() -> Unit = {}): Config<T> {
         return Config(dir, name, convertible).apply(construct)
     }
 }
@@ -34,11 +25,7 @@ enum class Source {
     DISK,
 }
 
-interface Cache<T : Any> :
-    Fuse.Cacheable,
-    Fuse.Cacheable.Put<T>,
-    Fuse.Cacheable.Get<T>,
-    Fuse.DataConvertible<T>
+interface Cache<T : Any> : Fuse.Cacheable, Fuse.Cacheable.Put<T>, Fuse.Cacheable.Get<T>, Fuse.DataConvertible<T>
 
 class CacheImpl<T : Any> internal constructor(
     private val config: Config<T>
@@ -143,9 +130,9 @@ class CacheImpl<T : Any> internal constructor(
         return value != null
     }
 
-    override fun getTimestamp(key: String): Long {
+    override fun getTimestamp(key: String): Long? {
         val safeKey = key.md5()
-        return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey) ?: -1
+        return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey) ?: null
     }
 
     private fun fetchAndPut(fetcher: Fetcher<T>): Result<T, Exception> {

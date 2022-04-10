@@ -81,9 +81,9 @@ object Fuse {
         /**
          *  Retrieve the keys from all values persisted
          * @param key The key associated with the object to be persisted
-         * @return Long represents the timestamp in milliseconds since epoch 1970
+         * @return Long represents the timestamp in milliseconds since epoch 1970, or null which means that the key is not present in cache
          */
-        fun getTimestamp(key: String): Long
+        fun getTimestamp(key: String): Long?
     }
 }
 
