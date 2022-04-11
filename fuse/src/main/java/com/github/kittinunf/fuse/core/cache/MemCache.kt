@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core.cache
 
-class MemCache(val maxSize: Int) : Persistence<Any> {
+internal class MemCache(val maxSize: Int) : Persistence<Any> {
 
     val cache: MutableMap<String, Any> = object : LinkedHashMap<String, Any>(0, 0.75f, true) {
 
