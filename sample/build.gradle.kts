@@ -4,7 +4,6 @@ plugins {
 }
 
 repositories {
-    jcenter()
     mavenCentral()
     google()
 }
@@ -47,7 +46,6 @@ dependencies {
     implementation(libs.appCompat)
     implementation(libs.constraintLayout)
 
-    implementation(libs.fuel)
     implementation(project(":fuse"))
     implementation(project(":fuse-android"))
 }

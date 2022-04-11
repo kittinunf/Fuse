@@ -1,31 +1,18 @@
 package com.github.kittinunf.fuse.core
 
 import com.github.kittinunf.fuse.core.cache.Entry
-import com.github.kittinunf.fuse.core.fetch.DiskFetcher
 import com.github.kittinunf.fuse.core.fetch.Fetcher
-import com.github.kittinunf.fuse.core.fetch.NoFetcher
-import com.github.kittinunf.fuse.core.fetch.SimpleFetcher
 import com.github.kittinunf.fuse.util.md5
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
-import java.io.File
 
 object CacheBuilder {
 
-    fun <T : Any> config(
-        dir: String,
-        convertible: Fuse.DataConvertible<T>,
-        construct: Config<T>.() -> Unit = {}
-    ): Config<T> {
+    fun <T : Any> config(dir: String, convertible: Fuse.DataConvertible<T>, construct: Config<T>.() -> Unit = {}): Config<T> {
         return Config(dir, convertible = convertible).apply(construct)
     }
 
-    fun <T : Any> config(
-        dir: String,
-        name: String,
-        convertible: Fuse.DataConvertible<T>,
-        construct: Config<T>.() -> Unit = {}
-    ): Config<T> {
+    fun <T : Any> config(dir: String, name: String, convertible: Fuse.DataConvertible<T>, construct: Config<T>.() -> Unit = {}): Config<T> {
         return Config(dir, name, convertible).apply(construct)
     }
 }
@@ -38,11 +25,7 @@ enum class Source {
     DISK,
 }
 
-interface Cache<T : Any> :
-    Fuse.Cacheable,
-    Fuse.Cacheable.Put<T>,
-    Fuse.Cacheable.Get<T>,
-    Fuse.DataConvertible<T>
+interface Cache<T : Any> : Fuse.Cacheable, Fuse.Cacheable.Put<T>, Fuse.Cacheable.Get<T>, Fuse.DataConvertible<T>
 
 class CacheImpl<T : Any> internal constructor(
     private val config: Config<T>
@@ -147,9 +130,9 @@ class CacheImpl<T : Any> internal constructor(
         return value != null
     }
 
-    override fun getTimestamp(key: String): Long {
+    override fun getTimestamp(key: String): Long? {
         val safeKey = key.md5()
-        return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey) ?: -1
+        return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey) ?: null
     }
 
     private fun fetchAndPut(fetcher: Fetcher<T>): Result<T, Exception> {
@@ -157,32 +140,3 @@ class CacheImpl<T : Any> internal constructor(
         return fetchResult.flatMap { put(fetcher.key, it) }
     }
 }
-
-// region File
-fun <T : Any> Cache<T>.get(file: File): Result<T, Exception> = get(DiskFetcher(file, this))
-
-fun <T : Any> Cache<T>.getWithSource(file: File): Pair<Result<T, Exception>, Source> =
-    getWithSource(DiskFetcher(file, this))
-
-fun <T : Any> Cache<T>.put(file: File): Result<T, Exception> = put(DiskFetcher(file, this))
-// endregion File
-
-// region Value
-fun <T : Any> Cache<T>.get(key: String, getValue: (() -> T?)? = null): Result<T, Exception> {
-    val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    return get(fetcher)
-}
-
-fun <T : Any> Cache<T>.getWithSource(
-    key: String,
-    getValue: (() -> T?)? = null
-): Pair<Result<T, Exception>, Source> {
-    val fetcher = if (getValue == null) NoFetcher<T>(key) else SimpleFetcher(key, getValue)
-    return getWithSource(fetcher)
-}
-
-fun <T : Any> Cache<T>.put(key: String, putValue: T? = null): Result<T, Exception> {
-    val fetcher = if (putValue == null) NoFetcher<T>(key) else SimpleFetcher(key, { putValue })
-    return put(fetcher)
-}
-// endregion Value

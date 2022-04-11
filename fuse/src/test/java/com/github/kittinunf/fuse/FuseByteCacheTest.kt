@@ -170,11 +170,12 @@ class FuseByteCacheTest : BaseTestCase() {
 
         val timestamp = cache.getTimestamp("timestamp")
 
+        assertThat(timestamp, notNullValue())
         assertThat(timestamp, not(equalTo(-1L)))
 
         val timeLimit = 2000L
         assertThat(
-            System.currentTimeMillis() - timestamp,
+            System.currentTimeMillis() - timestamp!!,
             object : BaseMatcher<Long>() {
                 override fun describeTo(description: Description) {
                     description.appendText("$timestamp is over than $timeLimit")

@@ -1,79 +1,81 @@
 package com.github.kittinunf.fuse.sample
 
+import android.content.Context
+import com.github.kittinunf.fuse.android.config
+import com.github.kittinunf.fuse.android.defaultAndroidMemoryCache
+import com.github.kittinunf.fuse.core.CacheBuilder
 import com.github.kittinunf.fuse.core.Source
+import com.github.kittinunf.fuse.core.build
+import com.github.kittinunf.fuse.core.get
+import com.github.kittinunf.fuse.core.scenario.ExpirableCache
 import com.github.kittinunf.result.Result
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
+import java.net.URL
+import kotlin.time.Duration
 
 interface LocalTimeService {
 
-    fun getFromNetwork(location: String, handler: (Result<LocalTime, Exception>) -> Unit)
-
-    fun getFromCache(location: String, handler: (Result<LocalTime, Exception>) -> Unit)
-
-    // cache + network
-    fun getFromBoth(location: String, handler: (Result<LocalTime, Exception>) -> Unit)
-
-    // get from cache if available within 5 minutes otherwise refresh from network
-    fun getFromCacheIfNotExpired(location: String, handler: (Result<LocalTime, Exception>, Source) -> Unit)
+    fun getTime(place: String): Result<LocalTime, Exception>
 }
 
-class LocalTimeServiceImpl(private val network: LocalTimeRepository, private val cache: CacheableLocalTimeRepository) :
-    LocalTimeService {
+interface CacheableLocalTimeService : LocalTimeService {
 
-    override fun getFromNetwork(location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
-        dispatchDefault {
-            val result = network.getLocalTime(location)
+    fun getLocalTimeOnlyCache(place: String): Result<LocalTime, Exception>
 
-            mainThread {
-                handler(result)
-            }
-        }
-    }
+    fun getLocalTimeIfNotExpired(place: String, duration: Duration): Pair<Result<LocalTime, Exception>, Source>
 
-    override fun getFromCache(location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
-        dispatchDefault {
-            val result = cache.getLocalTime(location)
+    fun evictCache()
+}
 
-            mainThread {
-                handler(result)
-            }
-        }
-    }
+class NetworkService : LocalTimeService {
 
-    override fun getFromBoth(location: String, handler: (Result<LocalTime, Exception>) -> Unit) {
-        // this relies on the fact that network will always be slower than cache, in the real world usage, this probably a bad idea ...
-
-        dispatchDefault {
-            val r1 = cache.getLocalTime(location)
-
-            mainThread {
-                handler(r1)
-            }
-        }
-
-        dispatchDefault {
-            val r2 = network.getLocalTime(location)
-
-            mainThread {
-                handler(r2)
-            }
-        }
-    }
-
-    override fun getFromCacheIfNotExpired(
-        location: String,
-        handler: (Result<LocalTime, Exception>, Source) -> Unit
-    ) {
-        dispatchDefault {
-            val (result, source) = cache.getLocalTimeIfNotExpired(location)
-
-            mainThread {
-                handler(result, source)
-            }
-        }
+    override fun getTime(place: String): Result<LocalTime, Exception> {
+        val area = place.continent
+        val location = place.area
+        val fetcher = NetworkFetcher(URL("http://worldtimeapi.org/api/timezone/$area/$location"), LocalTime.deserializer)
+        return fetcher.fetch()
     }
 }
 
-private fun <T> T.dispatchDefault(block: FuseAsync<T>.() -> Unit): Future<Unit> =
-    dispatch(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()), block)
+// in real-world application you should not do this, you should do some injection to construct this or something else, but this is a sample application so ¯\_(ツ)_/¯
+class CacheService(context: Context) : CacheableLocalTimeService {
+
+    private val cache = CacheBuilder.config(context, convertible = LocalTime.deserializer) {
+        memCache = defaultAndroidMemoryCache()
+    }.build()
+
+    private val expirableCache = ExpirableCache(cache)
+
+    override fun getLocalTimeOnlyCache(place: String): Result<LocalTime, Exception> {
+        val key = getURL(place).toString()
+        // fetch from cache only
+        return cache.get(key)
+    }
+
+    override fun getTime(place: String): Result<LocalTime, Exception> {
+        val fetcher = NetworkFetcher(getURL(place), LocalTime.deserializer)
+        // fetch from cache if there, if not then use NetworkFetcher to get new content
+        return cache.get(fetcher)
+    }
+
+    override fun getLocalTimeIfNotExpired(place: String, duration: Duration): Pair<Result<LocalTime, Exception>, Source> {
+        val fetcher = NetworkFetcher(getURL(place), LocalTime.deserializer)
+        // fetch from cache with expiration (in duration) if there, if not then use NetworkFetcher to get new content
+        return expirableCache.getWithSource(fetcher, timeLimit = duration)
+    }
+
+    override fun evictCache() {
+        cache.removeAll()
+    }
+
+    private fun getURL(place: String): URL {
+        val area = place.continent
+        val location = place.area
+        return URL("http://worldtimeapi.org/api/timezone/$area/$location")
+    }
+}
+
+private val String.continent: String
+    get() = substringBefore("/")
+
+private val String.area: String
+    get() = substringAfter("/")

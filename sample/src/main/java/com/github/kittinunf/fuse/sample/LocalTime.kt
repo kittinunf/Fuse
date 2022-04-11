@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.sample
 
-import com.github.kittinunf.fuel.core.ResponseDeserializable
+import com.github.kittinunf.fuse.core.Fuse
 import org.json.JSONObject
 
 data class LocalTime(
@@ -22,10 +22,21 @@ data class LocalTime(
             }
         }
 
-        val deserializer = object : ResponseDeserializable<LocalTime> {
-            override fun deserialize(content: String): LocalTime? {
-                return fromJson(content)
+        val deserializer = object : Fuse.DataConvertible<LocalTime> {
+            override fun convertFromData(bytes: ByteArray): LocalTime {
+                return fromJson(String(bytes))
+            }
+
+            override fun convertToData(value: LocalTime): ByteArray {
+                return value.toJson().toString(2).toByteArray()
             }
         }
+    }
+
+    fun toJson() = JSONObject().apply {
+        put("utc_datetime", utcDateTime)
+        put("timezone", timezone)
+        put("datetime", dateTime)
+        put("abbreviation", abbrev)
     }
 }

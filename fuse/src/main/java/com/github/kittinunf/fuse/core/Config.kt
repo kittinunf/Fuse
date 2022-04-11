@@ -21,9 +21,6 @@ class Config<T : Any>(
 }
 
 internal fun defaultMemoryCache(minimalSize: Int = 128): Persistence<Any> = MemCache(minimalSize)
+
 internal fun defaultDiskCache(cacheDir: String, name: String, diskCapacity: Long): Persistence<ByteArray> =
-    DiskCache.open(
-        cacheDir,
-        name,
-        diskCapacity
-    )
+    DiskCache.open(cacheDir, name, diskCapacity)

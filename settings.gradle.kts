@@ -16,7 +16,6 @@ pluginManagement {
         mavenCentral()
         google()
         maven { setUrl("https://plugins.gradle.org/m2/") }
-        jcenter()
     }
 
     val kotlinVersion = rootDir.resolve("gradle/libs.versions.toml").reader().use { java.util.Properties().apply { load(it) } }

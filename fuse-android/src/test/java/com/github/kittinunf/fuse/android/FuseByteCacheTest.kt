@@ -168,8 +168,9 @@ class FuseByteCacheTest : BaseTestCase() {
 
         val timestamp = cache.getTimestamp("timestamp")
 
+        assertThat(timestamp, notNullValue())
         assertThat(timestamp, not(equalTo(-1L)))
-        assertThat(System.currentTimeMillis() - timestamp, object : BaseMatcher<Long>() {
+        assertThat(System.currentTimeMillis() - timestamp!!, object : BaseMatcher<Long>() {
             override fun describeTo(description: Description?) {}
 
             override fun matches(item: Any?): Boolean {
