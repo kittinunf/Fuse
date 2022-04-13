@@ -6,6 +6,7 @@ includeBuild("plugins")
 
 include(
     ":fuse",
+    ":fuse-core",
     ":fuse-android",
     ":sample"
 )
@@ -26,6 +27,7 @@ pluginManagement {
         .removeSurrounding("\"")
 
     plugins {
+        kotlin("multiplatform") version kotlinVersion
         kotlin("jvm") version kotlinVersion
         kotlin("android") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
@@ -33,3 +35,4 @@ pluginManagement {
         id("com.android.application") version androidGradleVersion
     }
 }
+include(":fuse-core")
