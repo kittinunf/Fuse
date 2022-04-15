@@ -5,10 +5,10 @@ rootProject.name = "Fuse"
 includeBuild("plugins")
 
 include(
-    ":fuse",
+//    ":fuse",
     ":fuse-core",
-    ":fuse-android",
-    ":sample"
+//    ":fuse-android",
+//    ":sample"
 )
 
 pluginManagement {

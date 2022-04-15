@@ -17,5 +17,3 @@ internal class SimpleFetcher<out T : Any>(override val key: String, private val 
     override fun fetch(): Result<T, Exception> =
         if (getValue() == null) Result.failure(RuntimeException("Fetch with Key: $key is failure")) else Result.of(getValue)
 }
-
-
