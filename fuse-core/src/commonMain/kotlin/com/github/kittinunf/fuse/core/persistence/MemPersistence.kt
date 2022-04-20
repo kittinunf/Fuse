@@ -23,11 +23,6 @@ internal class MemPersistence : Persistence<Any> {
             .toSet()
     }
 
-    override fun size(): Long {
-        val snapshot = LinkedHashMap(cache)
-        return snapshot.size.toLong()
-    }
-
     override fun get(safeKey: String): Any? = getEntry(safeKey)?.data
 
     override fun getTimestamp(safeKey: String): Long? = getEntry(safeKey)?.timestamp

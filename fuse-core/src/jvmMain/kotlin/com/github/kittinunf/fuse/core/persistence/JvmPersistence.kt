@@ -2,7 +2,7 @@ package com.github.kittinunf.fuse.core.persistence
 
 import com.github.kittinunf.fuse.core.model.Entry
 
-class DiskJvmPersistence : Persistence<ByteArray> {
+class JvmPersistence : Persistence<ByteArray> {
 
     override fun put(safeKey: String, entry: Entry<ByteArray>) {
         TODO("Not yet implemented")
@@ -17,10 +17,6 @@ class DiskJvmPersistence : Persistence<ByteArray> {
     }
 
     override fun allKeys(): Set<String> {
-        TODO("Not yet implemented")
-    }
-
-    override fun size(): Long {
         TODO("Not yet implemented")
     }
 

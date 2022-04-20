@@ -31,12 +31,6 @@ interface Persistence<T : Any> {
     fun allKeys(): Set<String>
 
     /**
-     * Retrieve accumulated values
-     * @return Long Size of the cache according to the implementation of the sub class
-     */
-    fun size(): Long
-
-    /**
      * Get the value associated with its particular safeKey
      *
      * @param safeKey The safeKey associated with the value to be retrieved from persistence
