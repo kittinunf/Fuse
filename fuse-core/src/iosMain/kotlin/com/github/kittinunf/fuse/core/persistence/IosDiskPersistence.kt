@@ -16,7 +16,7 @@ import platform.Foundation.URLByAppendingPathComponent
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
 
-class IosPersistence(name: String, private var directory: NSURL? = null) : Persistence<ByteArray> {
+class IosDiskPersistence(name: String, private var directory: NSURL? = null) : Persistence<ByteArray> {
 
     private val fileManager = NSFileManager()
 
