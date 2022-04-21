@@ -2,8 +2,10 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
 
-    java
+    id("com.android.library")
+//    java
     jacoco
+
 
     id("publication")
 }
@@ -23,6 +25,7 @@ kotlin {
     jvm()
     ios()
     iosSimulatorArm64()
+    android()
 
     sourceSets {
         all {
@@ -58,10 +61,57 @@ kotlin {
             val iosMain by getting
             dependsOn(iosMain)
         }
+
         val iosSimulatorArm64Test by getting {
             val iosTest by getting
             dependsOn(iosTest)
         }
+
+        val androidMain by getting {
+            dependsOn(jvmMain)
+        }
+
+        val androidTest by getting {
+            dependencies {
+                implementation(libs.bundles.android.test)
+                implementation(libs.kotlin.test.junit)
+            }
+        }
+    }
+}
+
+android {
+    compileSdk = libs.versions.compileSdk.get().toInt()
+
+    sourceSets {
+        getByName("main") {
+            manifest.srcFile("src/androidMain/AndroidManifest.xml")
+            java.srcDirs("src/androidMain/kotlin")
+            res.srcDirs("src/androidMain/res")
+        }
+
+        getByName("androidTest") {
+            manifest.srcFile("src/androidTest/AndroidManifest.xml")
+            java.srcDirs("src/androidTest/kotlin")
+            res.srcDirs("src/androidTest/res")
+        }
+    }
+
+    defaultConfig {
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+        }
+    }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 }
 

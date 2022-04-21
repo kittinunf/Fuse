@@ -1,9 +1,14 @@
 package com.github.kittinunf.fuse.core
 
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MD5Test {
+
+    @BeforeTest
+    fun before() {
+    }
 
     @Test
     fun `should return correct md5 value`() {

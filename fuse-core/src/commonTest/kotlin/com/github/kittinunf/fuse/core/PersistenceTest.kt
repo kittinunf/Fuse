@@ -3,7 +3,6 @@ package com.github.kittinunf.fuse.core
 import com.github.kittinunf.fuse.core.model.Entry
 import com.github.kittinunf.fuse.core.persistence.MemPersistence
 import com.github.kittinunf.fuse.core.persistence.Persistence
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -12,16 +11,15 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-expect fun createTestDiskPersistence(): Persistence<ByteArray>
+expect fun createTestDiskPersistence(context: Any): Persistence<ByteArray>
 
-class PersistenceTest {
+class PersistenceTest : BaseTest() {
 
     private lateinit var diskCache: Persistence<ByteArray>
     private lateinit var memCache: MemPersistence
 
-    @BeforeTest
-    fun beforeTest() {
-        diskCache = createTestDiskPersistence()
+    override fun setUp(any: Any) {
+        diskCache = createTestDiskPersistence(any)
         memCache = MemPersistence()
     }
 

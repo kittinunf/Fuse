@@ -35,4 +35,3 @@ pluginManagement {
         id("com.android.application") version androidGradleVersion
     }
 }
-include(":fuse-core")
