@@ -1,6 +1,7 @@
 package com.github.kittinunf.fuse.core
 
 import com.github.kittinunf.fuse.core.model.Entry
+import com.github.kittinunf.fuse.core.persistence.MemPersistence
 import com.github.kittinunf.fuse.core.persistence.Persistence
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -11,85 +12,136 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-expect fun createTestPersistence(): Persistence<ByteArray>
+expect fun createTestDiskPersistence(): Persistence<ByteArray>
 
 class PersistenceTest {
 
-    private lateinit var testCache: Persistence<ByteArray>
+    private lateinit var diskCache: Persistence<ByteArray>
+    private lateinit var memCache: MemPersistence
 
     @BeforeTest
     fun beforeTest() {
-        testCache = createTestPersistence()
+        diskCache = createTestDiskPersistence()
+        memCache = MemPersistence()
     }
 
     @Test
     fun `should put data into persistence without error`() {
-        testCache.put("112233", Entry("112233", "hello".encodeToByteArray(), 0))
-        assertNotNull(testCache)
+        diskCache.put("112233", Entry("112233", "hello".encodeToByteArray(), 0))
+        memCache.put("112233", Entry("112233", "hello".encodeToByteArray(), 0))
+
+        assertNotNull(diskCache)
+        assertNotNull(memCache)
     }
 
     @Test
     fun `should be able to put data and get it back without error`() {
-        testCache.put("av1342", Entry("av1342", "hello world!".encodeToByteArray(), 0))
+        diskCache.put("av1342", Entry("av1342", "hello world!".encodeToByteArray(), 0))
+        memCache.put("av1342", Entry("av1342", "hello world!", 0))
 
-        val result = testCache.get("av1342")
+        val diskResult = diskCache.get("av1342")
 
-        assertNotNull(result)
-        assertEquals("hello world!", result.decodeToString())
+        assertNotNull(diskResult)
+        assertEquals("hello world!", diskResult.decodeToString())
+
+        val memResult = memCache.get("av1342")
+
+        assertNotNull(memResult)
+        assertEquals("hello world!", memResult)
     }
 
     @Test
     fun `should be able to delete item without error`() {
-        testCache.put("to-be-deleted", Entry("to-be-deleted", "DELETED".encodeToByteArray(), 0))
+        diskCache.put("to-be-deleted", Entry("to-be-deleted", "DELETED".encodeToByteArray(), 0))
+        memCache.put("to-be-deleted", Entry("to-be-deleted", "DELETED", 0))
 
-        val value = testCache.get("to-be-deleted")
-        assertNotNull(value)
-        assertEquals("DELETED", value.decodeToString())
+        val diskResult = diskCache.get("to-be-deleted")
+        assertNotNull(diskResult)
+        assertEquals("DELETED", diskResult.decodeToString())
 
-        assertTrue(testCache.remove("to-be-deleted"))
-        assertFalse(testCache.remove("unknown"))
-        assertFalse(testCache.remove("to-be-deleted"))
+        assertTrue(diskCache.remove("to-be-deleted"))
+        assertFalse(diskCache.remove("unknown"))
+        assertFalse(diskCache.remove("to-be-deleted"))
+
+        val memResult = memCache.get("to-be-deleted")
+        assertNotNull(memResult)
+        assertEquals("DELETED", memResult)
+
+        assertTrue(memCache.remove("to-be-deleted"))
+        assertFalse(memCache.remove("unknown"))
+        assertFalse(memCache.remove("to-be-deleted"))
     }
 
     @Test
     fun `should be able to retrieve the timestamp`() {
-        testCache.put("1", Entry("1", "foo bar".encodeToByteArray(), 1650012031))
-        testCache.put("2", Entry("2", "foo bar".encodeToByteArray(), 1650012032))
+        diskCache.put("1", Entry("1", "foo bar".encodeToByteArray(), 1650012031))
+        diskCache.put("2", Entry("2", "foo bar".encodeToByteArray(), 1650012032))
 
-        val timestamp1 = testCache.getTimestamp("1")
-        val timestamp2 = testCache.getTimestamp("2")
-        val timestamp3 = testCache.getTimestamp("unknown")
+        memCache.put("1", Entry("1", "foo bar", 1650012031))
+        memCache.put("2", Entry("2", "foo bar", 1650012032))
 
-        assertEquals(1650012031, timestamp1)
-        assertEquals(1650012032, timestamp2)
-        assertNull(timestamp3)
+        val diskTimestamp1 = diskCache.getTimestamp("1")
+        val diskTimestamp2 = diskCache.getTimestamp("2")
+        val diskTimestamp3 = diskCache.getTimestamp("unknown")
+
+        assertEquals(1650012031, diskTimestamp1)
+        assertEquals(1650012032, diskTimestamp2)
+        assertNull(diskTimestamp3)
+
+        val memTimestamp1 = memCache.getTimestamp("1")
+        val memTimestamp2 = memCache.getTimestamp("2")
+        val memTimestamp3 = memCache.getTimestamp("unknown")
+
+        assertEquals(1650012031, memTimestamp1)
+        assertEquals(1650012032, memTimestamp2)
+        assertNull(memTimestamp3)
     }
 
     @Test
     fun `should be able to list items in cache folder`() {
-        testCache.removeAll()
+        diskCache.removeAll()
+        memCache.removeAll()
 
-        testCache.put("1", Entry("1", "foo".encodeToByteArray(), 1))
-        testCache.put("2", Entry("2", "bar".encodeToByteArray(), 2))
-        testCache.put("3", Entry("3", "foo bar".encodeToByteArray(), 3))
+        diskCache.put("1", Entry("1", "foo".encodeToByteArray(), 1))
+        diskCache.put("2", Entry("2", "bar".encodeToByteArray(), 2))
+        diskCache.put("3", Entry("3", "foo bar".encodeToByteArray(), 3))
 
-        val result = testCache.allKeys()
+        memCache.put("1", Entry("1", "foo", 1))
+        memCache.put("2", Entry("2", "bar", 2))
+        memCache.put("3", Entry("3", "foo bar", 3))
 
-        assertTrue(result.isNotEmpty())
-        assertContains(result, "1")
-        assertContains(result, "2")
-        assertContains(result, "3")
+        val diskResult = diskCache.allKeys()
+
+        assertTrue(diskResult.isNotEmpty())
+        assertContains(diskResult, "1")
+        assertContains(diskResult, "2")
+        assertContains(diskResult, "3")
+
+        val memResult = diskCache.allKeys()
+
+        assertTrue(memResult.isNotEmpty())
+        assertContains(memResult, "1")
+        assertContains(memResult, "2")
+        assertContains(memResult, "3")
     }
 
     @Test
     fun `should remove all item in the cache folder`() {
-        testCache.put("1111", Entry("1234", "foo".encodeToByteArray(), 1))
+        diskCache.put("1111", Entry("1234", "foo".encodeToByteArray(), 1))
+        memCache.put("1111", Entry("1234", "foo".encodeToByteArray(), 1))
 
-        var result = testCache.allKeys()
-        assertContains(result, "1234") // contains original key
+        var diskResult = diskCache.allKeys()
+        assertContains(diskResult, "1234") // contains original key
 
-        testCache.removeAll()
-        result = testCache.allKeys()
-        assertTrue(result.isEmpty())
+        diskCache.removeAll()
+        diskResult = diskCache.allKeys()
+        assertTrue(diskResult.isEmpty())
+
+        var memResult = memCache.allKeys()
+        assertContains(memResult, "1234") // contains original key
+
+        memCache.removeAll()
+        memResult = memCache.allKeys()
+        assertTrue(memResult.isEmpty())
     }
 }
