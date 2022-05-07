@@ -5,6 +5,8 @@ import com.github.kittinunf.fuse.core.model.Entry
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
 import kotlinx.datetime.Clock
+import kotlinx.serialization.BinaryFormat
+import kotlinx.serialization.KSerializer
 
 enum class Source {
     ORIGIN,
@@ -12,11 +14,10 @@ enum class Source {
     DISK,
 }
 
-interface Cache<T : Any> : Fuse.Cacheable<T>, Fuse.DataConvertible<T>
+interface Cache<T : Any> : Fuse.Cacheable<T>, BinaryFormat
 
-class CacheImpl<T : Any> internal constructor(
-    private val config: Config<T>
-) : Cache<T>, Fuse.DataConvertible<T> by config.convertible {
+class CacheImpl<T : Any> internal constructor(private val config: Config<T>, private val serializer: KSerializer<T>) : Cache<T>,
+    BinaryFormat by config.formatDriver {
 
     private val memCache = config.memCache
     private val diskCache = config.diskCache
@@ -43,10 +44,9 @@ class CacheImpl<T : Any> internal constructor(
             // move specific key in disk cache up as it is found in mem
             val result = Result.of<T, Exception> {
                 if (diskCache.get(safeKey) == null) {
-                    val converted = convertToData(value as T)
                     // we found this in memCache, so we need to retrieve timeStamp that was saved in memCache back to diskCache
                     val timeWasPersisted = memCache.getTimestamp(safeKey)
-                    diskCache.put(safeKey, Entry(key, converted, timeWasPersisted ?: -1))
+                    diskCache.put(safeKey, Entry(key, encodeToByteArray(serializer, value), timeWasPersisted ?: -1))
                 }
                 value as T
             }
@@ -54,15 +54,15 @@ class CacheImpl<T : Any> internal constructor(
         }
 
         // find in diskCache
-        val bytes = diskCache.get(safeKey)
-        if (bytes == null) {
+        val value = diskCache.get(safeKey)
+        if (value == null) {
             // not found we need to fetch then put it back
             return fetchAndPut(fetcher) to Source.ORIGIN
         } else {
             // found in disk, save back into mem
             val result = Result.of<T, Exception> {
                 // we found this in disk cache, so we need to retrieve timeStamp that was stored in diskCache back to memCache
-                val converted = convertFromData(bytes)
+                val converted = decodeFromByteArray(serializer, value)
 
                 val timeWasPersisted = diskCache.getTimestamp(safeKey)
                 // put the converted version into the memCache
@@ -82,7 +82,7 @@ class CacheImpl<T : Any> internal constructor(
 
         memCache.put(safeKey, Entry(key, transformed, timeToPersist))
         return Result.of {
-            val converted = convertToData(transformed)
+            val converted = encodeToByteArray(serializer, transformed)
             diskCache.put(safeKey, Entry(key, converted, timeToPersist))
             transformed
         }
@@ -128,6 +128,6 @@ class CacheImpl<T : Any> internal constructor(
     }
 }
 
-fun <T : Any> Config<T>.build(): Cache<T> = CacheImpl(this)
+fun <T : Any> Config<T>.build(): Cache<T> = CacheImpl(this, serializer)
 
 internal expect fun String.md5(): String

@@ -1,17 +1,11 @@
 package com.github.kittinunf.fuse.core
 
-import com.github.kittinunf.fuse.core.fetcher.DiskFetcher
 import com.github.kittinunf.fuse.core.fetcher.Fetcher
 import com.github.kittinunf.fuse.core.fetcher.NeverFetcher
 import com.github.kittinunf.fuse.core.fetcher.SimpleFetcher
 import com.github.kittinunf.result.Result
 
 object Fuse {
-
-    interface DataConvertible<T : Any> {
-        fun convertFromData(bytes: ByteArray): T
-        fun convertToData(value: T): ByteArray
-    }
 
     interface Cacheable<T : Any> {
         /**
@@ -87,7 +81,7 @@ object Fuse {
  * @param file The file object that represent file data on the disk
  * @return Result<T, Exception> The Result that represents the success/failure of the operation
  */
-fun <T : Any> Cache<T>.get(file: IO): Result<T, Exception> = get(DiskFetcher(file, this))
+//fun <T : Any> Cache<T>.get(file: IO): Result<T, Exception> = get(DiskFetcher(file, this))
 
 /**
  *  Get the entry associated as a Data of file content in T with its particular key as File path. If File is not there or too large, it returns as [Result.Failure]
@@ -96,8 +90,8 @@ fun <T : Any> Cache<T>.get(file: IO): Result<T, Exception> = get(DiskFetcher(fil
  * @param file The file object that represent file data on the disk
  * @return Pair<Result<T, Exception>, Source>> The Result that represents the success/failure of the operation
  */
-fun <T : Any> Cache<T>.getWithSource(file: IO): Pair<Result<T, Exception>, Source> =
-    getWithSource(DiskFetcher(file, this))
+//fun <T : Any> Cache<T>.getWithSource(file: IO): Pair<Result<T, Exception>, Source> =
+//    getWithSource(DiskFetcher(file, this))
 
 /**
  *  Put the entry as a content of a file into Cache
@@ -105,7 +99,7 @@ fun <T : Any> Cache<T>.getWithSource(file: IO): Pair<Result<T, Exception>, Sourc
  * @param file The file object that represent file data on the disk
  * @return Result<T, Exception> The Result that represents the success/failure of the operation
  */
-fun <T : Any> Cache<T>.put(file: IO): Result<T, Exception> = put(DiskFetcher(file, this))
+//fun <T : Any> Cache<T>.put(file: IO): Result<T, Exception> = put(DiskFetcher(file, this))
 // endregion File
 
 // region Value

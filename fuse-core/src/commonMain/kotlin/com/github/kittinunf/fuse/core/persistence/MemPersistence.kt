@@ -2,11 +2,11 @@ package com.github.kittinunf.fuse.core.persistence
 
 import com.github.kittinunf.fuse.core.model.Entry
 
-internal class MemPersistence : Persistence<Any> {
+internal class MemPersistence<T : Any> : Persistence<T> {
 
     private val cache: MutableMap<String, Any> = LinkedHashMap(0, 0.75f)
 
-    override fun put(safeKey: String, entry: Entry<Any>) {
+    override fun put(safeKey: String, entry: Entry<T>) {
         cache.put(safeKey, entry)
     }
 
@@ -23,10 +23,10 @@ internal class MemPersistence : Persistence<Any> {
             .toSet()
     }
 
-    override fun get(safeKey: String): Any? = getEntry(safeKey)?.data
+    override fun get(safeKey: String): T? = getEntry(safeKey)?.data
 
     override fun getTimestamp(safeKey: String): Long? = getEntry(safeKey)?.timestamp
 
     @Suppress("UNCHECKED_CAST")
-    private fun getEntry(safeKey: String): Entry<Any>? = cache.get(safeKey) as? Entry<Any>
+    private fun getEntry(safeKey: String): Entry<T>? = cache.get(safeKey) as? Entry<T>
 }

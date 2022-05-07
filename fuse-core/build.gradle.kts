@@ -49,7 +49,10 @@ kotlin {
             }
         }
 
-        val jvmMain by getting
+        val jvmMain by getting {
+            dependencies {
+            }
+        }
 
         val jvmTest by getting {
             dependencies {
@@ -57,8 +60,12 @@ kotlin {
             }
         }
 
+        val iosMain by getting {
+            dependencies {
+            }
+        }
+
         val iosSimulatorArm64Main by getting {
-            val iosMain by getting
             dependsOn(iosMain)
         }
 

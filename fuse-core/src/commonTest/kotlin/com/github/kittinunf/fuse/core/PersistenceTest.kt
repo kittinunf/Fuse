@@ -16,7 +16,7 @@ expect fun createTestDiskPersistence(context: Any): Persistence<ByteArray>
 class PersistenceTest : BaseTest() {
 
     private lateinit var diskCache: Persistence<ByteArray>
-    private lateinit var memCache: MemPersistence
+    private lateinit var memCache: MemPersistence<String>
 
     override fun setUp(any: Any) {
         diskCache = createTestDiskPersistence(any)
@@ -26,7 +26,7 @@ class PersistenceTest : BaseTest() {
     @Test
     fun `should put data into persistence without error`() {
         diskCache.put("112233", Entry("112233", "hello".encodeToByteArray(), 0))
-        memCache.put("112233", Entry("112233", "hello".encodeToByteArray(), 0))
+        memCache.put("112233", Entry("112233", "hello", 0))
 
         assertNotNull(diskCache)
         assertNotNull(memCache)
@@ -126,7 +126,7 @@ class PersistenceTest : BaseTest() {
     @Test
     fun `should remove all item in the cache folder`() {
         diskCache.put("1111", Entry("1234", "foo".encodeToByteArray(), 1))
-        memCache.put("1111", Entry("1234", "foo".encodeToByteArray(), 1))
+        memCache.put("1111", Entry("1234", "foo", 1))
 
         var diskResult = diskCache.allKeys()
         assertContains(diskResult, "1234") // contains original key

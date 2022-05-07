@@ -10,5 +10,4 @@ actual abstract class BaseTest {
     }
 
     actual abstract fun setUp(any: Any)
-
 }

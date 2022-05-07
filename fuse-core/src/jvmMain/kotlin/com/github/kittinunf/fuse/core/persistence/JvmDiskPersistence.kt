@@ -1,18 +1,17 @@
 package com.github.kittinunf.fuse.core.persistence
 
+import com.github.kittinunf.fuse.core.formatter.BinarySerializer
 import com.github.kittinunf.fuse.core.model.Entry
+import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.builtins.ByteArraySerializer
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromStream
 import java.io.File
 
-class JvmDiskPersistence(name: String, private var path: File? = null) : Persistence<ByteArray> {
+class JvmDiskPersistence(name: String, private var path: File? = null, formatDriver: BinaryFormat = BinarySerializer()) :
+    Persistence<ByteArray>,
+    BinaryFormat by formatDriver {
 
     private val cacheDirectory
         get() = path!!
-
-    private val json = Json
 
     init {
         if (path != null) {
@@ -28,8 +27,8 @@ class JvmDiskPersistence(name: String, private var path: File? = null) : Persist
 
     override fun put(safeKey: String, entry: Entry<ByteArray>) {
         val file = createNewFileForKey(safeKey)
-        val serialized = json.encodeToString(entry)
-        file.writeText(serialized)
+        val serialized = encodeToByteArray(Entry.serializer(ByteArraySerializer()), entry)
+        file.writeBytes(serialized)
     }
 
     override fun remove(safeKey: String): Boolean {
@@ -58,7 +57,6 @@ class JvmDiskPersistence(name: String, private var path: File? = null) : Persist
     private fun getEntryForKey(safeKey: String): Entry<ByteArray>? {
         val file = getFileForKey(safeKey)
         if (file.exists().not()) return null
-
-        return json.decodeFromStream(Entry.serializer(ByteArraySerializer()), file.inputStream())
+        return decodeFromByteArray(Entry.serializer(ByteArraySerializer()), file.readBytes())
     }
 }
