@@ -2,6 +2,9 @@ package com.github.kittinunf.fuse.core.persistence
 
 import com.github.kittinunf.fuse.core.formatter.BinarySerializer
 import com.github.kittinunf.fuse.core.model.Entry
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.usePinned
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
@@ -9,17 +12,16 @@ import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSData
 import platform.Foundation.NSDirectoryEnumerationSkipsHiddenFiles
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSKeyedArchiver
-import platform.Foundation.NSKeyedUnarchiver
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.URLByAppendingPathComponent
+import platform.Foundation.create
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
+import platform.posix.memcpy
 
 class IosDiskPersistence(name: String, private var directory: NSURL? = null, formatDriver: BinaryFormat = BinarySerializer()) :
-    Persistence<ByteArray>,
-    BinaryFormat by formatDriver {
+    Persistence<ByteArray>, BinaryFormat by formatDriver {
 
     private val fileManager = NSFileManager()
 
@@ -38,9 +40,9 @@ class IosDiskPersistence(name: String, private var directory: NSURL? = null, for
 
     override fun put(safeKey: String, entry: Entry<ByteArray>) {
         val destination = getUrlForKey(safeKey)
-        val serialized = encodeToByteArray(entry)
-        val data = NSKeyedArchiver.archivedDataWithRootObject(serialized, false, null)
-        data?.writeToURL(destination, atomically = true)
+        val bytes = encodeToByteArray(entry)
+        val data = bytes.toData()
+        data.writeToURL(destination, atomically = true)
     }
 
     override fun remove(safeKey: String): Boolean {
@@ -85,10 +87,14 @@ class IosDiskPersistence(name: String, private var directory: NSURL? = null, for
 
     private fun getEntry(url: NSURL): Entry<ByteArray>? {
         if (!fileManager.fileExistsAtPath(url.path!!)) return null
-
-        val retrievedData = NSData.dataWithContentsOfURL(url) ?: throw RuntimeException("Cannot retrieve data at path: ${url.relativePath}")
-
-        val content = NSKeyedUnarchiver.unarchiveObjectWithData(retrievedData) as ByteArray
-        return decodeFromByteArray(content)
+        val data = NSData.dataWithContentsOfURL(url) ?: throw RuntimeException("Cannot retrieve data at path: ${url.relativePath}")
+        val bytes = data.toByteArray()
+        return decodeFromByteArray(bytes)
     }
+}
+
+internal fun ByteArray.toData(): NSData = usePinned { NSData.create(bytes = it.addressOf(0), size.convert()) }
+
+internal fun NSData.toByteArray(): ByteArray = ByteArray(length.convert()).apply {
+    usePinned { memcpy(it.addressOf(0), bytes, length.convert()) }
 }

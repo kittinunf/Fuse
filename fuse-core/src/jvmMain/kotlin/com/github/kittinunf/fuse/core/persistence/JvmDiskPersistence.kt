@@ -7,8 +7,7 @@ import kotlinx.serialization.builtins.ByteArraySerializer
 import java.io.File
 
 class JvmDiskPersistence(name: String, private var path: File? = null, formatDriver: BinaryFormat = BinarySerializer()) :
-    Persistence<ByteArray>,
-    BinaryFormat by formatDriver {
+    Persistence<ByteArray>, BinaryFormat by formatDriver {
 
     private val cacheDirectory
         get() = path!!
