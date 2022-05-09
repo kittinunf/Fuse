@@ -5,7 +5,7 @@ import kotlin.test.BeforeTest
 actual abstract class BaseTest {
 
     @BeforeTest
-    actual fun before() {
+    internal actual fun before() {
         setUp(Unit)
     }
 

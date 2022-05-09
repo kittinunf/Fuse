@@ -128,13 +128,13 @@ fun <T : Any> Cache<T>.get(key: String): Result<T, Exception> = get(NeverFetcher
  * @param key The string represent key of the entry
  * @return Pair<Result<T, Exception>, Source>> The result that represents the success/failure of the operation
  */
-fun <T : Any> Cache<T>.getWithSource(key: String, getValue: (() -> T?)): Pair<Result<T, Exception>, Source> {
-    val fetcher = SimpleFetcher(key, getValue)
+fun <T : Any> Cache<T>.getWithSource(key: String, defaultValue: (() -> T?)): Pair<Result<T, Exception>, Source> {
+    val fetcher = SimpleFetcher(key, defaultValue)
     return getWithSource(fetcher)
 }
 
 /**
- *  Get the entry associated as a value in T by using lambda as a default value generator. if value for associated key is not there, it saves with value from defaultValue.
+ *  Get the entry associated as a value in T by using lambda as a default value generator. if value for associated key is not there, it returns failures as we don't provide defaultValue
  *
  * @param key The string represent key of the entry
  * @return Pair<Result<T, Exception>, Source>> The result that represents the success/failure of the operation

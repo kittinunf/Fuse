@@ -1,5 +1,6 @@
 package com.github.kittinunf.fuse.core
 
+import com.github.kittinunf.fuse.core.formatter.BinarySerializer
 import com.github.kittinunf.fuse.core.persistence.JvmDiskPersistence
 import com.github.kittinunf.fuse.core.persistence.MemPersistence
 import com.github.kittinunf.fuse.core.persistence.Persistence
@@ -15,8 +16,7 @@ class JvmConfig<T : Any>(
     override val transformer: (key: String, value: T) -> T = { _, value -> value }
 ) : Config<T> {
 
-    override val formatDriver: BinaryFormat
-        get() = TODO("Not yet implemented")
+    override val formatDriver: BinaryFormat = BinarySerializer()
 
     override val memCache: Persistence<T> = MemPersistence()
 

@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 actual abstract class BaseTest {
 
     @Before
-    actual fun before() {
+    internal actual fun before() {
         setUp(ApplicationProvider.getApplicationContext())
     }
 

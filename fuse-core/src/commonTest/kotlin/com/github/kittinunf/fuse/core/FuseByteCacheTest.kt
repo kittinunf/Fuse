@@ -2,90 +2,88 @@ package com.github.kittinunf.fuse.core
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+
+internal expect fun createByteTestCache(name: String, context: Any): Cache<ByteArray>
 
 class FuseByteCacheTest : BaseTest() {
 
-    //    companion object {
-//        private val tempDir = createTempDir().absolutePath
-//        val cache =
-//            Config("byte-cache", tempDir, ByteArrayDataConvertible()) {
-//                // do more configuration here
-//            }.build()
-//    }
+    lateinit var cache: Cache<ByteArray>
 
     override fun setUp(any: Any) {
+        cache = createByteTestCache("test", any)
+        cache.removeAll()
     }
 
-//    @Test
-//    fun fetch() {
-//        val (result, source) = cache.getWithSource("hello", { "world".toByteArray() })
-//        val (value, error) = result
-//
-//        assertNotNull(value)
-//        assertEquals(value!!.toString(Charset.defaultCharset()), equalTo("world"))
-//        assertNull(error)
-//        assertEquals(source, Source.ORIGIN)
-//    }
-//
-//    @Test
-//    fun hasKey() {
-//        val (value, error) = cache.get("hello")
-//
-//        val hasKey = cache.hasKey("hello")
-//
-//        assertThat(value, notNullValue())
-//        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("world"))
-//        assertThat(error, nullValue())
-//        assertThat(hasKey, equalTo(true))
-//    }
-//
-//    @Test
-//    fun fetchSecondFail() {
-//        fun fetchFail(): ByteArray? = null
-//
-//        val (result, source) = cache.getWithSource("fail", ::fetchFail)
-//        val (value, error) = result
-//
-//        assertThat(value, nullValue())
-//        assertThat(error, notNullValue())
-//        assertThat(source, equalTo(Source.ORIGIN))
-//    }
-//
-//    @Test
-//    fun fetchFromMemory() {
-//        val (result, source) = cache.getWithSource("hello", { "world".toByteArray() })
-//        val (value, error) = result
-//
-//        assertThat(value, notNullValue())
-//        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("world"))
-//        assertThat(error, nullValue())
-//        assertThat(source, equalTo(Source.MEM))
-//    }
-//
-//    @Test
-//    fun fetchFromDisk() {
-//        val (result, source) = cache.getWithSource("hello", { "world".toByteArray() })
-//        val (value, error) = result
-//
-//        assertThat(value, notNullValue())
-//        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("world"))
-//        assertThat(error, nullValue())
-//        assertThat(source, equalTo(Source.MEM))
-//
-//        // remove from memory cache
-//        cache.remove("hello", Source.MEM)
-//
-//        val (result2, source2) = cache.getWithSource("hello", { "world".toByteArray() })
-//        val (value2, error2) = result2
-//
-//        assertThat(value2, notNullValue())
-//        assertThat(value2!!.toString(Charset.defaultCharset()), equalTo("world"))
-//        assertThat(error2, nullValue())
-//        assertThat(source2, equalTo(Source.DISK))
-//    }
-//
+    @Test
+    fun `should fetch data correctly with defaultValue`() {
+        val (result, source) = cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
+        val (value, error) = result
+
+        assertNotNull(value)
+        assertEquals("world", value.decodeToString())
+        assertNull(error)
+        assertEquals(Source.ORIGIN, source)
+    }
+
+    @Test
+    fun `should return hasKey as true when there is data with key in the cache`() {
+        val (value, error) = cache.get("hello", defaultValue = { "world".encodeToByteArray() })
+        val hasKey = cache.hasKey("hello")
+
+        assertNotNull(value)
+        assertEquals(value.decodeToString(), "world")
+        assertNull(error)
+        assertTrue(hasKey)
+
+        val notFound = cache.hasKey("xxxx")
+        assertFalse(notFound)
+    }
+
+    @Test
+    fun `should return failure when fetch function is null out`() {
+        fun fetchFail(): ByteArray? = null
+
+        val (result, source) = cache.getWithSource("fail", ::fetchFail)
+        val (value, error) = result
+
+        assertNull(value)
+        assertNotNull(error)
+        assertEquals(Source.ORIGIN, source)
+    }
+
+    @Test
+    fun `should return source as memory after fetching the second time`() {
+        // get this once, to trigger save in memory
+        cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
+
+        val (result, source) = cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
+        val (value, error) = result
+
+        assertNotNull(value)
+        assertEquals("world", value.decodeToString())
+        assertNull(error)
+        assertEquals(Source.MEM, source)
+    }
+
+    @Test
+    fun `should fallback to use disk value when we remove it from memory`() {
+        cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
+        // remove from memory cache
+        cache.remove("hello", Source.MEM)
+
+        val (result, source) = cache.getWithSource("hello")
+        val (value, error) = result
+
+        assertNotNull(value)
+        assertEquals("world", value.decodeToString())
+        assertNull(error)
+        assertEquals(Source.DISK, source)
+    }
+
 //    @Test
 //    fun putStringSuccess1() {
 //        val (value, error) = cache.put("Test Put", "Hello world".toByteArray())
