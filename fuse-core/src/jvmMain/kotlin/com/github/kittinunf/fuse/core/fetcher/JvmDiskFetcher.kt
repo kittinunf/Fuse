@@ -1,24 +1,31 @@
 package com.github.kittinunf.fuse.core.fetcher
 
-import com.github.kittinunf.fuse.core.formatter.BinarySerializer
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
 import com.github.kittinunf.result.Result
+import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.KSerializer
-import java.io.InputStream
+import java.io.File
 
-class JvmDiskFetcher<T : Any>(path: String, private val inputStream: InputStream, private val serializer: KSerializer<T>) :
-    Fetcher<T> {
+class JvmDiskFetcher<T : Any>(
+    private val file: File,
+    private val binaryFormat: BinaryFormat = JsonBinaryFormatter(),
+    private val serializer: KSerializer<T>
+) : Fetcher<T>, BinaryFormat by binaryFormat {
 
     private var cancelled: Boolean = false
 
-    override val key: String = path
-
-    private val binarySerializer = BinarySerializer()
+    override val key: String = file.absolutePath
 
     override fun fetch(): Result<T, Exception> {
+        if (!file.isFile) return Result.failure(IllegalStateException("Given $file is not a File URL."))
+        if (!file.exists()) return Result.failure(RuntimeException("Given $file is unreachable."))
+
         return Result.of {
-            val bytes = inputStream.use { it.readBytes() }
+            val bytes = file.inputStream().use { it.readBytes() }
             if (cancelled) throw RuntimeException("Fetcher with $key got cancelled")
-            binarySerializer.decodeFromByteArray(serializer, bytes)
+            if (bytes.isEmpty()) throw RuntimeException("Cannot read from file")
+
+            decodeFromByteArray(serializer, bytes)
         }
     }
 

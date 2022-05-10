@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core.persistence
 
-import com.github.kittinunf.fuse.core.formatter.BinarySerializer
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
 import com.github.kittinunf.fuse.core.model.Entry
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
@@ -20,8 +20,8 @@ import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
 import platform.posix.memcpy
 
-class IosDiskPersistence(name: String, private var directory: NSURL? = null, formatDriver: BinaryFormat = BinarySerializer()) :
-    Persistence<ByteArray>, BinaryFormat by formatDriver {
+class IosDiskPersistence(name: String, private var directory: NSURL? = null, formatter: BinaryFormat = JsonBinaryFormatter()) :
+    Persistence<ByteArray>, BinaryFormat by formatter {
 
     private val fileManager = NSFileManager()
 

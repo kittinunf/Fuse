@@ -149,7 +149,7 @@ tasks {
         }
     }
 
-    val iosTest = findByName("iosX64Test") ?: findByName("iosSimulatorArm64Test")
+    val iosTest = findByName("iosSimulatorArm64Test") ?: findByName("iosX64Test")
     val copyIOSTestResources by creating(Copy::class) {
         from("src/commonTest/resources")
         val iosTestName = iosTest!!.name

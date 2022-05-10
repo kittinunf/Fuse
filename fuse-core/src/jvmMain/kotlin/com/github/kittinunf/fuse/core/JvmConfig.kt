@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core
 
-import com.github.kittinunf.fuse.core.formatter.BinarySerializer
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
 import com.github.kittinunf.fuse.core.persistence.JvmDiskPersistence
 import com.github.kittinunf.fuse.core.persistence.MemPersistence
 import com.github.kittinunf.fuse.core.persistence.Persistence
@@ -16,7 +16,7 @@ class JvmConfig<T : Any>(
     override val transformer: (key: String, value: T) -> T = { _, value -> value }
 ) : Config<T> {
 
-    override val formatter: BinaryFormat = BinarySerializer()
+    override val formatter: BinaryFormat = JsonBinaryFormatter()
 
     override val memCache: Persistence<T> = MemPersistence()
 

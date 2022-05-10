@@ -1,12 +1,12 @@
 package com.github.kittinunf.fuse.core.persistence
 
-import com.github.kittinunf.fuse.core.formatter.BinarySerializer
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
 import com.github.kittinunf.fuse.core.model.Entry
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.builtins.ByteArraySerializer
 import java.io.File
 
-class JvmDiskPersistence(name: String, private var path: File? = null, formatDriver: BinaryFormat = BinarySerializer()) :
+class JvmDiskPersistence(name: String, private var path: File? = null, formatDriver: BinaryFormat = JsonBinaryFormatter()) :
     Persistence<ByteArray>, BinaryFormat by formatDriver {
 
     private val cacheDirectory

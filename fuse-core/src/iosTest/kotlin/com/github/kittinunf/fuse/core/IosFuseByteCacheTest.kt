@@ -1,114 +1,45 @@
 package com.github.kittinunf.fuse.core
 
+import com.github.kittinunf.result.Result
+import kotlinx.serialization.BinaryFormat
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.builtins.ByteArraySerializer
+import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
+import platform.Foundation.NSBundle
+import platform.Foundation.NSURL
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
-internal expect fun createByteTestCache(name: String, context: Any): Cache<ByteArray>
+class IosFuseByteCacheTest {
 
-class FuseByteCacheTest : BaseTest() {
+    val cache: Cache<ByteArray> = IosConfig("test-cache", path = null, formatter = object : BinaryFormat {
+        override val serializersModule: SerializersModule = EmptySerializersModule
 
-    lateinit var cache: Cache<ByteArray>
+        override fun <T> decodeFromByteArray(deserializer: DeserializationStrategy<T>, bytes: ByteArray): T {
+            return bytes as T
+        }
 
-    override fun setUp(any: Any) {
-        cache = createByteTestCache("test", any)
-        cache.removeAll()
-    }
+        override fun <T> encodeToByteArray(serializer: SerializationStrategy<T>, value: T): ByteArray {
+            return value as ByteArray
+        }
 
-    @Test
-    fun `should fetch data correctly with defaultValue`() {
-        val (result, source) = cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
-        val (value, error) = result
-
-        assertNotNull(value)
-        assertEquals("world", value.decodeToString())
-        assertNull(error)
-        assertEquals(Source.ORIGIN, source)
-    }
+    }, serializer = ByteArraySerializer()).build()
 
     @Test
-    fun `should return hasKey as true when there is data with key in the cache`() {
-        val (value, error) = cache.get("hello", defaultValue = { "world".encodeToByteArray() })
-        val hasKey = cache.hasKey("hello")
-
-        assertNotNull(value)
-        assertEquals(value.decodeToString(), "world")
-        assertNull(error)
-        assertTrue(hasKey)
-
-        val notFound = cache.hasKey("xxxx")
-        assertFalse(notFound)
+    fun `should fetch data from file correctly`() {
+        val filePath = NSBundle.mainBundle.pathForResource("sample_song", ofType = "mp3", inDirectory = "resources")
+        val fileUrl = NSURL(fileURLWithPath = filePath!!)
+//        val result = cache.get(fileUrl)
+//        println(result)
+//        assertIs<Result.Success<*>>(result)
+//        val (value, error) = result
+//        assertNotNull(value)
+//        assertNull(error)
     }
-
-    @Test
-    fun `should return failure when fetch function is null out`() {
-        fun fetchFail(): ByteArray? = null
-
-        val (result, source) = cache.getWithSource("fail", ::fetchFail)
-        val (value, error) = result
-
-        assertNull(value)
-        assertNotNull(error)
-        assertEquals(Source.ORIGIN, source)
-    }
-
-    @Test
-    fun `should return source as memory after fetching the second time`() {
-        // get this once, to trigger save in memory
-        cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
-
-        val (result, source) = cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
-        val (value, error) = result
-
-        assertNotNull(value)
-        assertEquals("world", value.decodeToString())
-        assertNull(error)
-        assertEquals(Source.MEM, source)
-    }
-
-    @Test
-    fun `should fallback to use disk value when we remove it from memory`() {
-        cache.getWithSource("hello", defaultValue = { "world".encodeToByteArray() })
-        // remove from memory cache
-        cache.remove("hello", Source.MEM)
-
-        val (result, source) = cache.getWithSource("hello")
-        val (value, error) = result
-
-        assertNotNull(value)
-        assertEquals("world", value.decodeToString())
-        assertNull(error)
-        assertEquals(Source.DISK, source)
-    }
-
-    @Test
-    fun `should put value into the cache successfully`() {
-        val (value, error) = cache.put("put", "Hello world".encodeToByteArray())
-
-        assertNotNull(value)
-        assertEquals("Hello world", value.decodeToString())
-        assertNull(error)
-
-        val (value2, error2) = cache.get("put")
-
-        assertNotNull(value2)
-        assertNull(error2)
-        assertEquals("Hello world", value2.decodeToString())
-    }
-
-//    @Test
-//    fun test() {
-//        val song = readResource("./sample_song.mp3")
-//        println(song)
-//
-//        val (value, error) = cache.get(song)
-//
-//        assertThat(value, notNullValue())
-//        assertThat(error, nullValue())
-//    }
 
 //    @Test
 //    fun fetchFileImageSuccess() {
