@@ -16,9 +16,9 @@ class IosConfig<T : Any>(
     override val transformer: (key: String, value: T) -> T = { _, value -> value }
 ) : Config<T> {
 
-    override val formatDriver: BinaryFormat = BinarySerializer()
+    override val formatter: BinaryFormat = BinarySerializer()
 
     override val memCache: Persistence<T> = MemPersistence()
 
-    override val diskCache: Persistence<ByteArray> = IosDiskPersistence(name, path, formatDriver)
+    override val diskCache: Persistence<ByteArray> = IosDiskPersistence(name, path, formatter)
 }

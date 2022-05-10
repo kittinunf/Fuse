@@ -84,35 +84,31 @@ class FuseByteCacheTest : BaseTest() {
         assertEquals(Source.DISK, source)
     }
 
-//    @Test
-//    fun putStringSuccess1() {
-//        val (value, error) = cache.put("Test Put", "Hello world".toByteArray())
-//
-//        assertThat(value, notNullValue())
-//        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("Hello world"))
-//        assertThat(error, nullValue())
-//    }
-//
-//    @Test
-//    fun putStringSuccess2() {
-//        // this needs to be run sequentially after running the putStringSuccess1
-//        val (value, error) = cache.get("Test Put")
-//
-//        assertThat(value, notNullValue())
-//        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("Hello world"))
-//        assertThat(error, nullValue())
-//    }
-//
+    @Test
+    fun `should put value into the cache successfully`() {
+        val (value, error) = cache.put("put", "Hello world".encodeToByteArray())
+
+        assertNotNull(value)
+        assertEquals("Hello world", value.decodeToString())
+        assertNull(error)
+
+        val (value2, error2) = cache.get("put")
+
+        assertNotNull(value2)
+        assertNull(error2)
+        assertEquals("Hello world", value2.decodeToString())
+    }
+
 //    @Test
 //    fun fetchFileSuccess() {
-//        val song = assetDir.resolve("sample_song.mp3")
+//        val song = readResource("./sample_song.mp3")
 //
 //        val (value, error) = cache.get(song)
 //
 //        assertThat(value, notNullValue())
 //        assertThat(error, nullValue())
 //    }
-//
+
 //    @Test
 //    fun fetchFileImageSuccess() {
 //        val image = assetDir.resolve("sample.jpg")

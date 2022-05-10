@@ -6,7 +6,7 @@ import kotlinx.serialization.KSerializer
 
 interface Config<T : Any> {
     val name: String
-    val formatDriver: BinaryFormat
+    val formatter: BinaryFormat
     val diskCapacity: Long
     val serializer: KSerializer<T>
     val memCache: Persistence<T>

@@ -8,8 +8,7 @@ interface Fetcher<out T : Any> {
 
     fun fetch(): Result<T, Exception>
 
-    fun cancel() {
-    }
+    fun cancel() {}
 }
 
 internal class SimpleFetcher<out T : Any>(override val key: String, private val getValue: () -> T?) : Fetcher<T> {

@@ -17,7 +17,7 @@ enum class Source {
 interface Cache<T : Any> : Fuse.Cacheable<T>, BinaryFormat
 
 class CacheImpl<T : Any> internal constructor(private val config: Config<T>, private val serializer: KSerializer<T>) : Cache<T>,
-    BinaryFormat by config.formatDriver {
+    BinaryFormat by config.formatter {
 
     private val memCache = config.memCache
     private val diskCache = config.diskCache

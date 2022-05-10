@@ -148,4 +148,13 @@ tasks {
             csv.required.set(false)
         }
     }
+
+    val iosTest = findByName("iosX64Test") ?: findByName("iosSimulatorArm64Test")
+    val copyIOSTestResources by creating(Copy::class) {
+        from("src/commonTest/resources")
+        val iosTestName = iosTest!!.name
+        into("$buildDir/bin/${iosTestName.substringBefore("Test")}/debugTest/resources")
+    }
+
+    iosTest?.dependsOn(copyIOSTestResources)
 }
