@@ -82,7 +82,6 @@ class CacheImpl<T : Any> internal constructor(private val config: Config<T>, pri
 
         memCache.put(safeKey, Entry(key, transformed, timeToPersist))
         return Result.of {
-            println("put $transformed")
             diskCache.put(safeKey, Entry(key, encodeToByteArray(serializer, transformed), timeToPersist))
             transformed
         }

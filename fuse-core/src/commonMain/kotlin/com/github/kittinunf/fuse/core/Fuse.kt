@@ -73,26 +73,6 @@ object Fuse {
     }
 }
 
-// region File
-/**
- *  Get the entry associated as a Data of file content in T with its particular key as File path. If File is not there or too large, it returns as [Result.Failure]
- *  Otherwise, it returns [Result.Success] of data of a given file in T
- *
- * @param file The file object that represent file data on the disk
- * @return Result<T, Exception> The Result that represents the success/failure of the operation
- */
-//fun <T : Any> Cache<T>.get(file: IO): Result<T, Exception> = get(DiskFetcher(file, this))
-
-/**
- *  Get the entry associated as a Data of file content in T with its particular key as File path. If File is not there or too large, it returns as [Result.Failure]
- *  Otherwise, it returns [Result.Success] data of a given file in T
- *
- * @param file The file object that represent file data on the disk
- * @return Pair<Result<T, Exception>, Source>> The Result that represents the success/failure of the operation
- */
-//fun <T : Any> Cache<T>.getWithSource(file: IO): Pair<Result<T, Exception>, Source> =
-//    getWithSource(DiskFetcher(file, this))
-
 /**
  *  Put the entry as a content of a file into Cache
  *

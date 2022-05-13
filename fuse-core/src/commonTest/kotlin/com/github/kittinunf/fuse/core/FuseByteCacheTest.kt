@@ -191,32 +191,13 @@ class FuseByteCacheTest : BaseTest() {
         assertFalse(hasKey)
     }
 
-//    @Test
-//    fun removeThemAll() {
-//        val count = 10
-//        val lock = CountDownLatch(count)
-//
-//        (1..count).forEach {
-//            cache.put("remove $it", "yoyo".toByteArray())
-//        }
-//        lock.wait()
-//
-//        assertThat(cache.allKeys(), not(matchesEmpty(cache.allKeys())) as Matcher<in Set<String>>)
-//        (1..count).forEach {
-//            assertThat(
-//                cache.allKeys(),
-//                hasItems("remove $it")
-//            )
-//        }
-//        cache.removeAll()
-//        assertThat(cache.allKeys(), matchesEmpty(cache.allKeys()) as Matcher<in Set<String>>)
-//    }
-//
-//    private inline fun <reified T> matchesEmpty(collection: Collection<T>) = object : BaseMatcher<T>() {
-//        override fun describeTo(description: Description) {
-//            description.appendText("$collection is not empty")
-//        }
-//
-//        override fun matches(item: Any?): Boolean = (item as Collection<T>).isEmpty()
-//    }
+    @Test
+    fun `should remove all keys correctly`() {
+        (1..5).forEach {
+            cache.put("remove $it", "yoyo".encodeToByteArray())
+        }
+        assertEquals(setOf("remove 1", "remove 2", "remove 3", "remove 4", "remove 5"), cache.allKeys())
+        cache.removeAll()
+        assertEquals(emptySet(), cache.allKeys())
+    }
 }
