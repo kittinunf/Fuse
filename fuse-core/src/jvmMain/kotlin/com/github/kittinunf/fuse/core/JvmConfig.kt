@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core
 
-import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryConverter
 import com.github.kittinunf.fuse.core.persistence.JvmDiskPersistence
 import com.github.kittinunf.fuse.core.persistence.MemPersistence
 import com.github.kittinunf.fuse.core.persistence.Persistence
@@ -12,13 +12,9 @@ class JvmConfig<T : Any>(
     override val name: String,
     val path: File? = null,
     override val serializer: KSerializer<T>,
+    override val formatter: BinaryFormat = JsonBinaryConverter(),
     override val diskCapacity: Long = 1024 * 1024 * 20,
-    override val transformer: (key: String, value: T) -> T = { _, value -> value }
-) : Config<T> {
-
-    override val formatter: BinaryFormat = JsonBinaryFormatter()
-
-    override val memCache: Persistence<T> = MemPersistence()
-
-    override val diskCache: Persistence<ByteArray> = JvmDiskPersistence(name, path, formatter)
-}
+    override val transformer: (key: String, value: T) -> T = { _, value -> value },
+    override val memCache: Persistence<T> = MemPersistence(),
+    override val diskCache: Persistence<ByteArray> = JvmDiskPersistence(name, path)
+) : Config<T>

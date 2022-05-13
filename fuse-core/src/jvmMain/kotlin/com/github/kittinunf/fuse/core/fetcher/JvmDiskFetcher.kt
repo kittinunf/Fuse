@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core.fetcher
 
-import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryConverter
 import com.github.kittinunf.result.Result
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.KSerializer
@@ -8,7 +8,7 @@ import java.io.File
 
 class JvmDiskFetcher<T : Any>(
     private val file: File,
-    private val binaryFormat: BinaryFormat = JsonBinaryFormatter(),
+    private val binaryFormat: BinaryFormat = JsonBinaryConverter(),
     private val serializer: KSerializer<T>
 ) : Fetcher<T>, BinaryFormat by binaryFormat {
 

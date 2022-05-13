@@ -13,4 +13,4 @@ import platform.Foundation.NSURL
  * @return Result<T, Exception> The Result that represents the success/failure of the operation
  */
 inline fun <reified T : Any> Cache<T>.get(url: NSURL): Result<T, Exception> =
-    get(IosDiskFetcher(url, binaryFormat = this, serializer = serializersModule.serializer()))
+    get(IosDiskFetcher(url, formatter = this, serializer = serializersModule.serializer()))

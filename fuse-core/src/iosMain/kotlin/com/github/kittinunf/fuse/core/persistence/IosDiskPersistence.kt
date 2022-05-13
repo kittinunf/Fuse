@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core.persistence
 
-import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryConverter
 import com.github.kittinunf.fuse.core.model.Entry
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
@@ -20,10 +20,11 @@ import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.writeToURL
 import platform.posix.memcpy
 
-class IosDiskPersistence(name: String, private var directory: NSURL? = null, formatter: BinaryFormat = JsonBinaryFormatter()) :
-    Persistence<ByteArray>, BinaryFormat by formatter {
+class IosDiskPersistence(name: String, private var directory: NSURL? = null) : Persistence<ByteArray> {
 
     private val fileManager = NSFileManager()
+
+    private val formatter: BinaryFormat = JsonBinaryConverter()
 
     private val cacheDirectory
         get() = directory!!
@@ -40,7 +41,7 @@ class IosDiskPersistence(name: String, private var directory: NSURL? = null, for
 
     override fun put(safeKey: String, entry: Entry<ByteArray>) {
         val destination = getUrlForKey(safeKey)
-        val bytes = encodeToByteArray(entry)
+        val bytes = formatter.encodeToByteArray(entry)
         val data = bytes.toData()
         data.writeToURL(destination, atomically = true)
     }
@@ -89,7 +90,7 @@ class IosDiskPersistence(name: String, private var directory: NSURL? = null, for
         if (!fileManager.fileExistsAtPath(url.path!!)) return null
         val data = NSData.dataWithContentsOfURL(url) ?: throw RuntimeException("Cannot retrieve data at path: ${url.relativePath}")
         val bytes = data.toByteArray()
-        return decodeFromByteArray(bytes)
+        return formatter.decodeFromByteArray(bytes)
     }
 }
 

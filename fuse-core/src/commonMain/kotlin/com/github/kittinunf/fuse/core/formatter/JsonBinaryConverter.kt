@@ -6,7 +6,7 @@ import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
-class JsonBinaryFormatter(private val json: Json = Json) : BinaryFormat {
+internal class JsonBinaryConverter(private val json: Json = Json) : BinaryFormat {
 
     override val serializersModule: SerializersModule = json.serializersModule
 

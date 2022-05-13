@@ -1,8 +1,12 @@
 package com.github.kittinunf.fuse.core
 
+import com.github.kittinunf.fuse.core.fetcher.NotFoundException
+import kotlinx.datetime.Clock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -110,7 +114,7 @@ class FuseByteCacheTest : BaseTest() {
 //        assertThat(error, nullValue())
 //    }
 
-//    @Test
+    //    @Test
 //    fun fetchFileImageSuccess() {
 //        val image = assetDir.resolve("sample.jpg")
 //
@@ -130,75 +134,63 @@ class FuseByteCacheTest : BaseTest() {
 //        assertThat(error, notNullValue())
 //    }
 //
-//    @Test
-//    fun checkTimestamp() {
-//        cache.get("timestamp", { System.currentTimeMillis().toString().toByteArray() })
-//
-//        Thread.sleep(2100)
-//
-//        val timestamp = cache.getTimestamp("timestamp")
-//
-//        assertThat(timestamp, notNullValue())
-//        assertThat(timestamp, not(equalTo(-1L)))
-//
-//        val timeLimit = 2000L
-//        assertThat(
-//            System.currentTimeMillis() - timestamp!!,
-//            object : BaseMatcher<Long>() {
-//                override fun describeTo(description: Description) {
-//                    description.appendText("$timestamp is over than $timeLimit")
-//                }
-//
-//                override fun matches(item: Any?): Boolean = (item as Long) > timeLimit
-//            }
-//        )
-//    }
-//
-//    @Test
-//    fun remove() {
-//        val (result, source) = cache.getWithSource("YOYO", { "yoyo".toByteArray() })
-//        val (value, error) = result
-//
-//        assertThat(value, notNullValue())
-//        assertThat(value!!.toString(Charset.defaultCharset()), equalTo("yoyo"))
-//        assertThat(error, nullValue())
-//        assertThat(source, equalTo(Source.ORIGIN))
-//
-//        cache.remove("YOYO", Source.MEM)
-//        cache.remove("YOYO", Source.DISK)
-//
-//        val (anotherValue, anotherError) = cache.get("YOYO")
-//
-//        assertThat(anotherValue, nullValue())
-//        assertThat(anotherError, notNullValue())
-//        assertThat(anotherError as NotFoundException, isA(NotFoundException::class.java))
-//    }
-//
-//    @Test
-//    fun removeFromMem() {
-//        cache.put("remove", "test".toByteArray())
-//
-//        val result = cache.remove("remove")
-//        assertThat(result, equalTo(true))
-//
-//        val anotherResult = cache.remove("remove")
-//        assertThat(anotherResult, equalTo(false))
-//    }
-//
-//    @Test
-//    fun removeFromDisk() {
-//        cache.put("remove", "test".toByteArray())
-//
-//        val result = cache.remove("remove", Source.DISK)
-//        assertThat(result, equalTo(true))
-//
-//        val anotherResult = cache.remove("remove", Source.MEM)
-//        assertThat(anotherResult, equalTo(true))
-//
-//        val hasKey = cache.hasKey("remove")
-//        assertThat(hasKey, equalTo(false))
-//    }
-//
+    @Test
+    fun `should get correct timestamp`() {
+        val timeStamp = Clock.System.now().toEpochMilliseconds()
+        cache.get("timestamp", { timeStamp.toString().encodeToByteArray() })
+
+        val retrieved = cache.getTimestamp("timestamp")
+
+        assertNotNull(retrieved)
+        assertNotEquals(-1, retrieved)
+        assertTrue { (timeStamp - retrieved) < 1_000 }
+    }
+
+    @Test
+    fun `should able to remove item correctly`() {
+        val (result, source) = cache.getWithSource("YOYO", { "yoyo".encodeToByteArray() })
+        val (value, error) = result
+
+        assertNotNull(value)
+        assertEquals("yoyo", value.decodeToString())
+        assertNull(error)
+        assertEquals(Source.ORIGIN, source)
+
+        cache.remove("YOYO", Source.MEM)
+        cache.remove("YOYO", Source.DISK)
+
+        val (anotherValue, anotherError) = cache.get("YOYO")
+
+        assertNull(anotherValue)
+        assertNotNull(anotherError)
+        assertIs<NotFoundException>(anotherError)
+    }
+
+    @Test
+    fun `should be able to remove from mem correctly`() {
+        cache.put("remove", "test".encodeToByteArray())
+
+        val result = cache.remove("remove")
+        assertTrue(result)
+
+        val anotherResult = cache.remove("remove")
+        assertFalse(anotherResult)
+    }
+
+    @Test
+    fun `should be able to remove from disk correctly`() {
+        cache.put("remove", "test".encodeToByteArray())
+
+        val result = cache.remove("remove", Source.DISK)
+        assertTrue(result)
+
+        val anotherResult = cache.remove("remove", Source.MEM)
+        assertTrue(anotherResult)
+
+        val hasKey = cache.hasKey("remove")
+        assertFalse(hasKey)
+    }
+
 //    @Test
 //    fun removeThemAll() {
 //        val count = 10

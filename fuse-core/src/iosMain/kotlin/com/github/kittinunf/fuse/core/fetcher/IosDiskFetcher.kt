@@ -1,6 +1,6 @@
 package com.github.kittinunf.fuse.core.fetcher
 
-import com.github.kittinunf.fuse.core.formatter.JsonBinaryFormatter
+import com.github.kittinunf.fuse.core.formatter.JsonBinaryConverter
 import com.github.kittinunf.fuse.core.persistence.toByteArray
 import com.github.kittinunf.result.Result
 import kotlinx.cinterop.ObjCObjectVar
@@ -17,9 +17,9 @@ import platform.Foundation.dataWithContentsOfURL
 
 class IosDiskFetcher<T : Any>(
     private val url: NSURL,
-    private val binaryFormat: BinaryFormat = JsonBinaryFormatter(),
+    private val formatter: BinaryFormat = JsonBinaryConverter(),
     private val serializer: KSerializer<T>
-) : Fetcher<T>, BinaryFormat by binaryFormat {
+) : Fetcher<T>, BinaryFormat by formatter {
 
     override val key: String = url.absoluteString!!
 
