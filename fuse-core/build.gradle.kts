@@ -149,12 +149,19 @@ tasks {
         }
     }
 
-    val iosTest = findByName("iosSimulatorArm64Test") ?: findByName("iosX64Test")
+    val tests = listOfNotNull(findByName("iosSimulatorArm64Test"), findByName("iosX64Test"))
+
     val copyIOSTestResources by creating(Copy::class) {
-        from("src/commonTest/resources")
-        val iosTestName = iosTest!!.name
-        into("$buildDir/bin/${iosTestName.substringBefore("Test")}/debugTest/resources")
+        val spec = copySpec {
+            from("src/commonTest/resources")
+            duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        }
+        into("$buildDir/bin")
+
+        tests.forEach {
+            into("/${it.name.substringBefore("Test")}/debugTest/resources") { with(spec) }
+        }
     }
 
-    iosTest?.dependsOn(copyIOSTestResources)
+    tests.forEach { it.dependsOn(copyIOSTestResources) }
 }
