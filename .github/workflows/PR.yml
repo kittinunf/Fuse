@@ -24,11 +24,11 @@ jobs:
         if: failure()
         with:
           name: testDebugUnitTest
-          path: ./**/build/reports/tests/testDebugUnitTest
+          path: ./**/build/reports/tests/testDebugUnitTest/*
 
       - name: Upload allTests results
         uses: actions/upload-artifact@v2.2.3
         if: failure()
         with:
           name: allTests
-          path: ./**/build/reports/test/allTests
+          path: ./**/build/reports/test/allTests/*
