@@ -17,8 +17,8 @@ import platform.Foundation.dataWithContentsOfURL
 
 class IosDiskFetcher<T : Any>(
     private val url: NSURL,
-    private val formatter: BinaryFormat = JsonBinaryConverter(),
-    private val serializer: KSerializer<T>
+    private val serializer: KSerializer<T>,
+    private val formatter: BinaryFormat = JsonBinaryConverter()
 ) : Fetcher<T>, BinaryFormat by formatter {
 
     override val key: String = url.absoluteString!!

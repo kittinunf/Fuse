@@ -118,7 +118,7 @@ class CacheImpl<T : Any> internal constructor(private val config: Config<T>, pri
 
     override fun getTimestamp(key: String): Long? {
         val safeKey = key.md5()
-        return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey) ?: null
+        return memCache.getTimestamp(safeKey) ?: diskCache.getTimestamp(safeKey)
     }
 
     private fun fetchAndPut(fetcher: Fetcher<T>): Result<T, Exception> {

@@ -8,8 +8,8 @@ import java.io.File
 
 class JvmDiskFetcher<T : Any>(
     private val file: File,
-    private val format: BinaryFormat = JsonBinaryConverter(),
-    private val serializer: KSerializer<T>
+    private val serializer: KSerializer<T>,
+    private val format: BinaryFormat = JsonBinaryConverter()
 ) : Fetcher<T>, BinaryFormat by format {
 
     private var cancelled: Boolean = false

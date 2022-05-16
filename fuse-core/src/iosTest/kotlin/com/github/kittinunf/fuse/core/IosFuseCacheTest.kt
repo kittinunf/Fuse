@@ -1,5 +1,6 @@
 package com.github.kittinunf.fuse.core
 
+import com.github.kittinunf.fuse.core.formatter.StringBinaryConverter
 import com.github.kittinunf.result.Result
 import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.DeserializationStrategy
@@ -32,18 +33,7 @@ class IosFuseCacheTest {
         }).build()
 
     private val stringCache: Cache<String> =
-        IosConfig("test-string-cache", path = null, serializer = String.serializer(), formatter = object : BinaryFormat {
-            override val serializersModule: SerializersModule = EmptySerializersModule
-
-            override fun <T> decodeFromByteArray(deserializer: DeserializationStrategy<T>, bytes: ByteArray): T {
-                return bytes.decodeToString() as T
-            }
-
-            override fun <T> encodeToByteArray(serializer: SerializationStrategy<T>, value: T): ByteArray {
-                return (value as String).encodeToByteArray()
-            }
-
-        }).build()
+        IosConfig("test-string-cache", path = null, serializer = String.serializer(), formatter = StringBinaryConverter()).build()
 
     @Test
     fun `should fetch data from file correctly`() {

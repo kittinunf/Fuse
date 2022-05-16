@@ -103,37 +103,6 @@ class FuseByteCacheTest : BaseTest() {
         assertEquals("Hello world", value2.decodeToString())
     }
 
-//    @Test
-//    fun test() {
-//        val song = readResource("./sample_song.mp3")
-//        println(song)
-//
-//        val (value, error) = cache.get(song)
-//
-//        assertThat(value, notNullValue())
-//        assertThat(error, nullValue())
-//    }
-
-    //    @Test
-//    fun fetchFileImageSuccess() {
-//        val image = assetDir.resolve("sample.jpg")
-//
-//        val (value, error) = cache.get(image)
-//
-//        assertThat(value, notNullValue())
-//        assertThat(error, nullValue())
-//    }
-//
-//    @Test
-//    fun fetchFileFail() {
-//        val song = assetDir.resolve("not_found_song.mp3")
-//
-//        val (value, error) = cache.get(song)
-//
-//        assertThat(value, nullValue())
-//        assertThat(error, notNullValue())
-//    }
-//
     @Test
     fun `should get correct timestamp`() {
         val timeStamp = Clock.System.now().toEpochMilliseconds()

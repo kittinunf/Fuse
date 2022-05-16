@@ -13,7 +13,7 @@ import java.io.File
  * @return Result<T, Exception> The Result that represents the success/failure of the operation
  */
 inline fun <reified T : Any> Cache<T>.get(file: File): Result<T, Exception> =
-    get(JvmDiskFetcher(file, format = this, serializer = serializersModule.serializer()))
+    get(JvmDiskFetcher(file, serializer = serializersModule.serializer(), format = this))
 
 /**
  *  Put the entry as a content of a file into Cache
@@ -22,4 +22,4 @@ inline fun <reified T : Any> Cache<T>.get(file: File): Result<T, Exception> =
  * @return Result<T, Exception> The Result that represents the success/failure of the operation
  */
 inline fun <reified T : Any> Cache<T>.put(file: File): Result<T, Exception> =
-    put(JvmDiskFetcher(file, format = this, serializer = serializersModule.serializer()))
+    put(JvmDiskFetcher(file, serializer = serializersModule.serializer(), format = this))

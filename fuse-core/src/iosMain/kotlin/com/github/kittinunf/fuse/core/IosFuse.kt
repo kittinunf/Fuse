@@ -13,7 +13,7 @@ import platform.Foundation.NSURL
  * @return Result<T, Exception> The Result that represents the success/failure of the operation
  */
 inline fun <reified T : Any> Cache<T>.get(url: NSURL): Result<T, Exception> =
-    get(IosDiskFetcher(url, formatter = this, serializer = serializersModule.serializer()))
+    get(IosDiskFetcher(url, serializer = serializersModule.serializer(), formatter = this))
 
 /**
  *  Put the entry as a content of a in T with its key as path in [NSURL] format into Cache
@@ -22,4 +22,4 @@ inline fun <reified T : Any> Cache<T>.get(url: NSURL): Result<T, Exception> =
  * @return Result<T, Exception> The Result that represents the success/failure of the operation
  */
 inline fun <reified T : Any> Cache<T>.put(url: NSURL): Result<T, Exception> =
-    put(IosDiskFetcher(url, formatter = this, serializer = serializersModule.serializer()))
+    put(IosDiskFetcher(url, serializer = serializersModule.serializer(), formatter = this))
