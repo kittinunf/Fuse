@@ -6,10 +6,10 @@ import kotlinx.serialization.KSerializer
 
 interface Config<T : Any> {
     val name: String
+    val serializer: KSerializer<T>
     val formatter: BinaryFormat
     val diskCapacity: Long
-    val serializer: KSerializer<T>
+    val transformer: ((key: String, value: T) -> T)
     val memCache: Persistence<T>
     val diskCache: Persistence<ByteArray>
-    val transformer: ((key: String, value: T) -> T)
 }

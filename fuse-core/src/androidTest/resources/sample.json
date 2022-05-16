@@ -1,0 +1,26 @@
+{
+  "name": "Product",
+  "properties": {
+    "id": {
+      "type": "number",
+      "description": "Product Identifier",
+      "required": true
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the product",
+      "required": true
+    },
+    "price": {
+      "type": "number",
+      "minimum": 10,
+      "required": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
