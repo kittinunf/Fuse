@@ -73,15 +73,6 @@ object Fuse {
     }
 }
 
-/**
- *  Put the entry as a content of a file into Cache
- *
- * @param file The file object that represent file data on the disk
- * @return Result<T, Exception> The Result that represents the success/failure of the operation
- */
-//fun <T : Any> Cache<T>.put(file: IO): Result<T, Exception> = put(DiskFetcher(file, this))
-// endregion File
-
 // region Value
 /**
  *  Get the entry associated as a value in T by using lambda getValue as a default value generator. If value for associated Key is not there, it saves with value from defaultValue.

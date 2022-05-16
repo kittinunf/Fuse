@@ -13,7 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
-class IosFuseByteCacheTest {
+class IosFuseCacheTest {
 
     private val cache: Cache<ByteArray> =
         IosConfig("test-cache", path = null, serializer = ByteArraySerializer(), formatter = object : BinaryFormat {
@@ -31,13 +31,24 @@ class IosFuseByteCacheTest {
 
     @Test
     fun `should fetch data from file correctly`() {
-        val filePath = NSBundle.mainBundle.pathForResource("sample_song", ofType = "mp3", inDirectory = "resources")
-        val fileUrl = NSURL(fileURLWithPath = filePath!!)
+        val fileUrl = getUrlFromResource("sample_song", "mp3")
 
         val result = cache.get(fileUrl)
         assertIs<Result.Success<*>>(result)
 
         val (value, _) = result
         assertNotNull(value)
+    }
+
+    @Test
+    fun `should put data from file as binary correctly`() {
+        val file = getUrlFromResource("sample_song", "mp3")
+        val result = cache.put(file)
+        assertIs<Result.Success<*>>(result)
+    }
+
+    private fun getUrlFromResource(name: String, type: String): NSURL {
+        val filePath = NSBundle.mainBundle.pathForResource(name, ofType = type, inDirectory = "resources")
+        return NSURL(fileURLWithPath = filePath!!)
     }
 }
