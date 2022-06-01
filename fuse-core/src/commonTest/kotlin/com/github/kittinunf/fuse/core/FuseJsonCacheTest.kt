@@ -13,13 +13,19 @@ import kotlin.test.assertNull
 
 internal expect fun createStringTestCache(name: String, context: Any): Cache<String>
 
+internal expect fun createJsonTestCache(name: String, context: Any): Cache<Product>
+
 class FuseJsonCacheTest : BaseTest() {
 
     lateinit var cache: Cache<String>
+    lateinit var productCache: Cache<Product>
 
     override fun setUp(any: Any) {
         cache = createStringTestCache("json-test", any)
+        productCache = createJsonTestCache("product-test", any)
+
         cache.removeAll()
+        productCache.removeAll()
     }
 
     @Serializable
@@ -62,43 +68,26 @@ class FuseJsonCacheTest : BaseTest() {
         assertEquals(Price("number", minimum = 10, required = true), serialized.properties.price)
     }
 
-//    @Test
-//    fun fetchFromNetworkSuccess() {
-//        val httpBin = URL("https://www.httpbin.org/get")
-//
-//
-//        val cache = CacheBuilder.config(tempDir, HttpbinGetDataConvertible()).build()
-//
-//        val (result, source) = cache.getWithSource(httpBin)
-//        val (value, error) = result
-//
-//        assertThat(value, notNullValue())
-//        assertThat(value!!.url, equalTo("https://www.httpbin.org/get"))
-//        assertThat(error, nullValue())
-//        assertThat(source, equalTo(Source.ORIGIN))
-//
-//        val (anotherResult, anotherSource) = cache.getWithSource(httpBin)
-//        val (anotherValue, anotherError) = anotherResult
-//
-//        assertThat(anotherValue, notNullValue())
-//        assertThat(anotherValue!!.url, equalTo("https://www.httpbin.org/get"))
-//        assertThat(anotherError, nullValue())
-//        assertThat(anotherSource, equalTo(Source.MEM))
-//    }
-//
-//    @Test
-//    fun fetchFromNetworkFail() {
-//        val httpBin = URL("http://www.httpbin.org/fail")
-//
-//        val cache = CacheBuilder.config(tempDir, HttpbinGetDataConvertible()).build()
-//
-//        val (value, error) = cache.get(httpBin)
-//
-//        assertThat(value, nullValue())
-//        assertThat(error, notNullValue())
-//        assertThat(error as? FileNotFoundException, isA(FileNotFoundException::class.java))
-//    }
-//
+    @Test
+    fun `should read and deserialize into customize object correctly`() {
+        val data = readResource("./another_sample.json")
+
+        val (value, error) = productCache.get("another", defaultValue = { Json.decodeFromString(data.decodeToString()) })
+
+        assertNotNull(value)
+        assertNull(error)
+
+        val (result, source) = productCache.getWithSource("another")
+        assertEquals(Source.MEM, source)
+        val (v, e) = result
+        assertNotNull(v)
+        assertNull(e)
+
+        assertEquals("Another Product", v.name)
+        assertEquals(Id("number", description = "Another Product Identifier", required = true), v.properties.id)
+        assertEquals(Price("number", minimum = 42, required = true), v.properties.price)
+    }
+
 //    @Test
 //    fun putWithValueJsonCompatible() {
 //        val temp = assetDir.resolve("sample.json").copyTo(assetDir.resolve("temp.json"), true)
