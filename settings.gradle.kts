@@ -5,9 +5,10 @@ rootProject.name = "Fuse"
 includeBuild("plugins")
 
 include(
-    ":fuse",
-    ":fuse-android",
-    ":sample"
+//    ":fuse",
+    ":fuse-core",
+//    ":fuse-android",
+//    ":sample"
 )
 
 pluginManagement {
@@ -26,6 +27,7 @@ pluginManagement {
         .removeSurrounding("\"")
 
     plugins {
+        kotlin("multiplatform") version kotlinVersion
         kotlin("jvm") version kotlinVersion
         kotlin("android") version kotlinVersion
         kotlin("plugin.serialization") version kotlinVersion
